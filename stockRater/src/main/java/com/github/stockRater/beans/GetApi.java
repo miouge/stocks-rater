@@ -4,20 +4,20 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.net.URLEncoder;
+// import java.net.URLEncoder;
 import java.util.Map;
+import java.util.function.BiConsumer;
 
 public class GetApi  {
 	
 	private String urlSuffix;
 	private String method; // "GET", ...
 	
-	public GetApi( String urlSuffix ) {
+	public GetApi( Stock stock, BiConsumer<Stock, GetApi> consumer ) {
 
 		this.method = "GET";
+		consumer.accept( stock, this );
 	}
-	
-	
 
 	public String getUrlSuffix() {
 		return urlSuffix;
@@ -27,6 +27,7 @@ public class GetApi  {
 		this.urlSuffix = urlSuffix;
 	}
 
+	/*
 	private void useParameters( StringBuilder urlstring, Map<String,String> parameters ) throws Exception {
 		
 		if( parameters == null || parameters.isEmpty() ) {
@@ -51,6 +52,7 @@ public class GetApi  {
 			paramCounter++;
 		}
 	}
+	*/
 	
 	public int perform( TargetServer target, Map<String,String> parameters, Stock stock, AnswerHandler specificHandler ) throws Exception {
 
@@ -60,7 +62,7 @@ public class GetApi  {
 		
 		StringBuilder urlstring = new StringBuilder( target.assembleUrl( this.urlSuffix ) );
 		
-		this.useParameters( urlstring, parameters );
+		//this.useParameters( urlstring, parameters );
 			
 		AnswerHandler handler;
 		
@@ -117,7 +119,8 @@ public class GetApi  {
 				
 				try {
 					
-					handler.processAnswer( answer );
+					//handler.processAnswer( answer );
+					handler.processAnswerHTML( stock, answer );
 					
 				} catch (Exception e) {
 					

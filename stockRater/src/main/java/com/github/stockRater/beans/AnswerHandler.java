@@ -1,5 +1,10 @@
 package com.github.stockRater.beans;
 
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+
 public class AnswerHandler {
 	
 	protected String answer;
@@ -21,6 +26,11 @@ public class AnswerHandler {
 		// answer is a HTML document
 		
 		System.out.println( String.format( "handler for %s", stock.getName()));
+		
+		Document doc = Jsoup.parse( answer.toString(), "UTF-8" );
+
+		Elements elements = doc.select("div.item-lbl");
+
 		
 		
 
