@@ -4,30 +4,27 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-// import java.net.URLEncoder;
+import java.net.URLEncoder;
 import java.util.Map;
-import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+
+import com.github.stockRater.handlers.ResponseHandler;
 
 public class GetApi  {
 	
-	private String urlSuffix;
-	private String method; // "GET", ...
+	public String urlSuffix;
+	public String method; // "GET", ...
 	
-	public GetApi( Stock stock, BiConsumer<Stock, GetApi> consumer ) {
+	public Stock stock;
+	public Map<String,String> parameters; 
+	public ResponseHandler handler;
+
+	public GetApi( Consumer< GetApi> consumer ) {
 
 		this.method = "GET";
-		consumer.accept( stock, this );
+		consumer.accept( this );
 	}
 
-	public String getUrlSuffix() {
-		return urlSuffix;
-	}
-
-	public void setUrlSuffix(String urlSuffix) {
-		this.urlSuffix = urlSuffix;
-	}
-
-	/*
 	private void useParameters( StringBuilder urlstring, Map<String,String> parameters ) throws Exception {
 		
 		if( parameters == null || parameters.isEmpty() ) {
@@ -52,9 +49,8 @@ public class GetApi  {
 			paramCounter++;
 		}
 	}
-	*/
 	
-	public int perform( TargetServer target, Map<String,String> parameters, Stock stock, AnswerHandler specificHandler ) throws Exception {
+	public int perform( TargetServer target ) throws Exception {
 
 		if( this.urlSuffix == null || this.urlSuffix.isEmpty() ) {
 			throw new Exception( "urlSuffix is undefined");
@@ -62,19 +58,10 @@ public class GetApi  {
 		
 		StringBuilder urlstring = new StringBuilder( target.assembleUrl( this.urlSuffix ) );
 		
-		//this.useParameters( urlstring, parameters );
-			
-		AnswerHandler handler;
+		this.useParameters( urlstring, this.parameters );
 		
-		if( specificHandler != null ) {
-			handler = specificHandler;
-		}
-		else
-		{
-			handler = new AnswerHandler(); // use the default handler
-		}
-		
-		System.out.println( String.format( "%s for api %s", this.method, this.urlSuffix ));
+		// System.out.println( String.format( "%s for api %s", this.method, this.urlSuffix ));
+		System.out.println( String.format( "%s %s", this.method, urlstring ));
 		
 		URL url = new URL( urlstring.toString() );
 		
@@ -92,7 +79,7 @@ public class GetApi  {
 			connection.setRequestMethod( method );
 			
 			connection.getContent();
-			target.traceCookieStoreContent();
+			// target.traceCookieStoreContent();
 	
 			status = connection.getResponseCode();	
 			
@@ -112,15 +99,14 @@ public class GetApi  {
 					answer.append( line );
 					lineCount++;
 				}
-				while( true );				
+				while( true );
 				in.close();
 				
 				System.out.println( String.format( "\tanswer %s line(s) length = %d", lineCount, answer.length()));
 				
 				try {
 					
-					//handler.processAnswer( answer );
-					handler.processAnswerHTML( stock, answer );
+					this.handler.process( stock, answer );
 					
 				} catch (Exception e) {
 					
