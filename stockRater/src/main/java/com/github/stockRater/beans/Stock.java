@@ -1,53 +1,43 @@
 package com.github.stockRater.beans;
 
+import java.util.ArrayList;
+
 public class Stock {
 	
-	private String isin;
-	private String name;	
-	private String mnemo;
+	// loaded from liste.csv
 	
-	private String countryCode; // FR
+	public String isin;	
+	public String name;	
+	public String mnemo;
+	
+	public String countryCode; // FR
+	
+	
+	
+	// trading sat
+	public String tradingSatUrl;
+	public String tradingSatUrlSuffix; // "/engie-FR0010208488/societe.html"	
 		
 	// nombre de titres
-	private long stocksCount;
-
-	public String getIsin() {
-		return isin;
-	}
-
-	public void setIsin(String isin) {
-		this.isin = isin;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	public String getMnemo() {
-		return mnemo;
-	}
-
-	public void setMnemo(String mnemo) {
-		this.mnemo = mnemo;
-	}
-
-	public String getCountryCode() {
-		return countryCode;
-	}
-
-	public void setCountryCode(String countryCode) {
-		this.countryCode = countryCode;
-	}
-
-	public long getStocksCount() {
-		return stocksCount;
-	}
-
-	public void setStocksCount(long stocksCount) {
-		this.stocksCount = stocksCount;
-	}
+	public Long sharesCount;
+	public Long capitalisation;
+	public Double endettement = null; // en %
+	
+	// last quotation
+	
+	public Double lastQuote;
+	
+	// Bilan
+	
+	public Long capitauxPropres;
+	
+	// Compte de resultat	
+	
+	public ArrayList<Long> histoRNPG;
+	public Double avgRNPG;
+	public Double avg5yPER;
+	public Double ratioQuoteBV; // ration cours / capitaux propres par action
+	
+		
+	// Dividende	
 }
