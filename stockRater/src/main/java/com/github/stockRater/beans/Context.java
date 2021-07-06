@@ -11,14 +11,14 @@ public class Context {
 	
 	private void init() throws Exception {
 
-		String rootFolderEnv = System.getenv( "SRT_ROOT_FOLDER" );
+		String rootFolderEnv = System.getenv( "SRT_SCRATCH_FOLDER" );
 		if( rootFolderEnv == null ) {
-			throw new Exception( "SRT_ROOT_FOLDER environment variable is undefined !" );
+			throw new Exception( "SRT_SCRATCH_FOLDER environment variable is undefined !" );
 		}
-		this.rootFolder = rootFolderEnv;		
+		this.rootFolder = rootFolderEnv;
 		System.out.println( "workspace folder will be : " + this.rootFolder );
 		
-		settingsFilePath = this.rootFolder + "/settings.ini";		
+		settingsFilePath = this.rootFolder + "/settings.ini";
 		File settingFile = new File( settingsFilePath );
 		if( settingFile.exists() == false ) {
 			

@@ -42,13 +42,11 @@ public class Report {
 
 	public ArrayList<Stock> stocks = new ArrayList<Stock>();
 	
-	public void loadCsvData() throws FileNotFoundException, IOException, CsvException {
+	public void loadCsvData( String csvStockFile ) throws FileNotFoundException, IOException, CsvException {
 		
 		CSVParser csvParser = new CSVParserBuilder().withSeparator(';').build(); // custom separator
 	
-		String stocksCSV  = context.rootFolder + "/data/stocks.csv";
-		//String stocksCSV  = context.rootFolder + "/data/onlyVicat.csv";
-		//String stocksCSV  = context.rootFolder + "/data/onlyBonduelle.csv";		
+		String stocksCSV  = context.rootFolder + "/data/" + csvStockFile;
 		
 		try( CSVReader reader = new CSVReaderBuilder( new FileReader(stocksCSV))
 				.withCSVParser(csvParser) // custom CSV
@@ -67,7 +65,7 @@ public class Report {
 				this.stocks.add( stock );
 			});
 		}
-		System.out.println( String.format( "loaded %d stock definitions", this.stocks.size() ));
+		System.out.println( String.format( "%d stock definitions loaded", this.stocks.size() ));
 	}
 	
 	public void compute( Stock stock ) {
@@ -116,7 +114,7 @@ public class Report {
 		{	
 			GetApi api = new GetApi( theApi -> {
 				
-				theApi.urlSuffix = String.format( "/async/json/instrument-search.php?term=%s", stock.isin );				
+				theApi.urlSuffix = String.format( "/async/json/instrument-search.php?term=%s", stock.isin );
 				theApi.stock = stock;
 				theApi.handler = new TSGetCompanyPageUrl();
 				theApi.handler.cacheFolder =  this.context.rootFolder + "/cache/ts-searched";
@@ -128,7 +126,7 @@ public class Report {
 		{
 			GetApi api = new GetApi( theApi -> {
 				
-				theApi.urlSuffix = stock.tradingSatUrlSuffix + "societe.html";				
+				theApi.urlSuffix = stock.tradingSatUrlSuffix + "societe.html";
 				theApi.stock = stock;
 				theApi.handler = new TSParseSociete();
 				theApi.handler.cacheFolder =  this.context.rootFolder + "/cache/ts-societe";
@@ -136,11 +134,11 @@ public class Report {
 			api.perform( target );
 		}
 
-		// https://www.tradingsat.com/vicat-FR0000031775/donnees-financieres.html		
+		// https://www.tradingsat.com/vicat-FR0000031775/donnees-financieres.html
 		{
 			GetApi api = new GetApi( theApi -> {
 				
-				theApi.urlSuffix = stock.tradingSatUrlSuffix + "donnees-financieres.html";				
+				theApi.urlSuffix = stock.tradingSatUrlSuffix + "donnees-financieres.html";
 				theApi.stock = stock;
 				theApi.handler = new TSParseFinancialData();
 				theApi.handler.cacheFolder =  this.context.rootFolder + "/cache/ts-donnees-financieres";

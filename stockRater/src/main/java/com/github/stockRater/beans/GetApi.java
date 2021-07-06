@@ -66,7 +66,7 @@ public class GetApi  {
 			throw new Exception( "urlSuffix is undefined");
 		}
 		
-		StringBuilder urlstring = new StringBuilder( target.assembleUrl( this.urlSuffix ) );		
+		StringBuilder urlstring = new StringBuilder( target.assembleUrl( this.urlSuffix ) );
 		this.useParameters( urlstring, this.parameters );		
 		// System.out.println( String.format( "%s for api %s", this.method, this.urlSuffix ));
 				
@@ -77,9 +77,9 @@ public class GetApi  {
 			// file exists and it is not a directory
 			if( Files.exists(path) && !Files.isDirectory(path)) {
 				
-				// System.out.println("response is already present in cache folder");				
+				// System.out.println("response is already present in cache folder");
 
-				// load the file then call the handler directly				
+				// load the file then call the handler directly
 	            List<String> content = Files.readAllLines( path, StandardCharsets.UTF_8);
 	            content.forEach( line -> response.append( line ) );
 	            useCache = true;
@@ -91,7 +91,7 @@ public class GetApi  {
 							
 				URL url = new URL( urlstring.toString() );
 				
-				HttpURLConnection connection = null;			 
+				HttpURLConnection connection = null;
 				
 				try {
 		
@@ -111,23 +111,19 @@ public class GetApi  {
 									
 						BufferedReader in = new BufferedReader( new InputStreamReader( connection.getInputStream() ) );
 							
-						int lineCount = 0;
 						do {
 							String line = in.readLine();
 							if( line == null ) {
 								break;
 							}
 							response.append( line  + "\n" );
-							lineCount++;
 						}
 						while( true );
 						in.close();
-						
-						// System.out.println( String.format( "\tresponse: line(s) = %s  length = %d", lineCount, response.length()));
 		
 					} else {
 								
-						System.err.println( String.format( "%s %s", this.method, urlstring ));						
+						System.err.println( String.format( "%s %s", this.method, urlstring ));
 						System.err.println( String.format( "\t=> HTTP code = <%-3d>", status ) );
 						// throw new Exception("unsuccessful call of url (HTTP code <> 200)");
 					}
