@@ -6,9 +6,9 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.stockRater.beans.Stock;
-import com.github.stockRater.beans.TSSearchedIsin;
+import com.github.stockRater.beans.jsonMapping.TSSearchedIsin;
 
-public class TSGetCompanyPageUrl extends ResponseHandlerTemplate {
+public class TSSearchIsinHandler extends ResponseHandlerTemplate {
 
 	@Override
 	public String getDumpFilename( Stock stock ) {
@@ -38,8 +38,7 @@ public class TSGetCompanyPageUrl extends ResponseHandlerTemplate {
 			if( link.contains( "///www.tradingsat.com" ) ) {
 				
 				stock.tradingSatUrl = link.replace( "///", "" );
-				stock.tradingSatUrlSuffix = link.replace( "///www.tradingsat.com", "" );				
-				stock.lastQuote = Double.parseDouble( obj.getPrice());				
+				stock.tradingSatUrlSuffix = link.replace( "///www.tradingsat.com", "" );
 				success = true;
 			}
 			else {

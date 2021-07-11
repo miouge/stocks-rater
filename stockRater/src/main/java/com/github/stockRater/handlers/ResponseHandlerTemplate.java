@@ -2,7 +2,10 @@ package com.github.stockRater.handlers;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.List;
+import java.util.function.Function;
 
+import com.github.stockRater.beans.Context;
 import com.github.stockRater.beans.Stock;
 
 // import org.jsoup.Jsoup;
@@ -13,15 +16,55 @@ import com.github.stockRater.beans.Stock;
 public abstract class ResponseHandlerTemplate {
 
 	public boolean success = false;
+	Context context;
 	
 	 // folder where to store cache content if any needed (if null mean never cache)
-	public String cacheFolder = null;
-
+	public String cacheSubFolder = null;
+	
 	public String getDumpFilename( Stock stock ) { return null;	}
+	
+	protected void addIfNonNull( String data, Function<String,Object> converter, List<Long> list ) {
+		
+		if( data == null ) {
+			return;
+		}
+		
+		if( data.equals( "-" )) {
+			return;
+		}
+		
+		Object converted = converter.apply( data );
+		list.add( (Long) converted );
+	}	
+
+	protected void addDoubleIfNonNull( String data, Function<String,Object> converter, List<Double> list ) {
+		
+		if( data == null ) {
+			return;
+		}
+		
+		if( data.equals( "-" )) {
+			return;
+		}
+
+		if( data.equals( "" )) {
+			return;
+		}
+		
+		try {
+			
+			String tmp = data.replace(",", "." );			
+			Object converted = converter.apply( tmp  );
+			list.add( (Double) converted );
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}	
 	
 	public void dumpToFile( Stock stock, StringBuilder answer ) throws Exception {
 
-		if( this.cacheFolder == null ) {
+		if( this.cacheSubFolder == null ) {
 			// no dump
 			return;
 		}
@@ -33,17 +76,19 @@ public abstract class ResponseHandlerTemplate {
 		}
 
 		// create folder if doesn't exist ...		
-		Files.createDirectories(Paths.get( this.cacheFolder ));
+		Files.createDirectories(Paths.get( this.cacheSubFolder ));
 		
 		// output to file
-		String destination = this.cacheFolder + "/" + dumpFilename;		
-        System.out.println( String.format( "\tdumped into %s", dumpFilename ));                
+		String destination = this.context.rootFolder + '/' + cacheSubFolder + "/" + dumpFilename;		
+        System.out.println( String.format( "response dumped into %s", (cacheSubFolder + "/" + dumpFilename)));                
         Files.write( Paths.get( destination ), answer.toString().getBytes() );
 	}	
 	
 	public boolean customProcess( Stock stock, StringBuilder response ) throws Exception { return false; }
 	
-	public void process( Stock stock, StringBuilder response, boolean fromCache ) throws Exception {
+	public void process( Context context, Stock stock, StringBuilder response, boolean fromCache ) throws Exception {
+		
+		this.context = context;
 		
 		if( response == null ) {
 			return;

@@ -67,7 +67,7 @@ public class TargetServer {
 	public void applyCookies( URLConnection urlConnection ) {
 		
 		CookieStore cookieStore = (CookieStore) cookieManager.getCookieStore();	
-	
+			
 		List<HttpCookie> cookieList = cookieStore.getCookies();
 		
 		if( cookieList.size() < 1 ) {
@@ -84,6 +84,12 @@ public class TargetServer {
 		cookieHeader.deleteCharAt(cookieHeader.length() - 1);
 
 		urlConnection.setRequestProperty("Cookie", cookieHeader.toString());
+	}
+	
+	public void purgeCookieStore() {
+		
+		CookieStore cookieStore = (CookieStore) cookieManager.getCookieStore();		
+		cookieStore.removeAll();
 	}
 	
 	public String getBaseUrl() {

@@ -4,8 +4,7 @@ import java.util.ArrayList;
 import java.util.function.Consumer;
 
 public class PatternFinder {
-	
-	
+
 	boolean locate = false;
 	ArrayList<String> contextPatterns = new ArrayList<String>();
 	
@@ -55,6 +54,12 @@ public class PatternFinder {
 		int posleft  = raw.indexOf( leftPattern, currentPos );
 		int posright = raw.indexOf( rightPattern, posleft );
 				
+		if( posleft != -1 && posright != -1 && posright > posleft ) {
+			// OK
+		}
+		else {
+			return data;
+		}
 		
 		if( outOfContextPos != -1 && posright > outOfContextPos ) {
 			// out of context

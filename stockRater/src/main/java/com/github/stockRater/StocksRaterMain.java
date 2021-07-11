@@ -14,15 +14,19 @@ public class StocksRaterMain
 			Report report = new Report( context );
 			
 			// load the stocks reference CSV file
-			report.loadCsvData( "stocks.csv " );
+			report.loadCsvData( "eurolistABC.csv" );
 						
 			// retrieve needed data asking some websites
 			report.fetchData();
 
-			// generate report
-			report.output();
+			// compute ratio
+			report.computeAll();
+
+			// generate CSV			
+			report.flushCsvData();
 			
-			 System.out.println( "report generation OK" );
+			// generate report
+			report.outputReport();
 			
 		} catch (Exception e) {
 			
