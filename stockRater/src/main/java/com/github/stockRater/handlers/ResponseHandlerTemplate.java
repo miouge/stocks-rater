@@ -1,9 +1,13 @@
 package com.github.stockRater.handlers;
 
+import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.function.Function;
+
+import org.apache.commons.codec.binary.StringUtils;
+import org.apache.commons.io.FileUtils;
 
 import com.github.stockRater.beans.Context;
 import com.github.stockRater.beans.Stock;
@@ -12,6 +16,7 @@ import com.github.stockRater.beans.Stock;
 // import org.jsoup.nodes.Document;
 // import org.jsoup.nodes.Element;
 // import org.jsoup.select.Elements;
+// Document doc = Jsoup.parse( response.toString(), "UTF-8" );
 
 public abstract class ResponseHandlerTemplate {
 
@@ -81,7 +86,19 @@ public abstract class ResponseHandlerTemplate {
 		// output to file
 		String destination = this.context.rootFolder + '/' + cacheSubFolder + "/" + dumpFilename;		
         System.out.println( String.format( "response dumped into %s", (cacheSubFolder + "/" + dumpFilename)));                
-        Files.write( Paths.get( destination ), answer.toString().getBytes() );
+        //Files.write( Paths.get( destination ), answer.toString().getBytes() );
+
+        //Files.newBufferedReader(Paths.get( destination ), "ISO-8859-15");
+        
+        FileUtils.writeStringToFile(new File( destination ), answer.toString(), "ISO-8859-1" );
+        
+        /*
+        byte[] bytes = StringUtils.getBytesUtf8(answer.toString());         
+        String utf8EncodedString = StringUtils.newStringUtf8(bytes);        
+        File f = new File( destination ); 
+        FileUtils.writeStringToFile(f, utf8EncodedString, "UTF-8");
+        */
+        
 	}	
 	
 	public boolean customProcess( Stock stock, StringBuilder response ) throws Exception { return false; }

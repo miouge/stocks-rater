@@ -35,7 +35,7 @@ public class PatternFinder {
 			
 			for( String contextPattern : contextPatterns ) {
 			
-				int pos = raw.indexOf( contextPattern, 0 );
+				int pos = raw.indexOf( contextPattern, currentPos );
 				if( pos == -1 ) {
 					// not found
 					return data;

@@ -5,10 +5,10 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.TreeMap;
 
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.CreationHelper;
@@ -23,10 +23,9 @@ import com.github.stockRater.beans.Stock;
 import com.github.stockRater.beans.TargetServer;
 import com.github.stockRater.handlers.AbcSearchHandler;
 import com.github.stockRater.handlers.AbcSocieteHandler;
-import com.github.stockRater.handlers.AlphaSearchHandler;
 import com.github.stockRater.handlers.TSFinancialDataHandler;
-import com.github.stockRater.handlers.TSSocieteHandler;
 import com.github.stockRater.handlers.TSSearchIsinHandler;
+import com.github.stockRater.handlers.TSSocieteHandler;
 import com.github.stockRater.handlers.ZbFondamentalHandler;
 import com.github.stockRater.handlers.ZbSearchHandler;
 import com.opencsv.CSVParser;
@@ -218,6 +217,16 @@ public class Report {
 			stock.avgRNPG = stock.histoRNPG.stream().mapToLong(Long::longValue).average().getAsDouble();
 			//System.out.println( String.format( "avg RNPDG = %.2f K€ ", stock.avgRNPG ));
 		}
+		
+		if( stock.histoEBIT != null && stock.histoEBIT.size() > 0 ) {
+			
+			for( int i = 0 ; i < stock.histoEBIT.size() ; i++ ) {			
+				//System.out.println( String.format( "histoEBIT [%d] = %d K€ ", i, stock.histoEBIT.get(i) ));
+			}
+			
+			stock.avgEBIT = stock.histoEBIT.stream().mapToDouble( i -> i ).average().getAsDouble();
+			//System.out.println( String.format( "avg EBIT = %.2f M€ ", stock.avgEBIT ));
+		}		
 
 		if( stock.lastQuote != null && stock.sharesCount != null && stock.avgRNPG != null && stock.avgRNPG > 0 ) {
 
@@ -235,9 +244,22 @@ public class Report {
 			}
 		}
 		
+		if( stock.histoVE != null && stock.histoVE.size() > 0 && stock.avgEBIT != null ) {
+			
+			if( stock.avgEBIT >= 0 ) {
+				
+				Double lastVE = stock.histoVE.get(stock.histoVE.size()-1);
+				stock.ratioVeOverEBIT = lastVE / stock.avgEBIT; 
+			}
+		}
+		
+		
+		
 		if( ratings.size() > 0 ) {
 			stock.rating = ratings.stream().mapToDouble( i -> i ).average().getAsDouble();
 		}
+		
+		
 		
 	}	
 	
@@ -418,7 +440,8 @@ public class Report {
 		// 
 
 		// retrieve Zone Bourse fondamentaux
-		// ebit (résultat d'exploitation)		
+		// ebit (résultat d'exploitation)
+		// dette nette ou trésorerie nette
 		// free-cash flow		
 		this.stocks.forEach( stock -> {	
 			if( stock.zbSuffix != null ) {
@@ -428,6 +451,7 @@ public class Report {
 					theApi.stock = stock;
 					theApi.handler = new ZbFondamentalHandler();
 					theApi.handler.cacheSubFolder = "/cache/zb-fondamentaux";
+					theApi.charset = StandardCharsets.ISO_8859_1;
 				});			
 				api.perform( zoneBourse );
 			}
@@ -599,29 +623,29 @@ public class Report {
 		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).isin ); }
 		    
 		    // elligible PEA
-		    column++;
-		    sheet.getRow(0).createCell( column ).setCellValue( (String) "PEA" );
-		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).withinPEA ); }
+//		    column++;
+//		    sheet.getRow(0).createCell( column ).setCellValue( (String) "PEA" );
+//		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).withinPEA ); }
 		    
 		    // MNEMO		    
-		    column++;
-		    sheet.getRow(0).createCell( column ).setCellValue( (String) "Mnemo" );
-		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).mnemo ); }
+//		    column++;
+//		    sheet.getRow(0).createCell( column ).setCellValue( (String) "Mnemo" );
+//		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).mnemo ); }
 
 		    // Nombre d'actions
 		    column++;
-		    sheet.getRow(0).createCell( column ).setCellValue( (String) "Share Count Avg" );
+		    sheet.getRow(0).createCell( column ).setCellValue( (String) "Share Count" );
 		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).sharesCount ); }
 		    
 		    // Nombre d'actions
-		    column++;
-		    sheet.getRow(0).createCell( column ).setCellValue( (String) "Share Count (ABC)" );
-		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).sharesCountABC ); }
+//		    column++;
+//		    sheet.getRow(0).createCell( column ).setCellValue( (String) "Share Count (ABC)" );
+//		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).sharesCountABC ); }
 
 		    // Nombre d'actions
-		    column++;
-		    sheet.getRow(0).createCell( column ).setCellValue( (String) "Share Count (TS)" );
-		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).sharesCountTS ); }
+//		    column++;
+//		    sheet.getRow(0).createCell( column ).setCellValue( (String) "Share Count (TS)" );
+//		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).sharesCountTS ); }
 		    
 		    // lastQuote		    
 		    column++;
@@ -658,37 +682,42 @@ public class Report {
 		    sheet.getRow(0).createCell( column ).setCellValue( (String) "5y-Avg PER" );
 		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).avg5yPER ); }
 
-		    // Custom Rating
+		    // VE / EBIT
 		    column++;
-		    sheet.getRow(0).createCell( column ).setCellValue( (String) "Investment Rating" );
-		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).rating ); }
+		    sheet.getRow(0).createCell( column ).setCellValue( (String) "VE/EBIT" );
+		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).ratioVeOverEBIT ); }
+		    
+		    // Custom Rating
+//		    column++;
+//		    sheet.getRow(0).createCell( column ).setCellValue( (String) "Investment Rating" );
+//		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).rating ); }
  
 		    // ---------------- Web Sites Suffix and URL ...
 		    
 		    // trading Sat Suffix
-		    column++;
-		    sheet.getRow(0).createCell( column ).setCellValue( (String) "Yahoo Suffix" );
-		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).yahooSuffix ); }
+//		    column++;
+//		    sheet.getRow(0).createCell( column ).setCellValue( (String) "Yahoo Suffix" );
+//		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).yahooSuffix ); }
 
 		    // ABC Bourse Suffix
-		    column++;
-		    sheet.getRow(0).createCell( column ).setCellValue( (String) "ABC Bourse Suffix" );
-		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).abcSuffix ); }
+//		    column++;
+//		    sheet.getRow(0).createCell( column ).setCellValue( (String) "ABC Bourse Suffix" );
+//		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).abcSuffix ); }
 		    		    
 		    // Zone Bourse Suffix
-		    column++;
-		    sheet.getRow(0).createCell( column ).setCellValue( (String) "Zone Bourse Suffix" );
-		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).zbSuffix ); }		    
+//		    column++;
+//		    sheet.getRow(0).createCell( column ).setCellValue( (String) "Zone Bourse Suffix" );
+//		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).zbSuffix ); }		    
 		    
 		    // Boursorama Suffix
-		    column++;
-		    sheet.getRow(0).createCell( column ).setCellValue( (String) "Boursorama Suffix" );
-		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).bmaSuffix ); }
-		    
+//		    column++;
+//		    sheet.getRow(0).createCell( column ).setCellValue( (String) "Boursorama Suffix" );
+//		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).bmaSuffix ); }
+//		    
 		    // trading Sat Suffix
-		    column++;
-		    sheet.getRow(0).createCell( column ).setCellValue( (String) "TradingSat Suffix" );
-		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).tradingSatUrlSuffix ); }
+//		    column++;
+//		    sheet.getRow(0).createCell( column ).setCellValue( (String) "TradingSat Suffix" );
+//		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).tradingSatUrlSuffix ); }
 		    
 		    // trading Sat URL
 		    column++;

@@ -1,8 +1,6 @@
 package com.github.stockRater.handlers;
 
 import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Function;
 
 import com.github.stockRater.beans.Stock;
 

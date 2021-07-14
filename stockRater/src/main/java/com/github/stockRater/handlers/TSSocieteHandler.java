@@ -34,6 +34,15 @@ public class TSSocieteHandler extends ResponseHandlerTemplate {
 		}); 		
 		data = pf.find().replace( "&nbsp;", "" ).replace( "€", "" ).trim(); 
 		if( data.equals( "-" ) == false ) { stock.lastQuote = Double.parseDouble( data ); }
+				
+		pf = new PatternFinder( response, thePf -> {
+
+			thePf.contextPatterns.add( "Ratio d'endettement" );
+			thePf.leftPattern = "<div class=\"item-data\">";
+			thePf.rightPattern = "</div>";
+		}); 		
+		data = pf.find().replace( "%", "" ).replace( "&nbsp;", "" ).trim();
+		if( data.equals( "-" ) == false ) { stock.endettement = Double.parseDouble( data ); }
 		
 //		pf = new PatternFinder( response, thePf -> {
 //
@@ -44,15 +53,6 @@ public class TSSocieteHandler extends ResponseHandlerTemplate {
 //		data = pf.find().replace( "&nbsp;", "" ).trim(); 
 //		if( data.equals( "-" ) == false ) { stock.capitauxPropres = Long.parseLong( data ) / 1000; } // en millier d'euro dans la page
 //
-		
-//		pf = new PatternFinder( response, thePf -> {
-//
-//			thePf.contextPatterns.add( "Ratio d'endettement" );
-//			thePf.leftPattern = "<div class=\"item-data\">";
-//			thePf.rightPattern = "</div>";
-//		}); 		
-//		data = pf.find().replace( "%", "" ).replace( "&nbsp;", "" ).trim();
-//		if( data.equals( "-" ) == false ) { stock.endettement = Double.parseDouble( data ); }
 		
 		return true;
 	}

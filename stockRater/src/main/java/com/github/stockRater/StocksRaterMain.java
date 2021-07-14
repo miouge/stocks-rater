@@ -14,6 +14,8 @@ public class StocksRaterMain
 			Report report = new Report( context );
 			
 			// load the stocks reference CSV file
+			
+			//report.loadCsvData( "onlyVICAT.csv"   );
 			report.loadCsvData( "eurolistABC.csv" );
 						
 			// retrieve needed data asking some websites

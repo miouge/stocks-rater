@@ -54,14 +54,23 @@ public class Stock {
 	// Compte de resultat	
 	
 	public ArrayList<Long> histoRNPG;
+	public Double avgRNPG;
+	
 	public ArrayList<Long> histoCP;
+	
 	public ArrayList<Double> histoEBIT;
+	public Double avgEBIT;
+	
 	public ArrayList<Double> histoNetDebt; // Dette nette
 	public ArrayList<Double> histoNetTres; // Trésorerie Nette
-	public Double avgRNPG;
+	public ArrayList<Double> histoVE; // Valeur d'entreprise
+	
+	
+	
 	public Double avg5yPER;
 	public Double ratioQuoteBV; // ration cours / capitaux propres par action
-	public Double vE; // Valeur d'entreprise
+	public Double ratioVeOverEBIT; // ration VE / EBIT
+	
 
 	// Dividende
 	

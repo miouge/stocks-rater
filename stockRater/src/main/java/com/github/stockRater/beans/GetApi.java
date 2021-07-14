@@ -1,10 +1,12 @@
 package com.github.stockRater.beans;
 
 import java.io.BufferedReader;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -21,6 +23,8 @@ public class GetApi  {
 	public String method; // "GET", ...
 	public Context context;
 	public boolean useCache = false;
+	
+	public Charset charset = StandardCharsets.UTF_8;
 	
 	public Stock stock;
 	public Map<String,String> parameters; 
@@ -97,7 +101,7 @@ public class GetApi  {
 					// System.out.println("response is already present in cache folder");
 	
 					// load the file then call the handler directly
-		            List<String> content = Files.readAllLines( path, StandardCharsets.UTF_8);
+		            List<String> content = Files.readAllLines( path, charset );
 		            content.forEach( line -> response.append( line ) );
 		            useCache = true;
 				}
@@ -132,13 +136,40 @@ public class GetApi  {
 					//target.traceCookieStoreContent();
 					
 					System.err.println( String.format( "%s %s", this.method, urlString ));
-					
-					connection.getContent();
+															
+					// Object content = connection.getContent();					
+					// String encoding = connection.getContentEncoding();
 
-					status = connection.getResponseCode();	
+					status = connection.getResponseCode();
 					
+					long charCount = 0;
 					if( status == 200 ) {
-									
+		
+						try( InputStream is = connection.getInputStream() )
+						{
+						    int BUFFER_SIZE = 8192;
+						    //String encoding = "ISO-8859-1"; // ISO Latin Alphabet No. 1, a.k.a. ISO-LATIN-1
+						    //String encoding = "UTF-8";    // Eight-bit UCS Transformation Format	
+						    String encoding = charset.toString();
+
+						    BufferedReader br = new BufferedReader( new InputStreamReader( is, encoding ), BUFFER_SIZE );
+						    String str;
+						    while( (str = br.readLine()) != null )
+						    {
+						    	// System.out.println( str );
+						    	
+						    	charCount += str.length();
+						    	response.append( str );
+						    }
+						    
+					    	System.out.println( String.format( "GET %d character(s)", charCount ));
+
+						} catch (Exception e) {
+
+							e.printStackTrace();
+						}
+						
+						/*
 						BufferedReader in = new BufferedReader( new InputStreamReader( connection.getInputStream() ) );
 							
 						do {
@@ -150,7 +181,8 @@ public class GetApi  {
 						}
 						while( true );
 						in.close();
-		
+						*/
+
 					} else {
 								
 						System.err.println( String.format( "%s %s", this.method, urlString ));
