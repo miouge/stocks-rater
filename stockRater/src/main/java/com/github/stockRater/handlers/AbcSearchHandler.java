@@ -2,7 +2,7 @@ package com.github.stockRater.handlers;
 
 import com.github.stockRater.beans.Stock;
 
-public class ABCParseSearched extends ResponseHandlerTemplate {
+public class AbcSearchHandler extends ResponseHandlerTemplate {
 
 	@Override
 	public String getDumpFilename( Stock stock ) {

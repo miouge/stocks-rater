@@ -8,7 +8,7 @@ import com.github.stockRater.beans.Stock;
 import com.github.stockRater.beans.jsonMapping.AlphaMatch;
 import com.github.stockRater.beans.jsonMapping.AlphaSearched;
 
-public class AlphaSearchSymbolHandler extends ResponseHandlerTemplate {
+public class AlphaSearchHandler extends ResponseHandlerTemplate {
 
 	@Override
 	public String getDumpFilename( Stock stock ) {

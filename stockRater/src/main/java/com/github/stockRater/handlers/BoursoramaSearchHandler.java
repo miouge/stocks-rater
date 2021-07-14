@@ -2,7 +2,7 @@ package com.github.stockRater.handlers;
 
 import com.github.stockRater.beans.Stock;
 
-public class BoursoramaParseSearchedHandler extends ResponseHandlerTemplate {
+public class BoursoramaSearchHandler extends ResponseHandlerTemplate {
 
 	@Override
 	public String getDumpFilename( Stock stock ) {

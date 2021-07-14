@@ -21,14 +21,14 @@ import com.github.stockRater.beans.Context;
 import com.github.stockRater.beans.GetApi;
 import com.github.stockRater.beans.Stock;
 import com.github.stockRater.beans.TargetServer;
-import com.github.stockRater.handlers.ABCParseSearched;
-import com.github.stockRater.handlers.ABCParseSociete;
-import com.github.stockRater.handlers.AlphaSearchSymbolHandler;
-import com.github.stockRater.handlers.TSParseFinancialData;
-import com.github.stockRater.handlers.TSParseSociete;
+import com.github.stockRater.handlers.AbcSearchHandler;
+import com.github.stockRater.handlers.AbcSocieteHandler;
+import com.github.stockRater.handlers.AlphaSearchHandler;
+import com.github.stockRater.handlers.TSFinancialDataHandler;
+import com.github.stockRater.handlers.TSSocieteHandler;
 import com.github.stockRater.handlers.TSSearchIsinHandler;
-import com.github.stockRater.handlers.ZbFondamentaux;
-import com.github.stockRater.handlers.ZbSearchSociete;
+import com.github.stockRater.handlers.ZbFondamentalHandler;
+import com.github.stockRater.handlers.ZbSearchHandler;
 import com.opencsv.CSVParser;
 import com.opencsv.CSVParserBuilder;
 import com.opencsv.CSVReader;
@@ -332,7 +332,7 @@ public class Report {
 					
 					theApi.urlSuffix = String.format( "/marches/symbol_retrieve/%s", stock.isin );
 					theApi.stock = stock;
-					theApi.handler = new ABCParseSearched();
+					theApi.handler = new AbcSearchHandler();
 					theApi.handler.cacheSubFolder = "/cache/abc-searched";
 				});			
 				api.perform( abcBourse );
@@ -348,7 +348,7 @@ public class Report {
 					
 					theApi.urlSuffix = String.format( "/analyses/chiffres/%s", stock.abcSuffix );
 					theApi.stock = stock;
-					theApi.handler = new ABCParseSociete();
+					theApi.handler = new AbcSocieteHandler();
 					theApi.handler.cacheSubFolder = "/cache/abc-societe";
 				});			
 				api.perform( abcBourse );
@@ -375,7 +375,7 @@ public class Report {
 					
 					theApi.urlSuffix = stock.tradingSatUrlSuffix + "societe.html";
 					theApi.stock = stock;
-					theApi.handler = new TSParseSociete();
+					theApi.handler = new TSSocieteHandler();
 					theApi.handler.cacheSubFolder = "/cache/ts-societe";
 				});			
 				api.perform( tradingSat );
@@ -392,7 +392,7 @@ public class Report {
 					
 					theApi.urlSuffix = stock.tradingSatUrlSuffix + "donnees-financieres.html";
 					theApi.stock = stock;
-					theApi.handler = new TSParseFinancialData();
+					theApi.handler = new TSFinancialDataHandler();
 					theApi.handler.cacheSubFolder = "/cache/ts-donnees-financieres";
 				});			
 				api.perform( tradingSat );
@@ -408,7 +408,7 @@ public class Report {
 				
 				theApi.urlSuffix = String.format( "/recherche/instruments/?aComposeInputSearch=s_%S", stock.isin );
 				theApi.stock = stock;
-				theApi.handler = new ZbSearchSociete();
+				theApi.handler = new ZbSearchHandler();
 				theApi.handler.cacheSubFolder = "/cache/zb-searched";
 			});			
 			api.perform( zoneBourse );
@@ -426,7 +426,7 @@ public class Report {
 					
 					theApi.urlSuffix = String.format( "/cours/action/%s/fondamentaux/", stock.zbSuffix );
 					theApi.stock = stock;
-					theApi.handler = new ZbFondamentaux();
+					theApi.handler = new ZbFondamentalHandler();
 					theApi.handler.cacheSubFolder = "/cache/zb-fondamentaux";
 				});			
 				api.perform( zoneBourse );

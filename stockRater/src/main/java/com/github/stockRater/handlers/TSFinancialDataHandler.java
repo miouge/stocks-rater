@@ -6,7 +6,7 @@ import java.util.function.Function;
 
 import com.github.stockRater.beans.Stock;
 
-public class TSParseFinancialData extends ResponseHandlerTemplate {
+public class TSFinancialDataHandler extends ResponseHandlerTemplate {
 
 	@Override
 	public String getDumpFilename( Stock stock ) {

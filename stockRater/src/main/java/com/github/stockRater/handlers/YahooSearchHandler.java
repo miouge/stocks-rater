@@ -2,7 +2,7 @@ package com.github.stockRater.handlers;
 
 import com.github.stockRater.beans.Stock;
 
-public class YahooParseCashFlowHandler extends ResponseHandlerTemplate {
+public class YahooSearchHandler extends ResponseHandlerTemplate {
 
 	@Override
 	public String getDumpFilename( Stock stock ) {
@@ -17,20 +17,20 @@ public class YahooParseCashFlowHandler extends ResponseHandlerTemplate {
 		
 		// System.out.println( String.format( "customProcess for %s ...", stock.name ));		
 		
-//		PatternFinder pf;
-//		String data;
-//
-//		pf = new PatternFinder( response, thePf -> {
-//
-//			thePf.contextPatterns.add( "exchange" );
-//			thePf.contextPatterns.add( "EQUITY" );			
-//			thePf.outOfContextPattern = "news";
-//			
-//			thePf.leftPattern = "symbol\":\"";
-//			thePf.rightPattern = "\",";
-//		}); 		
-//		data = pf.find().trim(); 
-//		stock.yahooSuffix = data;
+		PatternFinder pf;
+		String data;
+
+		pf = new PatternFinder( response, thePf -> {
+
+			thePf.contextPatterns.add( "exchange" );
+			thePf.contextPatterns.add( "EQUITY" );			
+			thePf.outOfContextPattern = "news";
+			
+			thePf.leftPattern = "symbol\":\"";
+			thePf.rightPattern = "\",";
+		}); 		
+		data = pf.find().trim(); 
+		stock.yahooSuffix = data;
 
 		return success;
 	}
