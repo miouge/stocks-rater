@@ -6,7 +6,6 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.function.Function;
 
-import org.apache.commons.codec.binary.StringUtils;
 import org.apache.commons.io.FileUtils;
 
 import com.github.stockRater.beans.Context;
@@ -28,7 +27,7 @@ public abstract class ResponseHandlerTemplate {
 	
 	public String getDumpFilename( Stock stock ) { return null;	}
 	
-	protected void addIfNonNull( String data, Function<String,Object> converter, List<Long> list ) {
+	protected void addIfNonNull( String data, Function<String, Object> converter, List<Long> list ) {
 		
 		if( data == null ) {
 			return;
@@ -67,7 +66,7 @@ public abstract class ResponseHandlerTemplate {
 		}
 	}	
 	
-	public void dumpToFile( Stock stock, StringBuilder answer ) throws Exception {
+	public void dumpToFile( Stock stock, StringBuilder answer, String charset ) throws Exception {
 
 		if( this.cacheSubFolder == null ) {
 			// no dump
@@ -85,12 +84,8 @@ public abstract class ResponseHandlerTemplate {
 		
 		// output to file
 		String destination = this.context.rootFolder + '/' + cacheSubFolder + "/" + dumpFilename;		
-        System.out.println( String.format( "response dumped into %s", (cacheSubFolder + "/" + dumpFilename)));                
-        //Files.write( Paths.get( destination ), answer.toString().getBytes() );
-
-        //Files.newBufferedReader(Paths.get( destination ), "ISO-8859-15");
-        
-        FileUtils.writeStringToFile(new File( destination ), answer.toString(), "ISO-8859-1" );
+        System.out.println( String.format( "response dumped into %s", (cacheSubFolder + "/" + dumpFilename)));
+        FileUtils.writeStringToFile( new File( destination ), answer.toString(), charset ); // "ISO-8859-1" );
         
         /*
         byte[] bytes = StringUtils.getBytesUtf8(answer.toString());         
@@ -103,7 +98,7 @@ public abstract class ResponseHandlerTemplate {
 	
 	public boolean customProcess( Stock stock, StringBuilder response ) throws Exception { return false; }
 	
-	public void process( Context context, Stock stock, StringBuilder response, boolean fromCache ) throws Exception {
+	public void process( Context context, Stock stock, StringBuilder response, boolean cacheLoaded, String charset ) throws Exception {
 		
 		this.context = context;
 		
@@ -111,8 +106,8 @@ public abstract class ResponseHandlerTemplate {
 			return;
 		}
 			
-		if( fromCache != true ) {
-			dumpToFile( stock, response );
+		if( cacheLoaded != true ) {
+			dumpToFile( stock, response, charset );
 		}
 		
 		try {

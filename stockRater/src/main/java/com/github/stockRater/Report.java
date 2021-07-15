@@ -165,11 +165,11 @@ public class Report {
 		
 		// figure out the correct share count
 		ArrayList<Long> shareCounts = new ArrayList<Long>();
-		if( stock.sharesCountABC != null ) {
-			shareCounts.add( stock.sharesCountABC );
+		if( stock.abcSharesCount != null ) {
+			shareCounts.add( stock.abcSharesCount );
 		}
-		if( stock.sharesCountTS != null ) {
-			shareCounts.add( stock.sharesCountTS );
+		if( stock.tradingSatSharesCount != null ) {
+			shareCounts.add( stock.tradingSatSharesCount );
 		}
 		if( shareCounts.size() > 0 ) {
 		

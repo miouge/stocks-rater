@@ -1,76 +1,101 @@
 package com.github.stockRater.handlers;
 
 import java.util.ArrayList;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 public class PatternFinder {
 
-	boolean locate = false;
+	boolean located = false;
 	ArrayList<String> contextPatterns = new ArrayList<String>();
-	
-	String outOfContextPattern;
+
+	String outOfContextPattern = "";
 	int outOfContextPos = -1;
-	
+
 	String leftPattern = "";
 	String rightPattern = "";
-	
-	int currentPos  = 0;
-	
+
+	int currentPos = 0;
+
 	String raw;
 	
 	PatternFinder( StringBuilder sb, Consumer< PatternFinder> consumer ) {
-		consumer.accept( this );
-		 this.raw = sb.toString();
+		
+		this.raw = sb.toString();
+		consumer.accept( this ); // allow customizations
 	}
 	
-	String find() {
-		
-		String data = "-";
-		
-		if( locate == false ) {
+	Optional<String> findOptional() {
 			
-			if( outOfContextPattern != null ) {				
-				outOfContextPos = raw.indexOf( outOfContextPattern, 0 );
-			}			
-			
+		Optional<String> result = Optional.empty(); 
+				
+		if( this.leftPattern.length() == 0 ) {
+			System.err.println( "PatternFinder : badly initialized" );
+			return result;
+		}
+		if( this.rightPattern.length() == 0 ) {
+			System.err.println( "PatternFinder : badly initialized" );
+			return result;
+		}
+		
+		if( contextPatterns.size() > 0 && this.located == false ) {
+						
 			for( String contextPattern : contextPatterns ) {
-			
-				int pos = raw.indexOf( contextPattern, currentPos );
+
+				int pos = raw.indexOf( contextPattern, currentPos ); // at beginning currentPos = 0 
 				if( pos == -1 ) {
 					// not found
-					return data;
+					return result;
 				}
-				// continue search with next pattern but from this new postion
-				currentPos = pos;			
+
+				currentPos = pos;
+				// continue search with next pattern if any but from this new position
+			}
+
+			if( outOfContextPattern.length() > 0 ) {
+				outOfContextPos = raw.indexOf( outOfContextPattern, currentPos );
 			}
 									
 			if( currentPos <= 0 ) {
-				return data;
+				return result;
 			}
 			
-			locate = true;
+			this.located = true;
 		}
 
 		int posleft  = raw.indexOf( leftPattern, currentPos );
 		int posright = raw.indexOf( rightPattern, posleft );
 				
-		if( posleft != -1 && posright != -1 && posright > posleft ) {
+		if( posleft > 0 && posright > 0 && posright > posleft ) {
 			// OK
 		}
 		else {
-			return data;
+			return result;
 		}
 		
 		if( outOfContextPos != -1 && posright > outOfContextPos ) {
 			// out of context
+			return result;
 		}
 		else {
 
-			data = raw.substring( posleft + leftPattern.length(), posright).trim();				
+			String data = raw.substring( posleft + leftPattern.length(), posright).trim();				
 			currentPos = posright + rightPattern.length(); // to further use
+			result = Optional.of( data );
+			return result;
 		}
+	}
+
+	String find() {
 		
-		return data;
+		Optional<String> result = this.findOptional();
+		
+		if( result.isPresent() ) {
+			return result.get();
+		}
+		else {
+			return "-";
+		}
 	}
 	
 	@SuppressWarnings("unused")

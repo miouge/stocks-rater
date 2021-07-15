@@ -22,7 +22,10 @@ public class GetApi  {
 	public String urlSuffix;
 	public String method; // "GET", ...
 	public Context context;
-	public boolean useCache = false;
+	public boolean cacheLoaded = false;
+	
+    // ISO-8859-1 =  ISO Latin Alphabet No. 1, a.k.a. ISO-LATIN-1
+    // UTF-8      =  Eight-bit UCS Transformation Format	
 	
 	public Charset charset = StandardCharsets.UTF_8;
 	
@@ -66,13 +69,13 @@ public class GetApi  {
 
 		StringBuilder urlString = new StringBuilder();
 		boolean urlStringOK = false;
-		
-		try {		
-			
+
+		try {
+
 			if( this.urlSuffix == null || this.urlSuffix.isEmpty() ) {
 				throw new Exception( "urlSuffix is undefined");
 			}
-			
+
 			urlString = new StringBuilder( target.assembleUrl( this.urlSuffix ) );
 			this.useParameters( urlString, this.parameters );
 			urlStringOK = true;
@@ -103,16 +106,16 @@ public class GetApi  {
 					// load the file then call the handler directly
 		            List<String> content = Files.readAllLines( path, charset );
 		            content.forEach( line -> response.append( line ) );
-		            useCache = true;
+		            cacheLoaded = true;
 				}
 			}
 			
 		} catch ( Exception e ) {
 
-			System.err.println( String.format( "exception in cache detection of : <%s>", cacheFile ));
+			System.err.println( String.format( "exception in cache detection/loading of : <%s>", cacheFile ));
 		}
 		
-		if( useCache != true ) {
+		if( cacheLoaded != true ) {
 		
 			try {
 							
@@ -142,63 +145,51 @@ public class GetApi  {
 
 					status = connection.getResponseCode();
 					
-					long charCount = 0;
+					// long charCount = 0;
 					if( status == 200 ) {
 		
 						try( InputStream is = connection.getInputStream() )
 						{
 						    int BUFFER_SIZE = 8192;
-						    //String encoding = "ISO-8859-1"; // ISO Latin Alphabet No. 1, a.k.a. ISO-LATIN-1
-						    //String encoding = "UTF-8";    // Eight-bit UCS Transformation Format	
 						    String encoding = charset.toString();
 
-						    BufferedReader br = new BufferedReader( new InputStreamReader( is, encoding ), BUFFER_SIZE );
-						    String str;
-						    while( (str = br.readLine()) != null )
-						    {
-						    	// System.out.println( str );
-						    	
-						    	charCount += str.length();
-						    	response.append( str );
-						    }
+						    BufferedReader in = new BufferedReader( new InputStreamReader( is, encoding ), BUFFER_SIZE );
 						    
-					    	System.out.println( String.format( "GET %d character(s)", charCount ));
-
-						} catch (Exception e) {
-
-							e.printStackTrace();
-						}
-						
-						/*
-						BufferedReader in = new BufferedReader( new InputStreamReader( connection.getInputStream() ) );
-							
-						do {
-							String line = in.readLine();
-							if( line == null ) {
-								break;
+							do {
+								String line = in.readLine();
+								if( line == null ) {
+									break;
+								}
+								// charCount += line.length();
+								response.append( line );
 							}
-							response.append( line  + "\n" );
+							while( true );
+							in.close();
+						    
+					    	// System.out.println( String.format( "GET %d character(s)", charCount ));
+
+						} catch ( Exception e ) {
+							
+							e.printStackTrace();
+							throw e;
 						}
-						while( true );
-						in.close();
-						*/
 
 					} else {
-								
+
 						System.err.println( String.format( "%s %s", this.method, urlString ));
 						System.err.println( String.format( "\t=> HTTP code = <%-3d>", status ) );
 						// throw new Exception("unsuccessful call of url (HTTP code <> 200)");
 					}
 				}
 				finally {
-					
+
 					if( connection != null ) {
 						connection.disconnect();
 					}
 				}
 			}
 			catch( Exception e ) {
-				
+
 				System.err.println( String.format( "%s", e ) );
 			}
 		}
@@ -206,12 +197,12 @@ public class GetApi  {
 		if( response.length() > 0 ) {
 
 			try {
-				
-				this.handler.process( this.context, stock, response, useCache );
-				
-			} catch (Exception e) {
-				
-				System.err.println( String.format( "exception in handler : <%s> <%s>", stock.name, urlString.toString() ));				
+
+				this.handler.process( this.context, this.stock, response, this.cacheLoaded, this.charset.toString() );
+
+			} catch( Exception e ) {
+
+				System.err.println( String.format( "exception in handler : <%s> <%s>", stock.name, urlString.toString() ));
 			}
 		}
 	}

@@ -37,7 +37,7 @@ public class AbcSocieteHandler extends ResponseHandlerTemplate {
 		data = pf.find().toLowerCase().trim().replaceAll("\u00a0",""); // \u00a0 est l'espace insécable  
 
 		if( data.equals("-") == false ) {
-			stock.sharesCountABC = Long.parseLong(data);
+			stock.abcSharesCount = Long.parseLong(data);
 		}
 
 		return true;

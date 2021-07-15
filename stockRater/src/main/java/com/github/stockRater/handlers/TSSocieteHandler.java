@@ -23,7 +23,7 @@ public class TSSocieteHandler extends ResponseHandlerTemplate {
 			thePf.rightPattern = "</div>";
 		}); 		
 		data = pf.find().replace( "&nbsp;", "" ).trim(); 
-		if( data.equals( "-" ) == false ) { stock.sharesCountTS = Long.parseLong( data ); }
+		if( data.equals( "-" ) == false ) { stock.tradingSatSharesCount = Long.parseLong( data ); }
 		
 
 		pf = new PatternFinder( response, thePf -> {
