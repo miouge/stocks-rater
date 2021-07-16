@@ -1,5 +1,7 @@
 package com.github.stockRater.handlers;
 
+import java.util.ArrayList;
+
 import com.github.stockRater.beans.Stock;
 
 public class AbcSocieteHandler extends ResponseHandlerTemplate {
@@ -7,7 +9,7 @@ public class AbcSocieteHandler extends ResponseHandlerTemplate {
 	@Override
 	public String getDumpFilename( Stock stock ) {
 		
-		return "ABC-" + stock.isin + "-societe.html";		
+		return stock.mnemo + "-" + stock.isin + "-societe.html";
 	}
 
 	@Override
@@ -40,6 +42,33 @@ public class AbcSocieteHandler extends ResponseHandlerTemplate {
 			stock.abcSharesCount = Long.parseLong(data);
 		}
 
+		// ratio d'endettement
+		
+		pf = new PatternFinder( response, thePf -> {
+
+			thePf.contextPatterns.add( "<td class=\"allf\">Ratio d'endettement</td>" );
+			thePf.outOfContextPattern = "<td class=\"allf\">Effectif en fin d'année</td>";
+			thePf.leftPattern = "<td>";
+			thePf.rightPattern = "</td>";
+		});
+		
+		stock.histoDebtRatio = new ArrayList<Double>();	
+		
+		data = pf.find().replace( " ", "" ); // N-5
+		addDoubleIfNonNull( data, Double::parseDouble, stock.histoDebtRatio );
+
+		data = pf.find().replace( " ", "" ); // N-4
+		addDoubleIfNonNull( data, Double::parseDouble, stock.histoDebtRatio );
+
+		data = pf.find().replace( " ", "" ); // N-3
+		addDoubleIfNonNull( data, Double::parseDouble, stock.histoDebtRatio );
+
+		data = pf.find().replace( " ", "" ); // N-2
+		addDoubleIfNonNull( data, Double::parseDouble, stock.histoDebtRatio );
+
+		data = pf.find().replace( " ", "" ); // N-1
+		addDoubleIfNonNull( data, Double::parseDouble, stock.histoDebtRatio );
+		
 		return true;
 	}
 }

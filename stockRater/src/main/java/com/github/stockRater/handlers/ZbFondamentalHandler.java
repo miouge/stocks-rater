@@ -9,7 +9,7 @@ public class ZbFondamentalHandler extends ResponseHandlerTemplate {
 	@Override
 	public String getDumpFilename( Stock stock ) {
 		
-		return "Zb-" + stock.isin + "-fondamentaux.html";		
+		return stock.mnemo + "-" + stock.isin + "-fondamentaux.html";	
 	}
 
 	@Override

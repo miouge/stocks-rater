@@ -9,7 +9,7 @@ public class TSFinancialDataHandler extends ResponseHandlerTemplate {
 	@Override
 	public String getDumpFilename( Stock stock ) {
 		
-		return "TS-" + stock.isin + "-donnees-financieres.html";		
+		return stock.mnemo + "-" + stock.isin + "-donnees-financieres.html";
 	}
 	
 	@Override

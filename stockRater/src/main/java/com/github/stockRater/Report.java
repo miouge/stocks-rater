@@ -151,6 +151,240 @@ public class Report {
 	     writer.close();
 	}	
 	
+	public void fetchStockData( Stock stock ) throws Exception {
+		
+/*
+		TargetServer yahoo = new TargetServer();
+		yahoo.setBaseUrl( "https://" );
+			
+		// https://query2.finance.yahoo.com/v1/finance/search?q=FR0000120222&lang=en-US&region=US&quotesCount=6&newsCount=4&enableFuzzyQuery=false&quotesQueryId=tss_match_phrase_query&multiQuoteQueryId=multi_quote_single_token_query&newsQueryId=news_cie_vespa&enableCb=true&enableNavLinks=true&enableEnhancedTrivialQuery=true			
+		// https://query2.finance.yahoo.com/v1/finance/search?q=FR0000031577&lang=en-US&region=US&quotesCount=6&newsCount=0&enableFuzzyQuery=false&quotesQueryId=tss_match_phrase_query&multiQuoteQueryId=multi_quote_single_token_query&enableCb=true&enableEnhancedTrivialQuery=true
+		// retrieve Yahoo Finance custom company urlSuffix from ISIN code
+		{	
+			GetApi api = new GetApi( this.context, theApi -> {
+				
+				theApi.urlSuffix = String.format( "query2.finance.yahoo.com/v1/finance/search?q=%s&lang=en-US&region=US&quotesCount=6&newsCount=0&enableFuzzyQuery=false&quotesQueryId=tss_match_phrase_query&multiQuoteQueryId=multi_quote_single_token_query&enableCb=true&enableEnhancedTrivialQuery=true", stock.isin );
+				theApi.stock = stock;
+				theApi.handler = new YahooSearchIsinHandler();
+				theApi.handler.cacheSubFolder = "/cache/yahoo-searched";
+			});			
+			//yahoo.purgeCookieStore();
+			api.perform( yahoo );
+		}
+		
+		// https://fr.finance.yahoo.com/quote/VCT.PA/cash-flow		
+		// retrieve Free Cash Flow
+		
+		{	
+			GetApi api = new GetApi( this.context, theApi -> {
+				
+				theApi.urlSuffix = String.format( "fr.finance.yahoo.com/quote/%s/cash-flow", stock.yahooSuffix );
+				theApi.stock = stock;
+				theApi.handler = new YahooParseCashFlowHandler();
+				theApi.handler.cacheSubFolder = "/cache/yahoo-cashflow";
+			});			
+			//yahoo.purgeCookieStore();
+			api.perform( yahoo );
+		}
+*/		
+/*		
+		// https://www.boursorama.com/recherche/ajax?query=fr0000031775		
+		// retrieve Boursorama custom company urlSuffix from ISIN code
+		{	
+			GetApi api = new GetApi( this.context, theApi -> {
+				
+				theApi.urlSuffix = String.format( "/recherche/ajax?query=%s", stock.isin.toLowerCase() );
+				theApi.stock = stock;
+				theApi.handler = new BoursoramaParseSearchedHandler();
+				theApi.handler.cacheSubFolder = "/cache/bma-searched";
+			});			
+			api.perform( boursorama );
+		}
+		
+		// https://www.boursorama.com/cours/societe/profil/1rPVCT/
+		
+		if( stock.bmaSuffix != null ){	
+			GetApi api = new GetApi( this.context, theApi -> {
+				
+				theApi.urlSuffix = String.format( "/cours/societe/profil/%s/", stock.bmaSuffix );
+				theApi.stock = stock;
+				theApi.handler = new BoursoramaParseSocieteHandler();
+				theApi.handler.cacheSubFolder = "/cache/bma-societe";
+			});			
+			api.perform( boursorama );
+		}		
+*/		
+	}
+	
+	public void fetchData() throws Exception {
+
+
+		TargetServer tradingSat = new TargetServer();
+		tradingSat.setBaseUrl( "https://www.tradingsat.com" );
+		
+		TargetServer abcBourse = new TargetServer();
+		abcBourse.setBaseUrl( "https://www.abcbourse.com" );
+
+		TargetServer zoneBourse = new TargetServer();
+		zoneBourse.setBaseUrl( "https://www.zonebourse.com" );		
+
+		TargetServer boursorama = new TargetServer();
+		boursorama.setBaseUrl( "https://www.boursorama.com" );
+		
+		TargetServer alphavantage = new TargetServer();
+		alphavantage.setBaseUrl( "https://www.alphavantage.co" );
+		
+		// TODO : https://live.euronext.com/fr/product/equities/FR0000031775-XPAR
+		// pour la cotation et le min / max sur les 52 derniere semaines
+		
+		// https://www.abcbourse.com/marches/symbol_retrieve/<ISIN>
+		// retrieve ABC Bourse  custom company urlSuffix from ISIN code
+		this.stocks.forEach( stock -> {
+				GetApi api = new GetApi( this.context, theApi -> {
+					
+					theApi.urlSuffix = String.format( "/marches/symbol_retrieve/%s", stock.isin );
+					theApi.stock = stock;
+					theApi.handler = new AbcSearchHandler();
+					theApi.handler.cacheSubFolder = "/cache/abc-searched";
+				});			
+				api.perform( abcBourse );
+		});
+		
+		// https://www.abcbourse.com/analyses/chiffres/CNPp
+		// retrieve 
+		// within PEA 
+		// the share count
+		// last 5 debt ratio
+		this.stocks.forEach( stock -> {
+			if( stock.abcSuffix != null ) {	
+				GetApi api = new GetApi( this.context, theApi -> {
+					
+					theApi.urlSuffix = String.format( "/analyses/chiffres/%s", stock.abcSuffix );
+					theApi.stock = stock;
+					theApi.handler = new AbcSocieteHandler();
+					theApi.handler.cacheSubFolder = "/cache/abc-societe";
+				});			
+				api.perform( abcBourse );
+			}
+		});
+				
+		// retrieve Trading Sat custom company urlSuffix from ISIN code
+		this.stocks.forEach( stock -> {	
+			GetApi api = new GetApi( this.context, theApi -> {
+				
+				theApi.urlSuffix = String.format( "/async/json/instrument-search.php?term=%s", stock.isin );
+				theApi.stock = stock;
+				theApi.handler = new TSSearchIsinHandler();
+				theApi.handler.cacheSubFolder = "/cache/ts-searched";
+			});			
+			api.perform( tradingSat );
+		});
+		
+		// https://www.tradingsat.com/vicat-FR0000031775/societe.html
+		// retrieve action count
+		this.stocks.forEach( stock -> {	
+			if( stock.tradingSatUrlSuffix != null ) {
+				GetApi api = new GetApi( this.context, theApi -> {
+					
+					theApi.urlSuffix = stock.tradingSatUrlSuffix + "societe.html";
+					theApi.stock = stock;
+					theApi.handler = new TSSocieteHandler();
+					theApi.handler.cacheSubFolder = "/cache/ts-societe";
+				});			
+				api.perform( tradingSat );
+			}
+		});
+		
+		// https://www.tradingsat.com/vicat-FR0000031775/donnees-financieres.html
+		// retrieve financial data
+		// last 5 years RNPG
+		
+		this.stocks.forEach( stock -> {	
+			if( stock.tradingSatUrlSuffix != null ) {
+				GetApi api = new GetApi( this.context, theApi -> {
+					
+					theApi.urlSuffix = stock.tradingSatUrlSuffix + "donnees-financieres.html";
+					theApi.stock = stock;
+					theApi.handler = new TSFinancialDataHandler();
+					theApi.handler.cacheSubFolder = "/cache/ts-donnees-financieres";
+				});			
+				api.perform( tradingSat );
+			}
+		});
+		
+		// https://www.zonebourse.com/recherche/instruments/?aComposeInputSearch=s_FR		
+
+		// retrieve Zone Bourse custom company urlSuffix from ISIN code
+		this.stocks.forEach( stock -> {	
+			GetApi api = new GetApi( this.context, theApi -> {
+				
+				theApi.urlSuffix = String.format( "/recherche/instruments/?aComposeInputSearch=s_%S", stock.isin );
+				theApi.stock = stock;
+				theApi.handler = new ZbSearchHandler();
+				theApi.handler.cacheSubFolder = "/cache/zb-searched";
+			});			
+			api.perform( zoneBourse );
+		});
+		
+		// https://www.zonebourse.com/cours/action/VICAT-5009/fondamentaux/
+
+		// retrieve Zone Bourse fondamentaux
+		// ebit (résultat d'exploitation)
+		// dette nette ou trésorerie nette
+		// free-cash flow		
+		this.stocks.forEach( stock -> {	
+			if( stock.zbSuffix != null ) {
+				GetApi api = new GetApi( this.context, theApi -> {
+					
+					theApi.urlSuffix = String.format( "/cours/action/%s/fondamentaux/", stock.zbSuffix );
+					theApi.stock = stock;
+					theApi.handler = new ZbFondamentalHandler();
+					theApi.handler.cacheSubFolder = "/cache/zb-fondamentaux";
+					theApi.charset = StandardCharsets.ISO_8859_1;
+				});			
+				api.perform( zoneBourse );
+			}
+		});
+		
+		// retrieve Alphavantage custom company symbol from name searched
+		// https://www.alphavantage.co/query?function=SYMBOL_SEARCH&keywords=Exel&apikey=48SR4TNP9V41IEGQhttps://www.google.com		
+		// TODO seulement pour les actions PEA
+		// seulement si un seul match est pour Paris
+		// le stocker dans le CSV d'origine
+		
+//		this.stocks.forEach( stock -> {
+//			
+//			if( stock.withinPEA == null ) return;
+//			if( stock.withinPEA == false ) return;
+//			if( stock.aphaSymbol != null && stock.aphaSymbol.length() > 0 ) return;
+//			
+//			String[] parts = stock.name.split( " " );
+//			if( parts.length < 1 ) {
+//				return;
+//			}
+//			GetApi api = new GetApi( this.context, theApi -> {
+//				
+//				theApi.parameters = new TreeMap();
+//				theApi.parameters.put("function", "SYMBOL_SEARCH");
+//				theApi.parameters.put("apikey", "48SR4TNP9V41IEGQ");
+//				theApi.parameters.put("keywords", parts[0] );
+//				theApi.urlSuffix = String.format( "/query" );
+//				theApi.stock = stock;
+//				theApi.handler = new AlphaSearchSymbolHandler();
+//				theApi.handler.cacheSubFolder = "/cache/alpha-searched";
+//			});			
+//			api.perform( alphavantage );
+//			if( api.useCache == false ) { 
+//				try {
+//					Thread.sleep(  12000 );
+//				} catch (InterruptedException e) {
+//					// TODO Auto-generated catch block
+//					e.printStackTrace();
+//				}
+//			}
+//		});
+	}
+	
 	public void compute( Stock stock ) {
 		
 		//System.out.println( String.format( "compute for stock <%s> ...", stock.name ));
@@ -161,8 +395,7 @@ public class Report {
 //		}
 		
 		ArrayList<Double> ratings = new ArrayList<Double>();
-		
-		
+				
 		// figure out the correct share count
 		ArrayList<Long> shareCounts = new ArrayList<Long>();
 		if( stock.abcSharesCount != null ) {
@@ -253,249 +486,16 @@ public class Report {
 			}
 		}
 		
+		if( stock.histoDebtRatio != null && stock.histoDebtRatio.size() > 0  ) {
+
+			stock.debtRatio = stock.histoDebtRatio.get(stock.histoDebtRatio.size()-1);
+		}
 		
 		
 		if( ratings.size() > 0 ) {
 			stock.rating = ratings.stream().mapToDouble( i -> i ).average().getAsDouble();
 		}
-		
-		
-		
 	}	
-	
-	public void fetchStockData( Stock stock ) throws Exception {
-		
-/*
-		TargetServer yahoo = new TargetServer();
-		yahoo.setBaseUrl( "https://" );
-			
-		// https://query2.finance.yahoo.com/v1/finance/search?q=FR0000120222&lang=en-US&region=US&quotesCount=6&newsCount=4&enableFuzzyQuery=false&quotesQueryId=tss_match_phrase_query&multiQuoteQueryId=multi_quote_single_token_query&newsQueryId=news_cie_vespa&enableCb=true&enableNavLinks=true&enableEnhancedTrivialQuery=true			
-		// https://query2.finance.yahoo.com/v1/finance/search?q=FR0000031577&lang=en-US&region=US&quotesCount=6&newsCount=0&enableFuzzyQuery=false&quotesQueryId=tss_match_phrase_query&multiQuoteQueryId=multi_quote_single_token_query&enableCb=true&enableEnhancedTrivialQuery=true
-		// retrieve Yahoo Finance custom company urlSuffix from ISIN code
-		{	
-			GetApi api = new GetApi( this.context, theApi -> {
-				
-				theApi.urlSuffix = String.format( "query2.finance.yahoo.com/v1/finance/search?q=%s&lang=en-US&region=US&quotesCount=6&newsCount=0&enableFuzzyQuery=false&quotesQueryId=tss_match_phrase_query&multiQuoteQueryId=multi_quote_single_token_query&enableCb=true&enableEnhancedTrivialQuery=true", stock.isin );
-				theApi.stock = stock;
-				theApi.handler = new YahooSearchIsinHandler();
-				theApi.handler.cacheSubFolder = "/cache/yahoo-searched";
-			});			
-			//yahoo.purgeCookieStore();
-			api.perform( yahoo );
-		}
-		
-		// https://fr.finance.yahoo.com/quote/VCT.PA/cash-flow		
-		// retrieve Free Cash Flow
-		
-		{	
-			GetApi api = new GetApi( this.context, theApi -> {
-				
-				theApi.urlSuffix = String.format( "fr.finance.yahoo.com/quote/%s/cash-flow", stock.yahooSuffix );
-				theApi.stock = stock;
-				theApi.handler = new YahooParseCashFlowHandler();
-				theApi.handler.cacheSubFolder = "/cache/yahoo-cashflow";
-			});			
-			//yahoo.purgeCookieStore();
-			api.perform( yahoo );
-		}
-*/		
-/*		
-		// https://www.boursorama.com/recherche/ajax?query=fr0000031775		
-		// retrieve Boursorama custom company urlSuffix from ISIN code
-		{	
-			GetApi api = new GetApi( this.context, theApi -> {
-				
-				theApi.urlSuffix = String.format( "/recherche/ajax?query=%s", stock.isin.toLowerCase() );
-				theApi.stock = stock;
-				theApi.handler = new BoursoramaParseSearchedHandler();
-				theApi.handler.cacheSubFolder = "/cache/bma-searched";
-			});			
-			api.perform( boursorama );
-		}
-		
-		// https://www.boursorama.com/cours/societe/profil/1rPVCT/
-		
-		if( stock.bmaSuffix != null ){	
-			GetApi api = new GetApi( this.context, theApi -> {
-				
-				theApi.urlSuffix = String.format( "/cours/societe/profil/%s/", stock.bmaSuffix );
-				theApi.stock = stock;
-				theApi.handler = new BoursoramaParseSocieteHandler();
-				theApi.handler.cacheSubFolder = "/cache/bma-societe";
-			});			
-			api.perform( boursorama );
-		}		
-*/		
-	}
-	
-	public void fetchData() throws Exception {
-
-		TargetServer boursorama = new TargetServer();
-		boursorama.setBaseUrl( "https://www.boursorama.com" );
-
-		TargetServer tradingSat = new TargetServer();
-		tradingSat.setBaseUrl( "https://www.tradingsat.com" );
-		
-		TargetServer abcBourse = new TargetServer();
-		abcBourse.setBaseUrl( "https://www.abcbourse.com" );
-
-		TargetServer zoneBourse = new TargetServer();
-		zoneBourse.setBaseUrl( "https://www.zonebourse.com" );		
-		
-		TargetServer alphavantage = new TargetServer();
-		alphavantage.setBaseUrl( "https://www.alphavantage.co" );		
-
-
-		
-		// retrieve ABC Bourse  custom company urlSuffix from ISIN code
-		// https://www.abcbourse.com/marches/symbol_retrieve/<ISIN>
-		this.stocks.forEach( stock -> {
-				GetApi api = new GetApi( this.context, theApi -> {
-					
-					theApi.urlSuffix = String.format( "/marches/symbol_retrieve/%s", stock.isin );
-					theApi.stock = stock;
-					theApi.handler = new AbcSearchHandler();
-					theApi.handler.cacheSubFolder = "/cache/abc-searched";
-				});			
-				api.perform( abcBourse );
-		});
-		
-		// https://www.abcbourse.com/analyses/chiffres/CNPp
-		// retrieve 
-		// if the stock can be stored within a PEA
-		// le nombre de titres
-		this.stocks.forEach( stock -> {
-			if( stock.abcSuffix != null ) {	
-				GetApi api = new GetApi( this.context, theApi -> {
-					
-					theApi.urlSuffix = String.format( "/analyses/chiffres/%s", stock.abcSuffix );
-					theApi.stock = stock;
-					theApi.handler = new AbcSocieteHandler();
-					theApi.handler.cacheSubFolder = "/cache/abc-societe";
-				});			
-				api.perform( abcBourse );
-			}
-		});
-		
-		// retrieve Trading Sat custom company urlSuffix from ISIN code
-		this.stocks.forEach( stock -> {	
-			GetApi api = new GetApi( this.context, theApi -> {
-				
-				theApi.urlSuffix = String.format( "/async/json/instrument-search.php?term=%s", stock.isin );
-				theApi.stock = stock;
-				theApi.handler = new TSSearchIsinHandler();
-				theApi.handler.cacheSubFolder = "/cache/ts-searched";
-			});			
-			api.perform( tradingSat );
-		});
-		
-		// https://www.tradingsat.com/vicat-FR0000031775/societe.html
-		// retrieve action count
-		this.stocks.forEach( stock -> {	
-			if( stock.tradingSatUrlSuffix != null ) {
-				GetApi api = new GetApi( this.context, theApi -> {
-					
-					theApi.urlSuffix = stock.tradingSatUrlSuffix + "societe.html";
-					theApi.stock = stock;
-					theApi.handler = new TSSocieteHandler();
-					theApi.handler.cacheSubFolder = "/cache/ts-societe";
-				});			
-				api.perform( tradingSat );
-			}
-		});
-		
-		// https://www.tradingsat.com/vicat-FR0000031775/donnees-financieres.html
-		// retrieve financial data
-		// last 5 years RNPG
-		
-		this.stocks.forEach( stock -> {	
-			if( stock.tradingSatUrlSuffix != null ) {
-				GetApi api = new GetApi( this.context, theApi -> {
-					
-					theApi.urlSuffix = stock.tradingSatUrlSuffix + "donnees-financieres.html";
-					theApi.stock = stock;
-					theApi.handler = new TSFinancialDataHandler();
-					theApi.handler.cacheSubFolder = "/cache/ts-donnees-financieres";
-				});			
-				api.perform( tradingSat );
-			}
-		});
-		
-		
-		// https://www.zonebourse.com/recherche/instruments/?aComposeInputSearch=s_FR		
-
-		// retrieve Zone Bourse custom company urlSuffix from ISIN code
-		this.stocks.forEach( stock -> {	
-			GetApi api = new GetApi( this.context, theApi -> {
-				
-				theApi.urlSuffix = String.format( "/recherche/instruments/?aComposeInputSearch=s_%S", stock.isin );
-				theApi.stock = stock;
-				theApi.handler = new ZbSearchHandler();
-				theApi.handler.cacheSubFolder = "/cache/zb-searched";
-			});			
-			api.perform( zoneBourse );
-		});
-		
-		// https://www.zonebourse.com/cours/action/VICAT-5009/fondamentaux/
-		// 
-
-		// retrieve Zone Bourse fondamentaux
-		// ebit (résultat d'exploitation)
-		// dette nette ou trésorerie nette
-		// free-cash flow		
-		this.stocks.forEach( stock -> {	
-			if( stock.zbSuffix != null ) {
-				GetApi api = new GetApi( this.context, theApi -> {
-					
-					theApi.urlSuffix = String.format( "/cours/action/%s/fondamentaux/", stock.zbSuffix );
-					theApi.stock = stock;
-					theApi.handler = new ZbFondamentalHandler();
-					theApi.handler.cacheSubFolder = "/cache/zb-fondamentaux";
-					theApi.charset = StandardCharsets.ISO_8859_1;
-				});			
-				api.perform( zoneBourse );
-			}
-		});
-		
-		
-		// retrieve Alphavantage custom company symbol from name searched
-		// https://www.alphavantage.co/query?function=SYMBOL_SEARCH&keywords=Exel&apikey=48SR4TNP9V41IEGQhttps://www.google.com		
-		// TODO seulement pour les actions PEA
-		// seulement si un seul match est pour Paris
-		// le stocker dans le CSV d'origine
-		
-//		this.stocks.forEach( stock -> {
-//			
-//			if( stock.withinPEA == null ) return;
-//			if( stock.withinPEA == false ) return;
-//			if( stock.aphaSymbol != null && stock.aphaSymbol.length() > 0 ) return;
-//			
-//			String[] parts = stock.name.split( " " );
-//			if( parts.length < 1 ) {
-//				return;
-//			}
-//			GetApi api = new GetApi( this.context, theApi -> {
-//				
-//				theApi.parameters = new TreeMap();
-//				theApi.parameters.put("function", "SYMBOL_SEARCH");
-//				theApi.parameters.put("apikey", "48SR4TNP9V41IEGQ");
-//				theApi.parameters.put("keywords", parts[0] );
-//				theApi.urlSuffix = String.format( "/query" );
-//				theApi.stock = stock;
-//				theApi.handler = new AlphaSearchSymbolHandler();
-//				theApi.handler.cacheSubFolder = "/cache/alpha-searched";
-//			});			
-//			api.perform( alphavantage );
-//			if( api.useCache == false ) { 
-//				try {
-//					Thread.sleep(  12000 );
-//				} catch (InterruptedException e) {
-//					// TODO Auto-generated catch block
-//					e.printStackTrace();
-//				}
-//			}
-//		});
-	}
 	
 	public void computeAll() throws Exception { 
 		
@@ -623,14 +623,14 @@ public class Report {
 		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).isin ); }
 		    
 		    // elligible PEA
-//		    column++;
-//		    sheet.getRow(0).createCell( column ).setCellValue( (String) "PEA" );
-//		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).withinPEA ); }
+		    column++;
+		    sheet.getRow(0).createCell( column ).setCellValue( (String) "PEA" );
+		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).withinPEA ); }
 		    
 		    // MNEMO		    
-//		    column++;
-//		    sheet.getRow(0).createCell( column ).setCellValue( (String) "Mnemo" );
-//		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).mnemo ); }
+		    column++;
+		    sheet.getRow(0).createCell( column ).setCellValue( (String) "Mnemo" );
+		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).mnemo ); }
 
 		    // Nombre d'actions
 		    column++;
@@ -670,7 +670,7 @@ public class Report {
 		    // Ratio d'endettement
 		    column++;
 		    sheet.getRow(0).createCell( column ).setCellValue( (String) "Endettement %" );
-		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).endettement ); }
+		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).debtRatio ); }
 		    
 		    // Ratio Book Value
 		    column++;
@@ -693,16 +693,29 @@ public class Report {
 //		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).rating ); }
  
 		    // ---------------- Web Sites Suffix and URL ...
-		    
+
+		    // ABC Bourse Suffix
+		    column++;
+		    sheet.getRow(0).createCell( column ).setCellValue( (String) "ABC Bourse Suffix" );
+		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).abcSuffix ); }
+
 		    // trading Sat Suffix
+		    column++;
+		    sheet.getRow(0).createCell( column ).setCellValue( (String) "TradingSat Suffix" );
+		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).tradingSatUrlSuffix ); }
+		    
+		    // trading Sat URL
+		    column++;
+		    sheet.getRow(0).createCell( column ).setCellValue( (String) "TradingSat URL" );
+		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).tradingSatUrl ); }
+		    
+		    
+		    
+		    // Yahoo Suffix
 //		    column++;
 //		    sheet.getRow(0).createCell( column ).setCellValue( (String) "Yahoo Suffix" );
 //		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).yahooSuffix ); }
 
-		    // ABC Bourse Suffix
-//		    column++;
-//		    sheet.getRow(0).createCell( column ).setCellValue( (String) "ABC Bourse Suffix" );
-//		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).abcSuffix ); }
 		    		    
 		    // Zone Bourse Suffix
 //		    column++;
@@ -714,15 +727,6 @@ public class Report {
 //		    sheet.getRow(0).createCell( column ).setCellValue( (String) "Boursorama Suffix" );
 //		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).bmaSuffix ); }
 //		    
-		    // trading Sat Suffix
-//		    column++;
-//		    sheet.getRow(0).createCell( column ).setCellValue( (String) "TradingSat Suffix" );
-//		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).tradingSatUrlSuffix ); }
-		    
-		    // trading Sat URL
-		    column++;
-		    sheet.getRow(0).createCell( column ).setCellValue( (String) "TradingSat URL" );
-		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).tradingSatUrl ); }
 
 		    // write file
 		    

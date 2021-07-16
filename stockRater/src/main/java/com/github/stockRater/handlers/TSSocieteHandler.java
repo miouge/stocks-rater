@@ -7,7 +7,7 @@ public class TSSocieteHandler extends ResponseHandlerTemplate {
 	@Override
 	public String getDumpFilename( Stock stock ) {
 		
-		return "TS-" + stock.isin + "-societe.html";		
+		return stock.mnemo + "-" + stock.isin + "-societe.html";	
 	}
 
 	@Override
@@ -42,7 +42,7 @@ public class TSSocieteHandler extends ResponseHandlerTemplate {
 			thePf.rightPattern = "</div>";
 		}); 		
 		data = pf.find().replace( "%", "" ).replace( "&nbsp;", "" ).trim();
-		if( data.equals( "-" ) == false ) { stock.endettement = Double.parseDouble( data ); }
+		if( data.equals( "-" ) == false ) { stock.debtRatio = Double.parseDouble( data ); }
 		
 //		pf = new PatternFinder( response, thePf -> {
 //

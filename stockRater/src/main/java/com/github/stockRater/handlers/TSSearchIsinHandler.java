@@ -13,7 +13,7 @@ public class TSSearchIsinHandler extends ResponseHandlerTemplate {
 	@Override
 	public String getDumpFilename( Stock stock ) {
 		
-		return "TS-url-" + stock.isin + ".json";		
+		return stock.mnemo + "-" + stock.isin + ".json";	
 	}
 
 	@Override

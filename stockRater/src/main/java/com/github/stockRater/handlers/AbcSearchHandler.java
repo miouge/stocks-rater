@@ -7,7 +7,7 @@ public class AbcSearchHandler extends ResponseHandlerTemplate {
 	@Override
 	public String getDumpFilename( Stock stock ) {
 		
-		return "ABC-" + stock.isin + "-cotation.html";		
+		return stock.mnemo + "-" + stock.isin + "-cotation.html";		
 	}
 
 	@Override
@@ -22,9 +22,11 @@ public class AbcSearchHandler extends ResponseHandlerTemplate {
 			thePf.leftPattern = "www.abcbourse.com/cotation/";
 			thePf.rightPattern = "\"";
 		}); 		
-		data = pf.find().trim(); 
-		stock.abcSuffix = data;
-				
+		data = pf.find().trim();
+		if( data.equals("-") == false ) {
+			stock.abcSuffix = data;
+		}
+
 		return true;
 	}
 }

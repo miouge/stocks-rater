@@ -50,7 +50,7 @@ public class Stock {
 	public String countryCode; 		  // FR
 	public Long sharesCount; 	      // nombre de titres
 	public Long capitalization;       // en K€
-	public Double endettement;        // en %
+
 	public Double lastQuote; 	      // last quotation
 	
 	// Bilan	
@@ -65,6 +65,9 @@ public class Stock {
 	
 	public ArrayList<Double> histoEBIT;
 	public Double avgEBIT;
+	
+	public ArrayList<Double> histoDebtRatio; // ratio d'endettement en %
+	public Double debtRatio;                 // en %	
 	
 	public ArrayList<Double> histoNetDebt; // Dette nette
 	public ArrayList<Double> histoNetTres; // Trésorerie Nette

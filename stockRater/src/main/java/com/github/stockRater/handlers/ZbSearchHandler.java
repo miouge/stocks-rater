@@ -7,7 +7,7 @@ public class ZbSearchHandler extends ResponseHandlerTemplate {
 	@Override
 	public String getDumpFilename( Stock stock ) {
 		
-		return "Zb-" + stock.isin + "-searched.html";		
+		return stock.mnemo + "-" + stock.isin + "-searched.html";
 	}
 
 	@Override

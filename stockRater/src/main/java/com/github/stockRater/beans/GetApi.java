@@ -95,7 +95,7 @@ public class GetApi  {
 		try {
 
 			if( cacheFile != null && handler.cacheSubFolder != null ) {
-			
+				
 				Path path = Paths.get( this.context.rootFolder + "/" + handler.cacheSubFolder + "/" + cacheFile );
 					
 				// file exists and it is not a directory
