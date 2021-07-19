@@ -16,6 +16,8 @@ public class ZbSearchHandler extends ResponseHandlerTemplate {
 		PatternFinder pf;
 		String data;
 
+		// custom suffix
+		
 		pf = new PatternFinder( response, thePf -> {
 
 			//thePf.contextPatterns.add( "</td><!-- inner td --></tr>" );
@@ -27,6 +29,7 @@ public class ZbSearchHandler extends ResponseHandlerTemplate {
 		data = pf.find().trim();
 		if( data.equals( "-" ) == false ) {
 			stock.zbSuffix = data;  
+			stock.zbUrl = String.format("https://www.zonebourse.com/cours/action/%s/fondamentaux/", stock.zbSuffix );
 		}
 		
 		return true;

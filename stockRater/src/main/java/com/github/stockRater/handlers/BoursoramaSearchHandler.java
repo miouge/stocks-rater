@@ -7,7 +7,7 @@ public class BoursoramaSearchHandler extends ResponseHandlerTemplate {
 	@Override
 	public String getDumpFilename( Stock stock ) {
 		
-		return "Boursorama-" + stock.isin + ".html";		
+		return stock.mnemo + "-" + stock.isin + ".html";		
 	}
 
 	@Override
@@ -19,12 +19,14 @@ public class BoursoramaSearchHandler extends ResponseHandlerTemplate {
 		pf = new PatternFinder( response, thePf -> {
 
 			thePf.contextPatterns.add( "class=\"search__list-link\"" );
-			thePf.outOfContextPattern = "class=\"search__item-content\"";
-			thePf.leftPattern = "href=\"/cours/";
+			thePf.contextPatterns.add( "href=\"/cours" );
+			thePf.leftPattern = "/";
 			thePf.rightPattern = "/\"";
 		}); 		
-		data = pf.find().trim(); 
-		stock.bmaSuffix = data;
+		data = pf.find().trim();
+		if( data.equals("-") == false ) {
+			stock.bmaSuffix = data;
+		}
 				
 		return true;
 	}

@@ -1,6 +1,7 @@
 package com.github.stockRater.beans;
 
 import java.util.ArrayList;
+import java.util.TreeMap;
 
 public class Stock {
 	
@@ -8,9 +9,11 @@ public class Stock {
 	public String isin;
 	public String mnemo;
 	public Boolean withinPEA;
+	public Boolean withTTF;
 	public Boolean toIgnore;
 	public String name;
 	public String activity;
+	public Long effectif;
 	
 	// manual overrides or fix of exceptional events
 	public Long initShareCount;
@@ -20,24 +23,25 @@ public class Stock {
 	public Double offsetDividends;
 	public String commentOnIgnore;	
 	public String commentOnOffsets;
-	
-	// trading sat
-	public String tradingSatUrl;
-	public String tradingSatUrlSuffix; // "/engie-FR0010208488/societe.html"
-	public Long   tradingSatSharesCount;
-	
+		
 	// abc bourse suffix
 	public String abcUrl; // TODO
 	public String abcSuffix; // "ALLECp""
 	public Long   abcSharesCount;
 	
+	// trading sat
+	public String tradingSatUrl;
+	public String tsSuffix; // "/engie-FR0010208488/societe.html"
+	public Long   tsSharesCount;
+	
 	// zonebourse
-	public String zbUrl;  // TODO
+	public String zbUrl;
 	public String zbSuffix; // TELEPERFORMANCE-SE-4709
-	public Long   zbSharesCount; // TODO
+	//public Long   zbSharesCount; // TODO
 	
 	// boursorama
 	public String bmaSuffix; // "1rPMALT"
+	public Long   bmaSharesCount;
 	
 	// yahoo
 	public String yahooSuffix; // "VIRP.PA"
@@ -48,20 +52,25 @@ public class Stock {
 	// aggregated data from all websites
 	
 	public String countryCode; 		  // FR
+	
+	public ArrayList<Long> shareCounts = new ArrayList<Long>(); // différentes récupération sur les websites
 	public Long sharesCount; 	      // nombre de titres
-	public Long capitalization;       // en K€
+	public Double capitalization;       // en M€
 
 	public Double lastQuote; 	      // last quotation
 	
 	// Bilan	
 	public Long capitauxPropres;
+	public Double dfn; // dette financiere nette M€
 	
 	// Compte de resultat	
+	public ArrayList<Long> histoCA; // K€
+	public Double avgCA;
 	
-	public ArrayList<Long> histoRNPG;
+	public ArrayList<Long> histoRNPG; // K€
 	public Double avgRNPG;
 	
-	public ArrayList<Long> histoCP;
+	public ArrayList<Long> histoCP; // K€
 	
 	public ArrayList<Double> histoEBIT;
 	public Double avgEBIT;
@@ -75,6 +84,9 @@ public class Stock {
 	public ArrayList<Double> histoVE; // Valeur d'entreprise
 	
 	// Dividends
+	
+	public TreeMap<Long,Event> events = new TreeMap<Long,Event>(); // epoch event object
+	public Integer eventCount;
 	
 	// computed ratio
 	

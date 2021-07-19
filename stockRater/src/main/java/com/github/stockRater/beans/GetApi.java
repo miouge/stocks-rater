@@ -94,7 +94,7 @@ public class GetApi  {
 		
 		try {
 
-			if( cacheFile != null && handler.cacheSubFolder != null ) {
+			if( handler.cacheSubFolder != null && cacheFile != null ) {
 				
 				Path path = Paths.get( this.context.rootFolder + "/" + handler.cacheSubFolder + "/" + cacheFile );
 					
@@ -138,7 +138,7 @@ public class GetApi  {
 					
 					//target.traceCookieStoreContent();
 					
-					System.err.println( String.format( "%s %s", this.method, urlString ));
+					System.out.println( String.format( "%s %s", this.method, urlString ));
 															
 					// Object content = connection.getContent();					
 					// String encoding = connection.getContentEncoding();

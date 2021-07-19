@@ -27,7 +27,7 @@ public abstract class ResponseHandlerTemplate {
 	
 	public String getDumpFilename( Stock stock ) { return null;	}
 	
-	protected void addIfNonNull( String data, Function<String, Object> converter, List<Long> list ) {
+	protected void addIfNonNull( String data, Function<String, Object> converter, List<Long> list, boolean debug ) {
 		
 		if( data == null ) {
 			return;
@@ -38,10 +38,13 @@ public abstract class ResponseHandlerTemplate {
 		}
 		
 		Object converted = converter.apply( data );
+		if( debug ) {
+			System.out.println( "addding :" + converted );
+		}
 		list.add( (Long) converted );
 	}	
 
-	protected void addDoubleIfNonNull( String data, Function<String,Object> converter, List<Double> list ) {
+	protected void addDoubleIfNonNull( String data, Function<String,Object> converter, List<Double> list, boolean debug ) {
 		
 		if( data == null ) {
 			return;
@@ -59,6 +62,9 @@ public abstract class ResponseHandlerTemplate {
 			
 			String tmp = data.replace(",", "." );			
 			Object converted = converter.apply( tmp  );
+			if( debug ) {
+				System.out.println( "addding :" + converted );
+			}			
 			list.add( (Double) converted );
 		} catch (Exception e) {
 			// TODO Auto-generated catch block

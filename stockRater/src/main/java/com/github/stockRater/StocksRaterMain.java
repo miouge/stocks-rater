@@ -13,10 +13,10 @@ public class StocksRaterMain
 			
 			Report report = new Report( context );
 			
-			// load the stocks reference CSV file
+			// load the stocks reference CSV file			
+			report.loadCsvData( "2021-07-17-stocks.csv" );
 			
-			//report.loadCsvData( "onlyVICAT.csv"   );
-			report.loadCsvData( "eurolistABC.csv" );
+			//report.importNewIsinCsv();
 						
 			// retrieve needed data asking some websites
 			report.fetchData();

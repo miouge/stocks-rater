@@ -38,7 +38,7 @@ public class TSSearchIsinHandler extends ResponseHandlerTemplate {
 			if( link.contains( "///www.tradingsat.com" ) ) {
 				
 				stock.tradingSatUrl = link.replace( "///", "" );
-				stock.tradingSatUrlSuffix = link.replace( "///www.tradingsat.com", "" );
+				stock.tsSuffix = link.replace( "///www.tradingsat.com", "" );
 				success = true;
 			}
 			else {

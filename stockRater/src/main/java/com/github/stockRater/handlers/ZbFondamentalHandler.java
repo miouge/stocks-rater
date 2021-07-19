@@ -20,6 +20,30 @@ public class ZbFondamentalHandler extends ResponseHandlerTemplate {
 		PatternFinder pf;
 		String data;
 
+		boolean debug = false;
+
+		
+		// Nombre d'employés		
+
+		if( stock.effectif == null ) {
+			
+			pf = new PatternFinder( response, thePf -> {
+	
+				thePf.contextPatterns.add( "<td>Nombre d'employés</td>" );		
+				thePf.outOfContextPattern = "<td>CA / Employé (EUR)</td>";			
+				thePf.leftPattern = "<td style=\"text-align:right\">";
+				thePf.rightPattern = "</td>";
+			});
+			data = pf.find().replace(" ", "").trim();
+	
+			if( data.equals("-") == false ) {
+				Long effectif = Long.parseLong(data);			
+				if( effectif != null && effectif > 0 ) {				
+					stock.effectif = effectif;
+				}
+			}
+		}
+		
 		// -------------------- EBIT ----------------
 		stock.histoEBIT = new ArrayList<Double>();
 		
@@ -32,7 +56,7 @@ public class ZbFondamentalHandler extends ResponseHandlerTemplate {
 			thePf.rightPattern = "</td>";
 		});
 		data = pf.find().replace( " ", "" );
-		addDoubleIfNonNull( data, Double::parseDouble, stock.histoEBIT );
+		addDoubleIfNonNull( data, Double::parseDouble, stock.histoEBIT, debug );
 
 		pf = new PatternFinder( response, thePf -> {
 
@@ -43,7 +67,7 @@ public class ZbFondamentalHandler extends ResponseHandlerTemplate {
 			thePf.rightPattern = "</td>";
 		});
 		data = pf.find().replace( " ", "" );
-		addDoubleIfNonNull( data, Double::parseDouble, stock.histoEBIT );
+		addDoubleIfNonNull( data, Double::parseDouble, stock.histoEBIT, debug );
 
 		pf = new PatternFinder( response, thePf -> {
 
@@ -54,7 +78,7 @@ public class ZbFondamentalHandler extends ResponseHandlerTemplate {
 			thePf.rightPattern = "</td>";
 		});
 		data = pf.find().replace( " ", "" ); // N-3
-   		addDoubleIfNonNull( data, Double::parseDouble, stock.histoEBIT );		
+   		addDoubleIfNonNull( data, Double::parseDouble, stock.histoEBIT, debug );		
 		
 		if( stock.histoEBIT.size() > 0 ) {			
 			stock.histoEBIT.forEach( ebit -> {				
@@ -74,7 +98,7 @@ public class ZbFondamentalHandler extends ResponseHandlerTemplate {
 			thePf.rightPattern = "</td>";
 		});
 		data = pf.find().replace( " ", "" );
-		addDoubleIfNonNull( data, Double::parseDouble, stock.histoVE );
+		addDoubleIfNonNull( data, Double::parseDouble, stock.histoVE, debug );
 
 		pf = new PatternFinder( response, thePf -> {
 
@@ -85,7 +109,7 @@ public class ZbFondamentalHandler extends ResponseHandlerTemplate {
 			thePf.rightPattern = "</td>";
 		});
 		data = pf.find().replace( " ", "" );
-		addDoubleIfNonNull( data, Double::parseDouble, stock.histoVE );
+		addDoubleIfNonNull( data, Double::parseDouble, stock.histoVE, debug );
 
 		pf = new PatternFinder( response, thePf -> {
 
@@ -96,7 +120,7 @@ public class ZbFondamentalHandler extends ResponseHandlerTemplate {
 			thePf.rightPattern = "</td>";
 		});
 		data = pf.find().replace( " ", "" ); // N-3
-   		addDoubleIfNonNull( data, Double::parseDouble, stock.histoVE );		
+   		addDoubleIfNonNull( data, Double::parseDouble, stock.histoVE, debug );		
 		
 		if( stock.histoVE.size() > 0 ) {
 			

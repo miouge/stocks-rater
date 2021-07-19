@@ -48,7 +48,8 @@ public class PatternFinder {
 					return result;
 				}
 
-				currentPos = pos;
+				int len = contextPattern.length();
+				currentPos = pos + len;
 				// continue search with next pattern if any but from this new position
 			}
 
@@ -64,7 +65,7 @@ public class PatternFinder {
 		}
 
 		int posleft  = raw.indexOf( leftPattern, currentPos );
-		int posright = raw.indexOf( rightPattern, posleft );
+ 		int posright = raw.indexOf( rightPattern, posleft + leftPattern.length()  );
 				
 		if( posleft > 0 && posright > 0 && posright > posleft ) {
 			// OK
@@ -98,25 +99,33 @@ public class PatternFinder {
 		}
 	}
 	
-	@SuppressWarnings("unused")
-	void unitTest() {
-	
+	public static void main( String[] args )
+	{
+		// unit test
+		
 		StringBuilder sb = new StringBuilder();
 		PatternFinder pf;
 		String data;
 
 		sb.setLength(0);
-		sb.append("xx--123478---xxx----xaaaa*****aa123456789");
+		sb.append("xx--//123478/---xxx----x//a/aaa**///***aa123//456789/");
 		
 		pf = new PatternFinder( sb, thePf -> {
 	
 			thePf.contextPatterns.add( "xx" );
 			thePf.contextPatterns.add( "xx" );
-			thePf.contextPatterns.add( "aaa" );
-			thePf.contextPatterns.add( "aa" );
-			thePf.leftPattern = "1234";
-			thePf.rightPattern = "78";
+			thePf.leftPattern = "//";
+			thePf.rightPattern = "/";
 		}); 
-		data = pf.find();		
+		data = pf.find(); 
+		System.out.println( "data=" + data );		
+		data = pf.find(); 
+		System.out.println( "data=" + data );
+		data = pf.find(); 
+		System.out.println( "data=" + data );
+		data = pf.find(); 
+		System.out.println( "data=" + data );
 	}
+	
+	
 }

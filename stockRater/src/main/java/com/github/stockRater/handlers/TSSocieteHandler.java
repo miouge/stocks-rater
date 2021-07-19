@@ -22,19 +22,17 @@ public class TSSocieteHandler extends ResponseHandlerTemplate {
 			thePf.leftPattern = "<div class=\"item-data\">";
 			thePf.rightPattern = "</div>";
 		}); 		
-		data = pf.find().replace( "&nbsp;", "" ).trim(); 
-		if( data.equals( "-" ) == false ) { stock.tradingSatSharesCount = Long.parseLong( data ); }
+		data = pf.find().replace( "&nbsp;", "" ).trim();
 		
-
-		pf = new PatternFinder( response, thePf -> {
-
-			thePf.contextPatterns.add( "quote-header-price" );
-			thePf.leftPattern = "<span class=\"price\">";
-			thePf.rightPattern = "</span>";
-		}); 		
-		data = pf.find().replace( "&nbsp;", "" ).replace( "€", "" ).trim(); 
-		if( data.equals( "-" ) == false ) { stock.lastQuote = Double.parseDouble( data ); }
-				
+		if( data.equals("-") == false ) {
+			
+			Long sharesCount = Long.parseLong(data);
+			if( sharesCount != null && sharesCount > 0 ) {
+				stock.tsSharesCount = sharesCount; 
+				stock.shareCounts.add(stock.tsSharesCount);
+			}
+		}
+					
 		pf = new PatternFinder( response, thePf -> {
 
 			thePf.contextPatterns.add( "Ratio d'endettement" );
