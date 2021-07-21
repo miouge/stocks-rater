@@ -28,9 +28,9 @@ import com.github.stockRater.handlers.AbcDividendEventsHandler;
 import com.github.stockRater.handlers.AbcDivisionEventsHandler;
 import com.github.stockRater.handlers.AbcSearchHandler;
 import com.github.stockRater.handlers.AbcSocieteHandler;
-import com.github.stockRater.handlers.BoursoramaConsensusHandler;
-import com.github.stockRater.handlers.BoursoramaSearchHandler;
-import com.github.stockRater.handlers.BoursoramaSocieteHandler;
+import com.github.stockRater.handlers.BmaConsensusHandler;
+import com.github.stockRater.handlers.BmaSearchHandler;
+import com.github.stockRater.handlers.BmaSocieteHandler;
 import com.github.stockRater.handlers.TSFinancialDataHandler;
 import com.github.stockRater.handlers.TSSearchIsinHandler;
 import com.github.stockRater.handlers.TSSocieteHandler;
@@ -127,34 +127,41 @@ public class Report {
 			List<String[]> lines = reader.readAll();
 			lines.forEach( fields -> {
 
-				Stock stock = new Stock();
-				this.stocks.add( stock );
 				int idx = 0;
 				
-				stock.isin=fields[idx++];
+				String isin = fields[idx++];
+				if( isin.length() != 12 ) { return; } // IsinCode = 12 characters length
+
+				Stock stock = new Stock();
+				stock.isin = isin;
+				
+				this.stocks.add( stock );
 				stocksByIsin.put(stock.isin, stock);
 				
 				stock.countryCode=fields[idx++];
 				//stock.countryCode = stock.isin.substring(0, 2);
 				
-				stock.mnemo=fields[idx++]; // also name of "ticker"
-				stock.name=fields[idx++];				
+				stock.mnemo      = fields[idx++]; // also named "ticker"
+				stock.aphaSymbol = fields[idx++];
+				stock.name       = fields[idx++];
 				
 				if( fields[idx].length() > 0 ) {stock.withinPEA=Boolean.parseBoolean( fields[idx] ); }; idx++;
-				if( fields[idx].length() > 0 ) {stock.toIgnore=Boolean.parseBoolean(fields[idx]); }; idx++;
+				if( fields[idx].length() > 0 ) {stock.toIgnore=Boolean.parseBoolean( fields[idx]); }; idx++;
 				
 				// System.out.println( stock.mnemo + " PEA=" + stock.withinPEA + "/ Ignore=" + stock.toIgnore );
 				
-				stock.aphaSymbol = fields[idx++];
+				stock.commentOnIgnore=fields[idx++];
+ 				stock.activity=fields[idx++];
+				
+/*				TODO : move on specific file ini file override 
+
+				
 				
 				if( fields[idx].length() > 0 ) { stock.initShareCount=Long.parseLong(fields[idx]); }; idx++;
 				if( fields[idx].length() > 0 ) { stock.offsetRNPG=Long.parseLong(fields[idx]); }; idx++;
 				if( fields[idx].length() > 0 ) { stock.offsetFCFW=Long.parseLong(fields[idx]); }; idx++;
 				if( fields[idx].length() > 0 ) { stock.offsetDividends=Double.parseDouble(fields[idx]); }; idx++;
-				
-				stock.activity=fields[idx++];				
-				stock.commentOnIgnore=fields[idx++];	
-				stock.commentOnOffsets=fields[idx++];
+*/				
 			});
 		}
 		
@@ -171,6 +178,8 @@ public class Report {
 		});
 		
 		System.out.println( String.format( "%d stock definitions loaded", this.stocks.size() ));
+		
+		// this.importNewIsinCsv();
 	}
 	
 	private void setCsvCell( String[] fieldsOfLine, int columnIdx, Object content ) {
@@ -188,7 +197,7 @@ public class Report {
 	
 	public void flushCsvData() throws IOException {
 		
-		int COLUMN_NB = 14; 
+		int COLUMN_NB = 9; 
 		
 		String stocksCSV  = context.rootFolder + "/data/" + "stocks-out.csv";
 		
@@ -201,20 +210,14 @@ public class Report {
 		header[column] = "Country";column++;	
 		header[column] = "Mnemo";column++;
 		header[column] = "Name";column++;
-		
+
+		header[column] = "alphaSymbol";column++;
 		header[column] = "WithinPEA";column++;
 		header[column] = "ToIgnore";column++;
-		header[column] = "alphaSymbol";column++;
-		
-		// overrides
-		header[column] = "initShareCount";column++;
-		header[column] = "OffsetRNPG";column++;
-		header[column] = "OffsetFCFW";column++;
-		header[column] = "OffsetDiv";column++;
-		
+
+
+		header[column] = "Comments";column++;
 		header[column] = "Activity";column++;
-		header[column] = "Comment On Ignore";column++;		
-		header[column] = "Comment On Offset";column++;						
 
 		for( Stock stock : this.stocks ) {
 			
@@ -224,20 +227,14 @@ public class Report {
 			setCsvCell( array, column++, stock.isin );
 			setCsvCell( array, column++, stock.countryCode );
 			setCsvCell( array, column++, stock.mnemo );
-			setCsvCell( array, column++, stock.name );				
+			setCsvCell( array, column++, stock.name );
 			
+			setCsvCell( array, column++, stock.aphaSymbol );
 			setCsvCell( array, column++, stock.withinPEA );
 			setCsvCell( array, column++, stock.toIgnore );
-			setCsvCell( array, column++, stock.aphaSymbol );
 			
-			setCsvCell( array, column++, stock.initShareCount );
-			setCsvCell( array, column++, stock.offsetRNPG );
-			setCsvCell( array, column++, stock.offsetFCFW );	
-			setCsvCell( array, column++, stock.offsetDividends );
-			
-			setCsvCell( array, column++, stock.activity );
 			setCsvCell( array, column++, stock.commentOnIgnore );
-			setCsvCell( array, column++, stock.commentOnOffsets );
+			setCsvCell( array, column++, stock.activity );
 		}
 		
 	     CSVWriter writer = new CSVWriter(new FileWriter(stocksCSV), ';', '\u0000', '\\', "\n" );
@@ -591,7 +588,7 @@ public class Report {
 				
 				theApi.urlSuffix = String.format( "/recherche/ajax?query=%s", stock.isin.toLowerCase() );
 				theApi.stock = stock;
-				theApi.handler = new BoursoramaSearchHandler();
+				theApi.handler = new BmaSearchHandler();
 				theApi.handler.cacheSubFolder = "/cache/bma-searched";
 			});			
 			api.perform( boursorama );
@@ -610,7 +607,7 @@ public class Report {
 
 				theApi.urlSuffix = String.format( "/cours/societe/profil/%s/", stock.bmaSuffix );
 				theApi.stock = stock;
-				theApi.handler = new BoursoramaSocieteHandler();
+				theApi.handler = new BmaSocieteHandler();
 				theApi.handler.cacheSubFolder = "/cache/bma-societe";
 			});
 			api.perform( boursorama );
@@ -628,7 +625,7 @@ public class Report {
 
 				theApi.urlSuffix = String.format( "/cours/consensus/%s/", stock.bmaSuffix );
 				theApi.stock = stock;
-				theApi.handler = new BoursoramaConsensusHandler();
+				theApi.handler = new BmaConsensusHandler();
 				theApi.handler.cacheSubFolder = "/cache/bma-consensus";
 			});
 			api.perform( boursorama );

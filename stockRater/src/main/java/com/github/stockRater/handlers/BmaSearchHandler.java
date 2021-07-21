@@ -2,12 +2,12 @@ package com.github.stockRater.handlers;
 
 import com.github.stockRater.beans.Stock;
 
-public class BoursoramaSearchHandler extends ResponseHandlerTemplate {
+public class BmaSearchHandler extends ResponseHandlerTemplate {
 
 	@Override
 	public String getDumpFilename( Stock stock ) {
 		
-		return stock.mnemo + "-" + stock.isin + ".html";		
+		return stock.mnemo + "-" + stock.isin + ".html";
 	}
 
 	@Override

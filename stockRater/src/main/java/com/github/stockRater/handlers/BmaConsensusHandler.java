@@ -2,12 +2,12 @@ package com.github.stockRater.handlers;
 
 import com.github.stockRater.beans.Stock;
 
-public class BoursoramaConsensusHandler extends ResponseHandlerTemplate {
+public class BmaConsensusHandler extends ResponseHandlerTemplate {
 
 	@Override
 	public String getDumpFilename( Stock stock ) {
 		
-		return stock.mnemo + "-" + stock.isin + ".html";		
+		return stock.mnemo + "-" + stock.isin + ".html";
 	}
 
 	@Override
@@ -28,7 +28,7 @@ public class BoursoramaConsensusHandler extends ResponseHandlerTemplate {
 		data = pf.find().replace(" ", "").trim();
 
 		if( data.equals("-") == false ) {
-			stock.dfn = Double.parseDouble(data);			
+			stock.dfn = Double.parseDouble(data);
 		}
 
 		if( stock.dfn == null ) {
@@ -42,7 +42,7 @@ public class BoursoramaConsensusHandler extends ResponseHandlerTemplate {
 			data = pf.find().replace(" ", "").trim();
 	
 			if( data.equals("-") == false ) {
-				stock.dfn = Double.parseDouble(data);			
+				stock.dfn = Double.parseDouble(data);
 			}
 		}
 		

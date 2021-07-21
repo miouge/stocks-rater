@@ -2,12 +2,12 @@ package com.github.stockRater.handlers;
 
 import com.github.stockRater.beans.Stock;
 
-public class BoursoramaSocieteHandler extends ResponseHandlerTemplate {
+public class BmaSocieteHandler extends ResponseHandlerTemplate {
 
 	@Override
 	public String getDumpFilename( Stock stock ) {
 		
-		return stock.mnemo + "-" + stock.isin + ".html";		
+		return stock.mnemo + "-" + stock.isin + ".html";
 	}
 
 	@Override
@@ -28,8 +28,8 @@ public class BoursoramaSocieteHandler extends ResponseHandlerTemplate {
 		data = pf.find().replace(" ", "").trim();
 
 		if( data.equals("-") == false ) {
-			Long effectif = Long.parseLong(data);			
-			if( effectif != null && effectif > 0 ) {				
+			Long effectif = Long.parseLong(data);
+			if( effectif != null && effectif > 0 ) {
 				stock.effectif = effectif;
 			}
 		}
@@ -46,8 +46,8 @@ public class BoursoramaSocieteHandler extends ResponseHandlerTemplate {
 		data = pf.find().replace(" ", "").trim();
 
 		if( data.equals("-") == false ) {
-			Long sharesCount = Long.parseLong(data);			
-			if( sharesCount != null && sharesCount > 0 ) {				
+			Long sharesCount = Long.parseLong(data);
+			if( sharesCount != null && sharesCount > 0 ) {
 				stock.bmaSharesCount = sharesCount;
 				stock.shareCounts.add(stock.bmaSharesCount);
 			}
