@@ -31,6 +31,7 @@ public class YahooSearchHandler extends ResponseHandlerTemplate {
 		}); 		
 		data = pf.find().trim(); 
 		stock.yahooSuffix = data;
+		System.out.println( String.format("%s->%s", stock.mnemo, stock.yahooSuffix ));
 
 		return success;
 	}

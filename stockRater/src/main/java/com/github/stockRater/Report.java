@@ -34,6 +34,7 @@ import com.github.stockRater.handlers.BmaSocieteHandler;
 import com.github.stockRater.handlers.TSFinancialDataHandler;
 import com.github.stockRater.handlers.TSSearchIsinHandler;
 import com.github.stockRater.handlers.TSSocieteHandler;
+import com.github.stockRater.handlers.YahooSearchHandler;
 import com.github.stockRater.handlers.ZbFondamentalHandler;
 import com.github.stockRater.handlers.ZbSearchHandler;
 import com.opencsv.CSVParser;
@@ -207,11 +208,12 @@ public class Report {
 		stringArray.add(header);
 		int column = 0;
 		header[column] = "ISIN";column++;
-		header[column] = "Country";column++;	
+		header[column] = "Country";column++;
+		
 		header[column] = "Mnemo";column++;
-		header[column] = "Name";column++;
-
 		header[column] = "alphaSymbol";column++;
+		header[column] = "Name";column++;
+		
 		header[column] = "WithinPEA";column++;
 		header[column] = "ToIgnore";column++;
 
@@ -226,10 +228,11 @@ public class Report {
 			column = 0;			
 			setCsvCell( array, column++, stock.isin );
 			setCsvCell( array, column++, stock.countryCode );
+			
 			setCsvCell( array, column++, stock.mnemo );
+			setCsvCell( array, column++, stock.aphaSymbol );
 			setCsvCell( array, column++, stock.name );
 			
-			setCsvCell( array, column++, stock.aphaSymbol );
 			setCsvCell( array, column++, stock.withinPEA );
 			setCsvCell( array, column++, stock.toIgnore );
 			
@@ -614,7 +617,8 @@ public class Report {
 		});
 		
 		// https://www.boursorama.com/cours/consensus/1rPLTA/
-		
+		// DFN enc
+		/*
 		this.stocks.forEach( stock -> {
 
 			if( stock.toIgnore == true ) { return; }
@@ -629,7 +633,49 @@ public class Report {
 				theApi.handler.cacheSubFolder = "/cache/bma-consensus";
 			});
 			api.perform( boursorama );
+		});	
+		*/
+
+		// cotation a une date donnée
+		
+		// https://www.boursorama.com/_formulaire-periode/?symbol=1rPADP&historic_search%5BstartDate%5D=12%2F08%2F2020&historic_search%5Bduration%5D=1M&historic_search%5Bperiod%5D=1
+		// https://www.abcbourse.com/download/valeur/CNPp POST / application/x-www-form-urlencoded
+		
+//		POST /download/valeur/CNPp HTTP/1.1
+//		Host: www.abcbourse.com
+//		Cache-Control: no-cache
+//		Content-Type: application/x-www-form-urlencoded
+//
+//		dateFrom=2020-08-12&dateTo=2020-08-12&sFormat=x&typeData=isin&__RequestVerificationToken=CfDJ8D7QL4yWkXhGoO_8O46EbPdCgMzyjslOuZ6f5rfXaeqzk5PEBgIM2LTn4ZgRtwwfdfd3MWcMNZQB-n_NaasBJzvfLRDa5WFGXLwaGCOLXFG-DDGC1PE1_9FFNp0IDQgYLXrqoV1osZTMzeRdeK72tmQ
+		
+//      https://fr.finance.yahoo.com/quote/VCT.PA/history?period1=1597190400&period2=1597276800&interval=1d&filter=history&frequency=1d&includeAdjustedClose=true
+		
+//      https://fr.finance.yahoo.com/quote/VCT.PA/history?period1=1597190400&period2=1597276800&interval=1d&filter=history&frequency=1d&includeAdjustedClose=false		
+		
+		
+		TargetServer yahoo1 = new TargetServer();
+		yahoo1.setBaseUrl( "https://query2.finance.yahoo.com" );
+			
+		// finance/search?q=FR0000120222&lang=en-US&region=US&quotesCount=6&newsCount=4&enableFuzzyQuery=false&quotesQueryId=tss_match_phrase_query&multiQuoteQueryId=multi_quote_single_token_query&newsQueryId=news_cie_vespa&enableCb=true&enableNavLinks=true&enableEnhancedTrivialQuery=true			
+		// https://query2.finance.yahoo.com/v1/finance/search?q=FR0000031577&lang=en-US&region=US&quotesCount=6&newsCount=0&enableFuzzyQuery=false&quotesQueryId=tss_match_phrase_query&multiQuoteQueryId=multi_quote_single_token_query&enableCb=true&enableEnhancedTrivialQuery=true
+		// retrieve Yahoo Finance custom company urlSuffix from ISIN code
+		
+		this.stocks.forEach( stock -> {
+
+			if( stock.toIgnore == true ) { return; }
+			if( stock.withinPEA == false ) { return; }
+
+			GetApi api = new GetApi( this.context, theApi -> {
+
+				theApi.urlSuffix = String.format( "/v1/finance/search?q=%s&lang=en-US&region=US&quotesCount=6&newsCount=0&enableFuzzyQuery=false&quotesQueryId=tss_match_phrase_query&multiQuoteQueryId=multi_quote_single_token_query&enableCb=true&enableEnhancedTrivialQuery=true", stock.isin );
+				theApi.stock = stock;
+				theApi.handler = new YahooSearchHandler();
+				theApi.handler.cacheSubFolder = "/cache/yahoo-searched";
+			});
+			yahoo1.purgeCookieStore();
+			api.perform( yahoo1 );
 		});		
+		
 	}
 	
 	public void compute( Stock stock ) {
