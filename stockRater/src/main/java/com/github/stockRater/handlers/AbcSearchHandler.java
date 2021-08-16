@@ -83,6 +83,7 @@ public class AbcSearchHandler extends ResponseHandlerTemplate {
 		data = pf.find().trim().toLowerCase();
 		if( data.equals("oui")) {
 			stock.withTTF = true;
+			stock.withTTFLabel = "TTF";
 		}
 		
 		// System.out.println(String.format("%s-%s-%s", stock.isin, stock.mnemo, stock.name));

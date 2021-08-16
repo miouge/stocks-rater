@@ -2,7 +2,7 @@ package com.github.stockRater.handlers;
 
 import com.github.stockRater.beans.Stock;
 
-public class YahooSearchHandler extends ResponseHandlerTemplate {
+public class YahooHistoQuoteHandler extends ResponseHandlerTemplate {
 
 	@Override
 	public String getDumpFilename( Stock stock ) {
@@ -21,17 +21,17 @@ public class YahooSearchHandler extends ResponseHandlerTemplate {
 
 		pf = new PatternFinder( response, thePf -> {
 
-			thePf.contextPatterns.add( "exchange" );
-			thePf.contextPatterns.add( "EQUITY" );			
-			thePf.outOfContextPattern = "news";
+			thePf.contextPatterns.add( "adjclose" );
+			thePf.contextPatterns.add( "adjclose" );			
 			
-			thePf.leftPattern = "symbol\":\"";
-			thePf.rightPattern = "\",";
+			thePf.leftPattern = "[";
+			thePf.rightPattern = "]";
 		}); 		
 		data = pf.find().trim();
+		
 		if( data.equals("-") == false ) {
-			stock.yahooSymbol = data;
-			// System.out.println( String.format("%s->%s", stock.mnemo, stock.yahooSuffix ));
+			
+			stock.previousQuote1 = Double.parseDouble( data );
 		}
 
 		return success;

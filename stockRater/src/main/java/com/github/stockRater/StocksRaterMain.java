@@ -14,7 +14,7 @@ public class StocksRaterMain
 			Report report = new Report( context );
 			
 			// load the stocks reference CSV file
-			report.loadCsvData( "2021-07-17-stocks.csv" );
+			report.loadCsvData( "stocks-input.csv" );			
 
 			// retrieve needed data asking some websites
 			report.fetchData();
@@ -23,7 +23,7 @@ public class StocksRaterMain
 			report.computeAll();
 
 			// generate CSV			
-			report.flushCsvData();
+			report.flushCsvData( "stocks-output.csv" );
 			
 			// generate report
 			report.outputReport();

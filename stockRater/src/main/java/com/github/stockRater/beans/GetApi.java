@@ -23,6 +23,8 @@ public class GetApi  {
 	public String method; // "GET", ...
 	public Context context;
 	public boolean cacheLoaded = false;
+	public boolean debug = false;
+	public boolean onlyUseCache = false;
 	
     // ISO-8859-1 =  ISO Latin Alphabet No. 1, a.k.a. ISO-LATIN-1
     // UTF-8      =  Eight-bit UCS Transformation Format	
@@ -116,6 +118,12 @@ public class GetApi  {
 		}
 		
 		if( cacheLoaded != true ) {
+			
+			if( onlyUseCache == true ) {
+				
+				// no HTTP communication allowed
+				return;
+			}
 		
 			try {
 							
@@ -136,7 +144,9 @@ public class GetApi  {
 					
 					connection.setRequestMethod( method );
 					
-					//target.traceCookieStoreContent();
+					if( debug ) {
+						target.traceCookieStoreContent();
+					}
 					
 					System.out.println( String.format( "%s %s", this.method, urlString ));
 															

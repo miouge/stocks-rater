@@ -6,6 +6,11 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -22,20 +27,21 @@ import com.github.stockRater.beans.Context;
 import com.github.stockRater.beans.GetApi;
 import com.github.stockRater.beans.Stock;
 import com.github.stockRater.beans.TargetServer;
-import com.github.stockRater.handlers.AbcEventsAndQuoteHandler;
 import com.github.stockRater.handlers.AbcAugCapitalEventsHandler;
 import com.github.stockRater.handlers.AbcDividendEventsHandler;
 import com.github.stockRater.handlers.AbcDivisionEventsHandler;
+import com.github.stockRater.handlers.AbcEventsAndQuoteHandler;
 import com.github.stockRater.handlers.AbcSearchHandler;
 import com.github.stockRater.handlers.AbcSocieteHandler;
-import com.github.stockRater.handlers.BmaConsensusHandler;
 import com.github.stockRater.handlers.BmaSearchHandler;
 import com.github.stockRater.handlers.BmaSocieteHandler;
 import com.github.stockRater.handlers.TSFinancialDataHandler;
 import com.github.stockRater.handlers.TSSearchIsinHandler;
 import com.github.stockRater.handlers.TSSocieteHandler;
+import com.github.stockRater.handlers.YahooHistoQuoteHandler;
 import com.github.stockRater.handlers.YahooSearchHandler;
 import com.github.stockRater.handlers.ZbFondamentalHandler;
+import com.github.stockRater.handlers.ZbResumeHandler;
 import com.github.stockRater.handlers.ZbSearchHandler;
 import com.opencsv.CSVParser;
 import com.opencsv.CSVParserBuilder;
@@ -143,7 +149,7 @@ public class Report {
 				//stock.countryCode = stock.isin.substring(0, 2);
 				
 				stock.mnemo      = fields[idx++]; // also named "ticker"
-				stock.aphaSymbol = fields[idx++];
+				stock.yahooSymbol = fields[idx++];
 				stock.name       = fields[idx++];
 				
 				if( fields[idx].length() > 0 ) {stock.withinPEA=Boolean.parseBoolean( fields[idx] ); }; idx++;
@@ -151,18 +157,8 @@ public class Report {
 				
 				// System.out.println( stock.mnemo + " PEA=" + stock.withinPEA + "/ Ignore=" + stock.toIgnore );
 				
-				stock.commentOnIgnore=fields[idx++];
- 				stock.activity=fields[idx++];
-				
-/*				TODO : move on specific file ini file override 
-
-				
-				
-				if( fields[idx].length() > 0 ) { stock.initShareCount=Long.parseLong(fields[idx]); }; idx++;
-				if( fields[idx].length() > 0 ) { stock.offsetRNPG=Long.parseLong(fields[idx]); }; idx++;
-				if( fields[idx].length() > 0 ) { stock.offsetFCFW=Long.parseLong(fields[idx]); }; idx++;
-				if( fields[idx].length() > 0 ) { stock.offsetDividends=Double.parseDouble(fields[idx]); }; idx++;
-*/				
+				stock.comment=fields[idx++];
+ 				stock.activity=fields[idx++];				
 			});
 		}
 		
@@ -175,7 +171,35 @@ public class Report {
 			}
 			if( stock.withTTF == null ) {
 				stock.withTTF = false;
-			}			
+			}
+			if( stock.withinPEA ) {
+				stock.withinPEALabel = "PEA";
+			}
+			
+			if( stock.isin != null && stock.isin.length() > 0 && stock.mnemo != null && stock.mnemo.length() > 0 ) {
+
+				// check presence of overrides ...
+				String overrideFile = context.rootFolder + "/data/overrides/" + stock.mnemo + "-" + stock.isin + ".ini";				
+				Path path = Paths.get( overrideFile );
+				
+				// file exists and it is not a directory
+				if( Files.exists(path) && !Files.isDirectory(path)) {
+					
+					System.out.println(String.format( "loading override for %s-%s ...", stock.mnemo, stock.isin ));
+					
+					String value = Tools.getIniSetting(overrideFile, "General", "SharesCount", "");
+
+					if( value != null && value.length() > 0 ) {
+						stock.overrides.sharesCount = Long.parseLong(value);
+					}
+					/* TODO : move on specific file ini file override 
+					if( fields[idx].length() > 0 ) { stock.initShareCount=Long.parseLong(fields[idx]); }; idx++;
+					if( fields[idx].length() > 0 ) { stock.offsetRNPG=Long.parseLong(fields[idx]); }; idx++;
+					if( fields[idx].length() > 0 ) { stock.offsetFCFW=Long.parseLong(fields[idx]); }; idx++;
+					if( fields[idx].length() > 0 ) { stock.offsetDividends=Double.parseDouble(fields[idx]); }; idx++;
+					*/				
+				}
+			}
 		});
 		
 		System.out.println( String.format( "%d stock definitions loaded", this.stocks.size() ));
@@ -192,15 +216,23 @@ public class Report {
 		}
 		else {
 			
+			if( content instanceof Boolean ) {
+				
+				if( (Boolean)content == false ) {
+					fieldsOfLine[ columnIdx ] = ""; // output void for false boolean
+					return;
+				}
+			}
+			
 			fieldsOfLine[ columnIdx ] = content.toString();
 		}
 	}	
 	
-	public void flushCsvData() throws IOException {
+	public void flushCsvData( String csvStockFile ) throws IOException {
 		
 		int COLUMN_NB = 9; 
 		
-		String stocksCSV  = context.rootFolder + "/data/" + "stocks-out.csv";
+		String stocksCSV  = context.rootFolder + "/data/" + csvStockFile;
 		
 		List<String[]> stringArray = new ArrayList<String[]>();
 		
@@ -211,7 +243,7 @@ public class Report {
 		header[column] = "Country";column++;
 		
 		header[column] = "Mnemo";column++;
-		header[column] = "alphaSymbol";column++;
+		header[column] = "yahooSymbol";column++;
 		header[column] = "Name";column++;
 		
 		header[column] = "WithinPEA";column++;
@@ -230,13 +262,13 @@ public class Report {
 			setCsvCell( array, column++, stock.countryCode );
 			
 			setCsvCell( array, column++, stock.mnemo );
-			setCsvCell( array, column++, stock.aphaSymbol );
+			setCsvCell( array, column++, stock.yahooSymbol );
 			setCsvCell( array, column++, stock.name );
 			
 			setCsvCell( array, column++, stock.withinPEA );
 			setCsvCell( array, column++, stock.toIgnore );
 			
-			setCsvCell( array, column++, stock.commentOnIgnore );
+			setCsvCell( array, column++, stock.comment );
 			setCsvCell( array, column++, stock.activity );
 		}
 		
@@ -320,33 +352,20 @@ public class Report {
 //				theApi.handler.cacheSubFolder = "/cache/alpha-searched";
 //			});			
 //			api.perform( alphavantage );
-//			if( api.useCache == false ) { 
-//				try {
-//					Thread.sleep(  12000 );
-//				} catch (InterruptedException e) {
-//					// TODO Auto-generated catch block
-//					e.printStackTrace();
-//				}
+//			if( api.useCache == false ) {
+		
+//				waitMs( 12000 );
 //			}
 //		});		
 		
 	}
 	
-	public void fetchData() throws Exception {
+	public void fetchDataAbc() throws Exception {
+		
+		// ---------------- ABC BOURSE -------------------		
 
 		TargetServer abcBourse = new TargetServer();
 		abcBourse.setBaseUrl( "https://www.abcbourse.com" );
-
-		TargetServer tradingSat = new TargetServer();
-		tradingSat.setBaseUrl( "https://www.tradingsat.com" );
-
-		TargetServer zoneBourse = new TargetServer();
-		zoneBourse.setBaseUrl( "https://www.zonebourse.com" );
-		
- 		TargetServer boursorama = new TargetServer();
-		boursorama.setBaseUrl( "https://www.boursorama.com" );
-			
-		// ---------------- ABC BOURSE -------------------		
 		
 		// https://www.abcbourse.com/marches/symbol_retrieve/<ISIN>
 		// -> https://www.abcbourse.com/cotation/VCTp
@@ -392,8 +411,8 @@ public class Report {
 		});
 		
 		// https://www.abcbourse.com/marches/events/VCTp
-		// retrieve 
-		// last quotation
+		// retrieve
+		// the last quotation
 		
 		this.stocks.forEach( stock -> {
 			
@@ -407,7 +426,7 @@ public class Report {
 					theApi.urlSuffix = String.format( "/marches/events/%s", stock.abcSuffix );
 					theApi.stock = stock;
 					theApi.handler = new AbcEventsAndQuoteHandler();
-					theApi.handler.cacheSubFolder = "/cache/abc-eventsAndQuote";
+					theApi.handler.cacheSubFolder = "/cache/abc-last-quotation";
 				});			
 				api.perform( abcBourse );
 			}
@@ -473,9 +492,25 @@ public class Report {
 				});			
 				api.perform( abcBourse );
 			}
-		});		
+		});
 		
+		// https://www.abcbourse.com/download/valeur/CNPp POST / application/x-www-form-urlencoded
+		
+//		POST /download/valeur/CNPp HTTP/1.1
+//		Host: www.abcbourse.com
+//		Cache-Control: no-cache
+//		Content-Type: application/x-www-form-urlencoded
+//
+//		dateFrom=2020-08-12&dateTo=2020-08-12&sFormat=x&typeData=isin&__RequestVerificationToken=CfDJ8D7QL4yWkXhGoO_8O46EbPdCgMzyjslOuZ6f5rfXaeqzk5PEBgIM2LTn4ZgRtwwfdfd3MWcMNZQB-n_NaasBJzvfLRDa5WFGXLwaGCOLXFG-DDGC1PE1_9FFNp0IDQgYLXrqoV1osZTMzeRdeK72tmQ
+		
+	}
+	
+	public void fetchDataTs() throws Exception {
+	
 		// ---------------- TRADING SAT -------------------		
+		
+		TargetServer tradingSat = new TargetServer();
+		tradingSat.setBaseUrl( "https://www.tradingsat.com" );
 		
 		// retrieve Trading Sat custom company urlSuffix from ISIN code (response is json like)
 		this.stocks.forEach( stock -> {
@@ -531,9 +566,15 @@ public class Report {
 				theApi.handler.cacheSubFolder = "/cache/ts-donnees-financieres";
 			});			
 			api.perform( tradingSat );
-		});
+		});		
+	}
 
+	public void fetchDataZb() throws Exception {
+		
 		// ---------------- ZONE BOURSE -------------------
+				
+		TargetServer zoneBourse = new TargetServer();
+		zoneBourse.setBaseUrl( "https://www.zonebourse.com" );
 		
 		// https://www.zonebourse.com/recherche/instruments/?aComposeInputSearch=s_FR		
 		// retrieve Zone Bourse custom company urlSuffix from ISIN code
@@ -552,6 +593,26 @@ public class Report {
 			});			
 			api.perform( zoneBourse );
 		});
+
+		// https://www.zonebourse.com/cours/action/CAISSE-REGIONALE-DE-CREDI-5701/
+		// TODO : Dette nette 2020 ou Trésorie nette 2020 => calcul de la Valeur d'entreprise		
+
+		this.stocks.forEach( stock -> {
+			
+			if( stock.toIgnore == true ) { return; }
+			if( stock.withinPEA == false ) { return; }
+			if( stock.zbSuffix == null ) { return; }
+			
+			GetApi api = new GetApi( this.context, theApi -> {
+				
+				theApi.urlSuffix = String.format( "/cours/action/%s/", stock.zbSuffix );
+				theApi.stock = stock;
+				theApi.handler = new ZbResumeHandler();
+				theApi.handler.cacheSubFolder = "/cache/zb-resume";
+				theApi.charset = StandardCharsets.ISO_8859_1;
+			});			
+			api.perform( zoneBourse );
+		});
 		
 		// https://www.zonebourse.com/cours/action/VICAT-5009/fondamentaux/
 
@@ -559,7 +620,8 @@ public class Report {
 		// last 3 years EBIT (résultat d'exploitation)
 		// last 3 years Valeur d'entreprise (résultat d'exploitation) (TODO normalement dépend de la cotation)
 		// TODO : dette nette ou trésorerie nette
-		// TODO : free-cash flow		
+		// TODO : free-cash flow
+		
 		this.stocks.forEach( stock -> {
 			
 			if( stock.toIgnore == true ) { return; }
@@ -577,7 +639,14 @@ public class Report {
 			api.perform( zoneBourse );
 		});
 		
+	}
+
+	public void fetchDataBma() throws Exception {
+		
 		// ---------------- BOURSORAMA -------------------
+		
+ 		TargetServer boursorama = new TargetServer();
+		boursorama.setBaseUrl( "https://www.boursorama.com" );		
 		
 		// https://www.boursorama.com/recherche/ajax?query=fr0000031775		
 		// retrieve Boursorama custom company urlSuffix from ISIN code
@@ -634,27 +703,17 @@ public class Report {
 			});
 			api.perform( boursorama );
 		});	
-		*/
+		*/		
+	}
 
+	public void fetchDataYahoo() throws Exception {
+	
 		// cotation a une date donnée
 		
-		// https://www.boursorama.com/_formulaire-periode/?symbol=1rPADP&historic_search%5BstartDate%5D=12%2F08%2F2020&historic_search%5Bduration%5D=1M&historic_search%5Bperiod%5D=1
-		// https://www.abcbourse.com/download/valeur/CNPp POST / application/x-www-form-urlencoded
+			
 		
-//		POST /download/valeur/CNPp HTTP/1.1
-//		Host: www.abcbourse.com
-//		Cache-Control: no-cache
-//		Content-Type: application/x-www-form-urlencoded
-//
-//		dateFrom=2020-08-12&dateTo=2020-08-12&sFormat=x&typeData=isin&__RequestVerificationToken=CfDJ8D7QL4yWkXhGoO_8O46EbPdCgMzyjslOuZ6f5rfXaeqzk5PEBgIM2LTn4ZgRtwwfdfd3MWcMNZQB-n_NaasBJzvfLRDa5WFGXLwaGCOLXFG-DDGC1PE1_9FFNp0IDQgYLXrqoV1osZTMzeRdeK72tmQ
-		
-//      https://fr.finance.yahoo.com/quote/VCT.PA/history?period1=1597190400&period2=1597276800&interval=1d&filter=history&frequency=1d&includeAdjustedClose=true
-		
-//      https://fr.finance.yahoo.com/quote/VCT.PA/history?period1=1597190400&period2=1597276800&interval=1d&filter=history&frequency=1d&includeAdjustedClose=false		
-		
-		
-		TargetServer yahoo1 = new TargetServer();
-		yahoo1.setBaseUrl( "https://query2.finance.yahoo.com" );
+		TargetServer yahoo2 = new TargetServer();
+		yahoo2.setBaseUrl( "https://query2.finance.yahoo.com" );
 			
 		// finance/search?q=FR0000120222&lang=en-US&region=US&quotesCount=6&newsCount=4&enableFuzzyQuery=false&quotesQueryId=tss_match_phrase_query&multiQuoteQueryId=multi_quote_single_token_query&newsQueryId=news_cie_vespa&enableCb=true&enableNavLinks=true&enableEnhancedTrivialQuery=true			
 		// https://query2.finance.yahoo.com/v1/finance/search?q=FR0000031577&lang=en-US&region=US&quotesCount=6&newsCount=0&enableFuzzyQuery=false&quotesQueryId=tss_match_phrase_query&multiQuoteQueryId=multi_quote_single_token_query&enableCb=true&enableEnhancedTrivialQuery=true
@@ -664,20 +723,90 @@ public class Report {
 
 			if( stock.toIgnore == true ) { return; }
 			if( stock.withinPEA == false ) { return; }
+			if( stock.yahooSymbol != null && stock.yahooSymbol.length() > 4 ) { return; }
 
+			// System.out.println( String.format( "missing yahoo symbol for %s %s ", stock.name, stock.isin ));
+			
 			GetApi api = new GetApi( this.context, theApi -> {
 
 				theApi.urlSuffix = String.format( "/v1/finance/search?q=%s&lang=en-US&region=US&quotesCount=6&newsCount=0&enableFuzzyQuery=false&quotesQueryId=tss_match_phrase_query&multiQuoteQueryId=multi_quote_single_token_query&enableCb=true&enableEnhancedTrivialQuery=true", stock.isin );
 				theApi.stock = stock;
 				theApi.handler = new YahooSearchHandler();
 				theApi.handler.cacheSubFolder = "/cache/yahoo-searched";
+				theApi.onlyUseCache = true;
 			});
-			yahoo1.purgeCookieStore();
-			api.perform( yahoo1 );
-		});		
+			
+			yahoo2.purgeCookieStore();
+			api.perform( yahoo2 );
+			
+			if( api.cacheLoaded == false ) {
+				Tools.waitMs( 1000 );
+			}
+		});
+
+		// https://query2.finance.yahoo.com/v7/finance/options/VCT.PA => OK TODO : dépouiller les informations présentes		
+
+		// https://query2.finance.yahoo.com/v8/finance/chart/VCT.PA ca repond
 		
+		// https://query2.finance.yahoo.com/v8/finance/chart/VCT.PA?period1=1597190400&period2=1597276800&interval=1d&filter=history&frequency=1d ca repond 1 donnée
+		
+		// https://query1.finance.yahoo.com/v7/finance/quote?lang=en-US&region=US&corsDomain=finance.yahoo.com&symbols=FB
+				
+		Long epoch1 = Tools.convertToEpoch( "2020/01/20", DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss"), ZoneId.of("UTC")); // date de la cotation demandée		
+		Long epoch2 = epoch1 + 86400;		
+				
+		this.stocks.forEach( stock -> {
+
+			if( stock.toIgnore == true ) { return; }
+			if( stock.withinPEA == false ) { return; }
+			if( stock.yahooSymbol == null ) { return; }
+
+			GetApi api = new GetApi( this.context, theApi -> {
+
+				theApi.urlSuffix = String.format( "/v8/finance/chart/%s?period1=%d&period2=%d&interval=1d&filter=history&frequency=1d", stock.yahooSymbol, epoch1, epoch2 );
+				theApi.stock = stock;
+				theApi.handler = new YahooHistoQuoteHandler();				
+				theApi.handler.cacheSubFolder = "/cache/yahoo-histo-quote-2020-01-20";
+				theApi.onlyUseCache = true;
+			});
+			api.debug = true;
+			api.perform( yahoo2 );			
+		});	
+		
+		/*
+		  
+https://query2.finance.yahoo.com/v10/finance/quoteSummary/VCT.PA?modules=financialData		  
+		  
+https://query1.finance.yahoo.com/v7/finance/quote?lang=en-US&region=US&corsDomain=finance.yahoo.com&symbols=FB		  
+https://query2.finance.yahoo.com/v10/finance/quoteSummary/NVDA?modules=incomeStatementHistoryQuarterly
+https://query2.finance.yahoo.com/v10/finance/quoteSummary/NVDA?modules=financialData
+https://github.com/pilwon/node-yahoo-finance/blob/master/docs/quote.md
+		
+let modules = [
+	'assetProfile', 'balanceSheetHistory', 'balanceSheetHistoryQuarterly', 'calendarEvents',
+	'cashflowStatementHistory', 'cashflowStatementHistoryQuarterly', 'defaultKeyStatistics', 'earnings',
+	'earningsHistory', 'earningsTrend', 'financialData', 'fundOwnership', 'incomeStatementHistory',
+	'incomeStatementHistoryQuarterly', 'indexTrend', 'industryTrend', 'insiderHolders', 'insiderTransactions',
+	'institutionOwnership', 'majorDirectHolders', 'majorHoldersBreakdown', 'netSharePurchaseActivity', 'price', 'quoteType',
+	'recommendationTrend', 'secFilings', 'sectorTrend', 'summaryDetail', 'summaryProfile', 'symbol', 'upgradeDowngradeHistory',
+	'fundProfile', 'topHoldings', 'fundPerformance',
+]		
+		
+		
+		*/		
 	}
 	
+	public void fetchData() throws Exception {
+		
+		fetchDataAbc();	
+		fetchDataTs();
+		fetchDataZb();
+		fetchDataBma();
+		fetchDataYahoo();
+
+		// TODO : voir https://www.reuters.com/companies/api/getFetchCompanyKeyMetrics/goog.oq
+	}
+		
 	public void compute( Stock stock ) {
 		
 		//System.out.println( String.format( "compute for stock <%s> ...", stock.name ));
@@ -695,7 +824,11 @@ public class Report {
 		
 			// stock.sharesCount = (long) shareCounts.stream().mapToLong(Long::longValue).average().getAsDouble();
 			stock.sharesCount = stock.shareCounts.stream().mapToLong(Long::longValue).max().getAsLong();
-		}		
+		}
+		
+		if( stock.overrides.sharesCount != null ) {
+			stock.sharesCount = stock.overrides.sharesCount; 
+		}
 		
 		// Capitalization (K€)
 		
@@ -772,7 +905,13 @@ public class Report {
 			if( stock.avgEBIT >= 0 ) {
 				
 				Double lastVE = stock.histoVE.get(stock.histoVE.size()-1);
-				stock.ratioVeOverEBIT = lastVE / stock.avgEBIT; 
+				stock.ratioVeOverEBIT = lastVE / stock.avgEBIT;
+				
+				if( stock.capitalization != null ) {
+				
+					Double soulteVE = lastVE - stock.capitalization;
+					stock.soulteVE = soulteVE; 
+				}				
 			}
 		}
 		
@@ -781,6 +920,22 @@ public class Report {
 
 			stock.debtRatio = stock.histoDebtRatio.get(stock.histoDebtRatio.size()-1);
 		}
+				
+		if( stock.lastQuote != null && stock.previousQuote1 != null ) {
+			
+			stock.progressionVsQuote1 = ((stock.lastQuote - stock.previousQuote1)/stock.previousQuote1)*100.0;
+		}
+		
+		if( stock.dfnZb != null ) {
+			
+			stock.dfn = stock.dfnZb;
+		}
+		else if( stock.dfnBma != null ) {
+			
+			stock.dfn = stock.dfnBma;
+		}
+		
+		
 		
 		stock.eventCount = stock.events.size();
 		
@@ -788,7 +943,7 @@ public class Report {
 //			stock.rating = ratings.stream().mapToDouble( i -> i ).average().getAsDouble();
 //		}
 	}	
-	
+		
 	public void computeAll() throws Exception { 
 		
 		for( Stock stock : this.stocks ) {
@@ -835,6 +990,40 @@ public class Report {
 		return cell;
 	}
 
+	private boolean excludeFromReport( Stock stock ) {
+		
+		if( stock.capitalization != null && stock.capitalization < 50.0 ) {
+			// société trop petite
+			return true;
+		}
+		
+		if( stock.ratioVeOverEBIT != null && stock.ratioVeOverEBIT > 20.0 ) {
+			return true;
+		}
+		
+		if( stock.avg5yPER != null && stock.avg5yPER > 20.0 ) {
+			return true;
+		}
+
+		if( stock.ratioQuoteBV != null && stock.ratioQuoteBV > 4.0 ) {
+			return true;
+		}
+		
+		if( stock.progressionVsQuote1 == null ) {
+			return true;
+		}
+		
+		if( stock.eventCount < 3 ) {
+			return true;
+		}		
+
+		if( stock.ratioVeOverEBIT == null && stock.ratioVeOverEBIT == null && stock.ratioQuoteBV == null ) {
+			return true;
+		}
+
+		return false;
+	}
+	
 	public void outputReport() throws IOException {
 			
 	    // create 1 empty workbook
@@ -893,11 +1082,8 @@ public class Report {
 		        final HSSFCell cell = row.createCell ( i );
 		        cell.setCellValue ( field.getHeader () );
 		        cell.setCellStyle ( style );
-		    }		    
-		}	
+		    }
 			*/
-	        
-	        
 	    		        
 		    // create an empty work sheet
 		    XSSFSheet reportSheet = wb.createSheet("report");
@@ -909,7 +1095,7 @@ public class Report {
 		    sourcesSheet.createRow( 0 ); // [ 0 : first row
 
 		    // prepare 1 row for each selected stock
-		    // and compose the selection (only PEA elligible)
+		    // and compose the selection (only withinPEA and not to be ignored)
 
 		    ArrayList<Stock> selection = new ArrayList<Stock>(); 
 		    
@@ -917,6 +1103,7 @@ public class Report {
 		    	
 		    	if( this.stocks.get(i).withinPEA == null || this.stocks.get(i).withinPEA == false ) {continue;}
 		    	if( this.stocks.get(i).toIgnore != null && this.stocks.get(i).toIgnore == true ) {continue;}
+		    	if( this.excludeFromReport( this.stocks.get(i) ) == true ) {continue;}
 		    	
 		    	reportSheet.createRow( row + 1 ); // [ 0 : first row
 		    	sourcesSheet.createRow( row + 1 ); // [ 0 : first row
@@ -924,79 +1111,86 @@ public class Report {
 		    	row++;
 		    }
 		    
+		    // ********************* Compose Report Sheet ***********************
+		    
+		    XSSFSheet sheet = reportSheet;
+		    
 		    int column;
 		    int iMax = selection.size();
 		    
 		    // NAME 		    
 		    column = 0;
-		    reportSheet.getRow(0).createCell( column ).setCellValue( (String) "Name" );
-		    for( int i = 0 ; i < iMax ; i++ ) { createCell( reportSheet.getRow( i + 1 ), column, selection.get(i).name ); }
+		    sheet.getRow(0).createCell( column ).setCellValue( (String) "Name" );
+		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).name ); }
 		    
 		    // ISIN
 		    column++;
-		    reportSheet.getRow(0).createCell( column ).setCellValue( (String) "ISIN" );
-		    for( int i = 0 ; i < iMax ; i++ ) { createCell( reportSheet.getRow( i + 1 ), column, selection.get(i).isin ); }
+		    sheet.getRow(0).createCell( column ).setCellValue( (String) "ISIN" );
+		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).isin ); }
 		    
 		    // with TTF
 		    column++;
-		    reportSheet.getRow(0).createCell( column ).setCellValue( (String) "TTF" );
-		    for( int i = 0 ; i < iMax ; i++ ) { createCell( reportSheet.getRow( i + 1 ), column, selection.get(i).withTTF ); }		    
+		    sheet.getRow(0).createCell( column ).setCellValue( (String) "TTF" );
+		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).withTTFLabel ); }		    
 
 		    // MNEMO		    
 		    column++;
-		    reportSheet.getRow(0).createCell( column ).setCellValue( (String) "Mnemo" );
-		    for( int i = 0 ; i < iMax ; i++ ) { createCell( reportSheet.getRow( i + 1 ), column, selection.get(i).mnemo ); }
+		    sheet.getRow(0).createCell( column ).setCellValue( (String) "Mnemo" );
+		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).mnemo ); }
 		    
-		    // MNEMO		    
+		    // Effectif		    
 		    column++;
-		    reportSheet.getRow(0).createCell( column ).setCellValue( (String) "Effectif" );
-		    for( int i = 0 ; i < iMax ; i++ ) { createCell( reportSheet.getRow( i + 1 ), column, selection.get(i).effectif ); }
-
+		    sheet.getRow(0).createCell( column ).setCellValue( (String) "Effectif" );
+		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).effectif ); }
 
 		    // lastQuote		    
 		    column++;
-		    reportSheet.getRow(0).createCell( column ).setCellValue( (String) "Last Quote" );
-		    for( int i = 0 ; i < iMax ; i++ ) { createCell( reportSheet.getRow( i + 1 ), column, selection.get(i).lastQuote ); }
+		    sheet.getRow(0).createCell( column ).setCellValue( (String) "Last Quote" );
+		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).lastQuote ); }
 		    
 		    // capitalisation
 		    column++;
-		    reportSheet.getRow(0).createCell( column ).setCellValue( (String) "Capitalization (M€)" );
-		    for( int i = 0 ; i < iMax ; i++ ) { createCell( reportSheet.getRow( i + 1 ), column, selection.get(i).capitalization ).setCellStyle( precisionStyle.get(-1)); }
-		    		    
-		    // capitaux propres		    
-		    column++;
-		    reportSheet.getRow(0).createCell( column ).setCellValue( (String) "Capitaux propres (M€)" );
-		    for( int i = 0 ; i < iMax ; i++ ) { createCell( reportSheet.getRow( i + 1 ), column, selection.get(i).capitauxPropres ); }
+		    sheet.getRow(0).createCell( column ).setCellValue( (String) "Capitalization (M€)" );
+		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).capitalization ).setCellStyle( precisionStyle.get(-1)); }
 
+		    // soulteVE
+		    column++;
+		    sheet.getRow(0).createCell( column ).setCellValue( (String) "SoulteVE (M€)" );
+		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).soulteVE ).setCellStyle( precisionStyle.get(-1)); }		    
+		    
 		    // Dette financiere nette		    
 		    column++;
-		    reportSheet.getRow(0).createCell( column ).setCellValue( (String) "DFN (M€)" );
-		    for( int i = 0 ; i < iMax ; i++ ) { createCell( reportSheet.getRow( i + 1 ), column, selection.get(i).dfn ); }		    
+		    sheet.getRow(0).createCell( column ).setCellValue( (String) "DFN (M€)" );
+		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).dfn ); }		    
 		    
-		    // avgRNPG		    
-		    column++;
-		    reportSheet.getRow(0).createCell( column ).setCellValue( (String) "5y-Avg RNPG (K€)" );
-		    for( int i = 0 ; i < iMax ; i++ ) { createCell( reportSheet.getRow( i + 1 ), column, selection.get(i).avgRNPG ); }
-		    
+		    		    
 		    // Ratio d'endettement
 		    column++;
-		    reportSheet.getRow(0).createCell( column ).setCellValue( (String) "Endettement %" );
-		    for( int i = 0 ; i < iMax ; i++ ) { createCell( reportSheet.getRow( i + 1 ), column, selection.get(i).debtRatio ); }
+		    sheet.getRow(0).createCell( column ).setCellValue( (String) "Endettement %" );
+		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).debtRatio ); }
 		    
 		    // Ratio Book Value
 		    column++;
-		    reportSheet.getRow(0).createCell( column ).setCellValue( (String) "Book value ratio" );
-		    for( int i = 0 ; i < iMax ; i++ ) { createCell( reportSheet.getRow( i + 1 ), column, selection.get(i).ratioQuoteBV ).setCellStyle( precisionStyle.get(-2)); }
+		    sheet.getRow(0).createCell( column ).setCellValue( (String) "Book value ratio" );
+		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).ratioQuoteBV ).setCellStyle( precisionStyle.get(-2)); }
 
 		    // 5 years avg PER
 		    column++;
-		    reportSheet.getRow(0).createCell( column ).setCellValue( (String) "5y-Avg PER" );
-		    for( int i = 0 ; i < iMax ; i++ ) { createCell( reportSheet.getRow( i + 1 ), column, selection.get(i).avg5yPER ).setCellStyle( precisionStyle.get(-1)); }
+		    sheet.getRow(0).createCell( column ).setCellValue( (String) "5y-Avg PER" );
+		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).avg5yPER ).setCellStyle( precisionStyle.get(-1)); }
 
 		    // VE / EBIT
 		    column++;
-		    reportSheet.getRow(0).createCell( column ).setCellValue( (String) "VE/EBIT" );
-		    for( int i = 0 ; i < iMax ; i++ ) { createCell( reportSheet.getRow( i + 1 ), column, selection.get(i).ratioVeOverEBIT ).setCellStyle( precisionStyle.get(-1)); }
+		    sheet.getRow(0).createCell( column ).setCellValue( (String) "VE/EBIT" );
+		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).ratioVeOverEBIT ).setCellStyle( precisionStyle.get(-1)); }
+
+		    // progression vs previous Quote 1
+		    column++;
+		    sheet.getRow(0).createCell( column ).setCellValue( (String) "progressionVsQuote1" );
+		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).progressionVsQuote1 ).setCellStyle( precisionStyle.get(0)); }
+		    
+		    		    
+		    
 		    
 		    // Custom Rating
 //		    column++;
@@ -1007,52 +1201,54 @@ public class Report {
 		    
 		    // trading Sat URL
 		    column++;
-		    reportSheet.getRow(0).createCell( column ).setCellValue( (String) "TradingSat URL" );
-		    for( int i = 0 ; i < iMax ; i++ ) { createCell( reportSheet.getRow( i + 1 ), column, selection.get(i).tradingSatUrl ); }
+		    sheet.getRow(0).createCell( column ).setCellValue( (String) "TradingSat URL" );
+		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).tradingSatUrl ); }
 		    
 		    // Zone Bourse URL
 		    column++;
-		    reportSheet.getRow(0).createCell( column ).setCellValue( (String) "Zone Bourse URL" );
-		    for( int i = 0 ; i < iMax ; i++ ) { createCell( reportSheet.getRow( i + 1 ), column, selection.get(i).zbUrl ); }
+		    sheet.getRow(0).createCell( column ).setCellValue( (String) "Zone Bourse URL" );
+		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).zbUrl ); }
 
-		    // Sources SHEET
+		    // ********************* Compose sources Sheet ***********************
+		    
+		    sheet = sourcesSheet;		    
 		    
 		    // NAME 		    
 		    column = 0;
-		    sourcesSheet.getRow(0).createCell( column ).setCellValue( (String) "Name" );
-		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sourcesSheet.getRow( i + 1 ), column, selection.get(i).name ); }
+		    sheet.getRow(0).createCell( column ).setCellValue( (String) "Name" );
+		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).name ); }
 		    
 		    // ISIN
 		    column++;
-		    sourcesSheet.getRow(0).createCell( column ).setCellValue( (String) "ISIN" );
-		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sourcesSheet.getRow( i + 1 ), column, selection.get(i).isin ); }
+		    sheet.getRow(0).createCell( column ).setCellValue( (String) "ISIN" );
+		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).isin ); }
 		    	    
 		    // MNEMO		    
 		    column++;
-		    sourcesSheet.getRow(0).createCell( column ).setCellValue( (String) "Mnemo" );
-		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sourcesSheet.getRow( i + 1 ), column, selection.get(i).mnemo ); }
+		    sheet.getRow(0).createCell( column ).setCellValue( (String) "Mnemo" );
+		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).mnemo ); }
 
 		    // ---------------- Web Sites Suffix and URL ...
 
 		    // ABC Bourse Suffix
 		    column++;
-		    sourcesSheet.getRow(0).createCell( column ).setCellValue( (String) "ABC Bourse Suffix" );
-		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sourcesSheet.getRow( i + 1 ), column, selection.get(i).abcSuffix ); }
+		    sheet.getRow(0).createCell( column ).setCellValue( (String) "ABC Bourse Suffix" );
+		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).abcSuffix ); }
 
 		    // trading Sat Suffix
 		    column++;
-		    sourcesSheet.getRow(0).createCell( column ).setCellValue( (String) "TradingSat Suffix" );
-		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sourcesSheet.getRow( i + 1 ), column, selection.get(i).tsSuffix ); }
+		    sheet.getRow(0).createCell( column ).setCellValue( (String) "TradingSat Suffix" );
+		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).tsSuffix ); }
 		    
 		    // Zone Bourse Suffix
 		    column++;
-		    sourcesSheet.getRow(0).createCell( column ).setCellValue( (String) "Zone Bourse Suffix" );
-		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sourcesSheet.getRow( i + 1 ), column, selection.get(i).zbSuffix ); }
+		    sheet.getRow(0).createCell( column ).setCellValue( (String) "Zone Bourse Suffix" );
+		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).zbSuffix ); }
 		    
 		    // Boursorama Suffix
 		    column++;
-		    sourcesSheet.getRow(0).createCell( column ).setCellValue( (String) "Boursorama Suffix" );
-		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sourcesSheet.getRow( i + 1 ), column, selection.get(i).bmaSuffix ); }
+		    sheet.getRow(0).createCell( column ).setCellValue( (String) "Boursorama Suffix" );
+		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).bmaSuffix ); }
 		    		    
 		    // Yahoo Suffix
 //		    column++;
@@ -1061,34 +1257,36 @@ public class Report {
 		    
 		    // elligible PEA
 		    column++;
-		    reportSheet.getRow(0).createCell( column ).setCellValue( (String) "PEA" );
-		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sourcesSheet.getRow( i + 1 ), column, selection.get(i).withinPEA ); }
+		    sheet.getRow(0).createCell( column ).setCellValue( (String) "PEA" );
+		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).withinPEALabel ); }
 		    
-		    // Nombre d'actions
-		    column++;
-		    sourcesSheet.getRow(0).createCell( column ).setCellValue( (String) "Share Count (ABC)" );
-		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sourcesSheet.getRow( i + 1 ), column, selection.get(i).abcSharesCount ); }
 
-		    // Nombre d'actions
-		    column++;
-		    sourcesSheet.getRow(0).createCell( column ).setCellValue( (String) "Share Count (TS)" );
-		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sourcesSheet.getRow( i + 1 ), column, selection.get(i).tsSharesCount ); }
-
-		    // Nombre d'actions
-		    column++;
-		    sourcesSheet.getRow(0).createCell( column ).setCellValue( (String) "Share Count (BMA)" );
-		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sourcesSheet.getRow( i + 1 ), column, selection.get(i).bmaSharesCount ); }
-		    
-		    // Nombre d'actions
-		    column++;
-		    sourcesSheet.getRow(0).createCell( column ).setCellValue( (String) "Share Count (Max)" );
-		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sourcesSheet.getRow( i + 1 ), column, selection.get(i).sharesCount ); }
+		    // Nombre d'actions		    
+		    column++; sheet.getRow(0).createCell( column ).setCellValue( (String) "Share Count (ABC)" );
+		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).abcSharesCount ); }
+		    column++; sheet.getRow(0).createCell( column ).setCellValue( (String) "Share Count (TS)" );
+		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).tsSharesCount ); }
+		    column++; sheet.getRow(0).createCell( column ).setCellValue( (String) "Share Count (BMA)" );
+		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).bmaSharesCount ); }
+		    column++; sheet.getRow(0).createCell( column ).setCellValue( (String) "Share Count Override" );
+		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).overrides.sharesCount ); }		    
+		    column++; sheet.getRow(0).createCell( column ).setCellValue( (String) "Share Count" );
+		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).sharesCount ); }
 		    
 		    // Dividend Event count
 		    column++;
-		    sourcesSheet.getRow(0).createCell( column ).setCellValue( (String) "Dividend Ev Nb" );
-		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sourcesSheet.getRow( i + 1 ), column, selection.get(i).eventCount ); }		    
+		    sheet.getRow(0).createCell( column ).setCellValue( (String) "Dividend Ev Nb" );
+		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).eventCount ); }
 		    
+		    // capitaux propres		    
+		    column++;
+		    sheet.getRow(0).createCell( column ).setCellValue( (String) "Capitaux propres (M€)" );
+		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).capitauxPropres ); }
+		    
+		    // avgRNPG		    
+		    column++;
+		    sheet.getRow(0).createCell( column ).setCellValue( (String) "5y-Avg RNPG (K€)" );
+		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).avgRNPG ); }
 		    
 		    // write file
 		    

@@ -28,10 +28,10 @@ public class BmaConsensusHandler extends ResponseHandlerTemplate {
 		data = pf.find().replace(" ", "").trim();
 
 		if( data.equals("-") == false ) {
-			stock.dfn = Double.parseDouble(data);
+			stock.dfnBma = Double.parseDouble(data);
 		}
 
-		if( stock.dfn == null ) {
+		if( stock.dfnBma == null ) {
 			pf = new PatternFinder( response, thePf -> {
 	
 				thePf.contextPatterns.add( "Dette financière nette" );
@@ -42,7 +42,7 @@ public class BmaConsensusHandler extends ResponseHandlerTemplate {
 			data = pf.find().replace(" ", "").trim();
 	
 			if( data.equals("-") == false ) {
-				stock.dfn = Double.parseDouble(data);
+				stock.dfnBma = Double.parseDouble(data);
 			}
 		}
 		

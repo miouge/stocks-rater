@@ -1,5 +1,7 @@
 package com.github.stockRater.handlers;
 
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -11,7 +13,7 @@ import com.github.stockRater.beans.jsonMapping.AbcDividend;
 import com.github.stockRater.beans.jsonMapping.DividendEvent;
 
 public class AbcDividendEventsHandler extends ResponseHandlerTemplate {
-
+		
 	@Override
 	public String getDumpFilename( Stock stock ) {
 		
@@ -31,7 +33,7 @@ public class AbcDividendEventsHandler extends ResponseHandlerTemplate {
 
 		for( AbcDividend obj : objs) {
 						 			
-			Long epoch = Tools.convertToEpoch( obj.getTimestamp());
+			Long epoch = Tools.convertToEpoch( obj.getTimestamp(), DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"), ZoneId.of("Europe/Paris"));
 			
 			DividendEvent dividend = new DividendEvent();
 			dividend.setEpoch( epoch );

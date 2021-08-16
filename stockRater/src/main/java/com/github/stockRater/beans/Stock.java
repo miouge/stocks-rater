@@ -9,23 +9,19 @@ public class Stock {
 	public String isin;
 	public String mnemo;
 	public Boolean withinPEA;
-	public Boolean withTTF;
 	public Boolean toIgnore;
 	public String name;
-	public String activity;
+	public String activity;	
+	public String comment;
+
+	public Boolean withTTF; // from ABC Bourse	
+	public String withTTFLabel; // "TTF" ou null
+	public String withinPEALabel; // "PEA" ou null
+
 	public Long effectif;
-	
-	// manual overrides or fix of exceptional events
-	public Long initShareCount;
-	public Long offsetRNPG;
-	public Long offsetFCFW;
-	public Long offsetEBIT; // TODO
-	public Double offsetDividends;
-	public String commentOnIgnore;	
-	public String commentOnOffsets;
+	public Overrides overrides = new Overrides();
 		
 	// abc bourse suffix
-	public String abcUrl; // TODO
 	public String abcSuffix; // "ALLECp""
 	public Long   abcSharesCount;
 	
@@ -44,7 +40,7 @@ public class Stock {
 	public Long   bmaSharesCount;
 	
 	// yahoo
-	public String yahooSuffix; // "VIRP.PA"
+	public String yahooSymbol; // "VIRP.PA"
 	
 	// AlphaVantage
 	public String aphaSymbol;
@@ -54,16 +50,21 @@ public class Stock {
 	public String countryCode; 		  // FR
 	
 	public ArrayList<Long> shareCounts = new ArrayList<Long>(); // différentes récupération sur les websites
-	public Long sharesCount; 	      // nombre de titres
-	public Double capitalization;       // en M€
+	public Long sharesCount; 	      // nombre de titres (max)
+	
+	public Double lastQuote; 	      // last quotation (from AbcEventsAndQuoteHandler)
+	public Double capitalization;     // en M€ (Nb de titres * last quotation) 
 
-	public Double lastQuote; 	      // last quotation
+	public Double previousQuote1; 	  // previous quotation point	
+	public Double progressionVsQuote1;
 	
 	// Bilan	
 	public Long capitauxPropres;
-	public Double dfn; // dette financiere nette M€
+	public Double dfnZb;  // dette financiere nette en M€ (si < 0 trésorie nette)
+	public Double dfnBma; // dette financiere nette en M€ (si < 0 trésorie nette
+	public Double dfn;    // dette financiere nette en M€ (si < 0 trésorie nette))
 	
-	// Compte de resultat	
+	// Compte de resultat
 	public ArrayList<Long> histoCA; // K€
 	public Double avgCA;
 	
@@ -78,10 +79,11 @@ public class Stock {
 	public ArrayList<Double> histoDebtRatio; // ratio d'endettement en %
 	public Double debtRatio;                 // en %	
 	
-	public ArrayList<Double> histoNetDebt; // Dette nette
+	public ArrayList<Double> histoNetDebt; // Dette nette // difficile de connaitre le calage ?
 	public ArrayList<Double> histoNetTres; // Trésorerie Nette
 	
-	public ArrayList<Double> histoVE; // Valeur d'entreprise
+	public ArrayList<Double> histoVE; // Valeur d'entreprise (Capitalization + Dette financiere nette) en M€ (from Zb)
+	public Double soulteVE; // en M€ uantité à ajouter a la capitalization pour avoir la valeur d'entreprise
 	
 	// Dividends
 	
@@ -93,5 +95,5 @@ public class Stock {
 	public Double avg5yPER;
 	public Double ratioQuoteBV;    // ratio Cours / capitaux propres part du groupe par action (eg 0.8)
 	public Double ratioVeOverEBIT; // ratio  VE / EBIT	( eg 8.5 )
-	public Double rating;          // Personal based rating (from 0 to 100+)
+	//public Double rating;          // Personal based rating (from 0 to 100+)
 }
