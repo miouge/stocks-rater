@@ -13,6 +13,7 @@ public class Stock {
 	public String name;
 	public String activity;	
 	public String comment;
+	public Integer portfolio = 0; // current nb of stock in portfolio
 
 	public Boolean withTTF; // from ABC Bourse	
 	public String withTTFLabel; // "TTF" ou null

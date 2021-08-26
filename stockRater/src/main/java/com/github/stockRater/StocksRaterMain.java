@@ -14,7 +14,10 @@ public class StocksRaterMain
 			Report report = new Report( context );
 			
 			// load the stocks reference CSV file
-			report.loadCsvData( "stocks-input.csv" );			
+			report.loadCsvData( "stocks-input.csv" );
+			
+			// load the portfolio CSV file
+			report.loadPortfolio( "portfolio.csv" );
 
 			// retrieve needed data asking some websites
 			report.fetchData();
@@ -22,7 +25,7 @@ public class StocksRaterMain
 			// compute ratio
 			report.computeAll();
 
-			// generate CSV			
+			// generate CSV
 			report.flushCsvData( "stocks-output.csv" );
 			
 			// generate report

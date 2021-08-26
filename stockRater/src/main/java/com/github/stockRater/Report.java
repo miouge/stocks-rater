@@ -15,9 +15,14 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.TreeMap;
+import java.util.function.Consumer;
 
+import org.apache.poi.hssf.util.HSSFColor;
+import org.apache.poi.hssf.util.HSSFColor.HSSFColorPredefined;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.CreationHelper;
+import org.apache.poi.ss.usermodel.FillPatternType;
+import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
@@ -53,7 +58,7 @@ import com.opencsv.exceptions.CsvException;
 public class Report {
 
 	Context context;
-	
+
 	@SuppressWarnings("unused")
 	private Report() {}
 	
@@ -143,7 +148,7 @@ public class Report {
 				stock.isin = isin;
 				
 				this.stocks.add( stock );
-				stocksByIsin.put(stock.isin, stock);
+				this.stocksByIsin.put(stock.isin, stock);
 				
 				stock.countryCode=fields[idx++];
 				//stock.countryCode = stock.isin.substring(0, 2);
@@ -158,11 +163,12 @@ public class Report {
 				// System.out.println( stock.mnemo + " PEA=" + stock.withinPEA + "/ Ignore=" + stock.toIgnore );
 				
 				stock.comment=fields[idx++];
- 				stock.activity=fields[idx++];				
+ 				stock.activity=fields[idx++];
 			});
 		}
 		
 		this.stocks.forEach( stock -> {
+
 			if( stock.withinPEA == null ) {
 				stock.withinPEA = false;
 			}
@@ -201,12 +207,48 @@ public class Report {
 				}
 			}
 		});
-		
+
 		System.out.println( String.format( "%d stock definitions loaded", this.stocks.size() ));
-		
+
 		// this.importNewIsinCsv();
 	}
 	
+	public void loadPortfolio( String csvPortfolioFile ) throws FileNotFoundException, IOException, CsvException {
+		
+		CSVParser csvParser = new CSVParserBuilder().withSeparator(';').build(); // custom separator
+		
+		String stocksCSV  = context.rootFolder + "/data/" + csvPortfolioFile;
+		
+		try( CSVReader reader = new CSVReaderBuilder( new FileReader(stocksCSV))
+				.withCSVParser(csvParser) // custom CSV
+				.withSkipLines(1) // skip the first line (header info)
+				.build()
+		) {
+
+			List<String[]> lines = reader.readAll();
+			lines.forEach( fields -> {
+
+				int idx = 0;
+				
+				String isin = fields[idx++];
+				if( isin.length() != 12 ) { return; } // IsinCode = 12 characters length
+
+				Integer nb = Integer.parseInt( fields[idx++]);
+				String comment = fields[idx++];
+
+				Stock stock = this.stocksByIsin.get( isin );
+				if( stock == null ) {
+					return;
+				}
+
+				stock.portfolio = nb;
+				System.out.println( String.format( "%s %s nb=%d", comment, isin, nb ));
+			});
+		}
+
+		System.out.println( String.format( "portfolio definitions loaded" ));
+	}
+
 	private void setCsvCell( String[] fieldsOfLine, int columnIdx, Object content ) {
 		
 		if( content == null ) {
@@ -278,7 +320,7 @@ public class Report {
 	     writer.close();
 	     
 	     System.out.println( String.format( "flush stock definitions Csv for %d stock(s) : OK", stocks.size()));
-	}	
+	}
 	
 	public void unused( Stock stock ) throws Exception {
 		
@@ -362,7 +404,9 @@ public class Report {
 	
 	public void fetchDataAbc() throws Exception {
 		
-		// ---------------- ABC BOURSE -------------------		
+		// ---------------- ABC BOURSE -------------------
+	
+		System.out.println( "fetch data from ABC BOURSE ..." );
 
 		TargetServer abcBourse = new TargetServer();
 		abcBourse.setBaseUrl( "https://www.abcbourse.com" );
@@ -507,7 +551,9 @@ public class Report {
 	
 	public void fetchDataTs() throws Exception {
 	
-		// ---------------- TRADING SAT -------------------		
+		// ---------------- TRADING SAT -------------------
+		
+		System.out.println( "fetch data from TRADING SAT ..." );
 		
 		TargetServer tradingSat = new TargetServer();
 		tradingSat.setBaseUrl( "https://www.tradingsat.com" );
@@ -572,9 +618,13 @@ public class Report {
 	public void fetchDataZb() throws Exception {
 		
 		// ---------------- ZONE BOURSE -------------------
+		
+		System.out.println( "fetch data from ZONE BOURSE ..." );
 				
 		TargetServer zoneBourse = new TargetServer();
 		zoneBourse.setBaseUrl( "https://www.zonebourse.com" );
+		
+		System.out.println( "	search ZbSuffix ..." );
 		
 		// https://www.zonebourse.com/recherche/instruments/?aComposeInputSearch=s_FR		
 		// retrieve Zone Bourse custom company urlSuffix from ISIN code
@@ -594,6 +644,8 @@ public class Report {
 			api.perform( zoneBourse );
 		});
 
+		System.out.println( "	search dfn ..." );
+		
 		// https://www.zonebourse.com/cours/action/CAISSE-REGIONALE-DE-CREDI-5701/
 		// TODO : Dette nette 2020 ou Trésorie nette 2020 => calcul de la Valeur d'entreprise		
 
@@ -613,6 +665,8 @@ public class Report {
 			});			
 			api.perform( zoneBourse );
 		});
+		
+		System.out.println( "	search ebit, VE ..." );
 		
 		// https://www.zonebourse.com/cours/action/VICAT-5009/fondamentaux/
 
@@ -644,6 +698,8 @@ public class Report {
 	public void fetchDataBma() throws Exception {
 		
 		// ---------------- BOURSORAMA -------------------
+		
+		System.out.println( "fetch data from BOURSORAMA ..." );
 		
  		TargetServer boursorama = new TargetServer();
 		boursorama.setBaseUrl( "https://www.boursorama.com" );		
@@ -708,9 +764,11 @@ public class Report {
 
 	public void fetchDataYahoo() throws Exception {
 	
-		// cotation a une date donnée
+		// ---------------- YAHOO -------------------
 		
-			
+		System.out.println( "fetch data from YAHOO ..." );
+		
+		// cotation a une date donnée
 		
 		TargetServer yahoo2 = new TargetServer();
 		yahoo2.setBaseUrl( "https://query2.finance.yahoo.com" );
@@ -935,8 +993,6 @@ let modules = [
 			stock.dfn = stock.dfnBma;
 		}
 		
-		
-		
 		stock.eventCount = stock.events.size();
 		
 //		if( ratings.size() > 0 ) {
@@ -951,12 +1007,92 @@ let modules = [
 			compute( stock );
 		}		
 		
-		// now sort stock list by stock name 		
-		this.stocks.sort( (st1, st2 ) -> {						
+		// now sort stock list by stock name
+		this.stocks.sort( (st1, st2 ) -> {
 			return st1.name.compareTo( st2.name );
 		});
 	}
 	
+	CellStyle createStyle( XSSFWorkbook wb, Stock stock, Consumer<CellStyle> consumer ) throws Exception {
+
+    	final CellStyle style = wb.createCellStyle();
+
+    	if( consumer != null ) {
+    		consumer.accept( style );
+    	}
+    	
+    	if( stock.portfolio > 0 ) {
+
+    		final Font font = wb.createFont ();
+    		font.setFontName( "Calibri" );
+    		font.setItalic( true );
+    		font.setBold( true );
+    		style.setFont(font);
+    	}
+
+// cellStyle.setAlignment(HorizontalAlignment.LEFT);
+// cellStyle.setAlignment(HorizontalAlignment.CENTER);
+//    	HSSFColor.HSSFColorPredefined.
+//    	AQUA 
+//    	AUTOMATIC
+//    	Special Default/Normal/Automatic color.
+//    	BLACK 
+//    	BLUE 
+//    	BLUE_GREY 
+//    	BRIGHT_GREEN 
+//    	BROWN 
+//    	CORAL 
+//    	CORNFLOWER_BLUE 
+//    	DARK_BLUE 
+//    	DARK_GREEN 
+//    	DARK_RED 
+//    	DARK_TEAL 
+//    	DARK_YELLOW 
+//    	GOLD 
+//    	GREEN 
+//    	GREY_25_PERCENT 
+//    	GREY_40_PERCENT 
+//    	GREY_50_PERCENT 
+//    	GREY_80_PERCENT 
+//    	INDIGO 
+//    	LAVENDER 
+//    	LEMON_CHIFFON 
+//    	LIGHT_BLUE 
+//    	LIGHT_CORNFLOWER_BLUE 
+//    	LIGHT_GREEN 
+//    	LIGHT_ORANGE 
+//    	LIGHT_TURQUOISE 
+//    	LIGHT_YELLOW 
+//    	LIME 
+//    	MAROON 
+//    	OLIVE_GREEN 
+//    	ORANGE 
+//    	ORCHID 
+//    	PALE_BLUE 
+//    	PINK 
+//    	PLUM 
+//    	RED 
+//    	ROSE 
+//    	ROYAL_BLUE 
+//    	SEA_GREEN 
+//    	SKY_BLUE 
+//    	TAN 
+//    	TEAL 
+//    	TURQUOISE 
+//    	VIOLET 
+//    	WHITE 
+//    	YELLOW     	
+
+    	return style;
+	}
+
+	private void setBackgroundColor( CellStyle style, HSSFColorPredefined color ) {
+		
+		// HSSFColor.HSSFColorPredefined.BLACK.getIndex()
+	    style.setFillForegroundColor( color.getIndex() );
+	    style.setFillPattern( FillPatternType.SOLID_FOREGROUND );
+	}
+		
 	private XSSFCell createCell( XSSFRow row, int column, Object content ) {
 		
 		XSSFCell cell = row.createCell(column);
@@ -964,7 +1100,6 @@ let modules = [
 		if( content == null ) {
 			
 			cell.setBlank();
-			
 		}
 		else if( content instanceof Boolean ) {
 			
@@ -1024,7 +1159,7 @@ let modules = [
 		return false;
 	}
 	
-	public void outputReport() throws IOException {
+	public void outputReport() throws Exception {
 			
 	    // create 1 empty workbook
 	    try( XSSFWorkbook wb = new XSSFWorkbook()) {
@@ -1058,32 +1193,6 @@ let modules = [
 	        	style.setDataFormat( ch.createDataFormat().getFormat("#0.0"));
 	        	precisionStyle.put( -1, style );
 	        }
-	        
-            // cellStyle.setAlignment(HorizontalAlignment.LEFT);
-            // cellStyle.setAlignment(HorizontalAlignment.CENTER);		    
-		    
-		    /*
-		    final Font font = sheet.getWorkbook ().createFont ();
-		    font.setFontName ( "Arial" );
-		    font.setBoldweight ( Font.BOLDWEIGHT_BOLD );
-		    font.setColor ( HSSFColor.WHITE.index );
-
-		    final CellStyle style = sheet.getWorkbook ().createCellStyle ();
-		    style.setFont ( font );
-		    style.setFillForegroundColor ( HSSFColor.BLACK.index );
-		    style.setFillPattern ( PatternFormatting.SOLID_FOREGROUND );
-
-		    final HSSFRow row = sheet.createRow ( 0 );
-
-		    for ( int i = 0; i < columns.size (); i++ )
-		    {
-		        final Field field = columns.get ( i );
-
-		        final HSSFCell cell = row.createCell ( i );
-		        cell.setCellValue ( field.getHeader () );
-		        cell.setCellStyle ( style );
-		    }
-			*/
 	    		        
 		    // create an empty work sheet
 		    XSSFSheet reportSheet = wb.createSheet("report");
@@ -1121,7 +1230,13 @@ let modules = [
 		    // NAME 		    
 		    column = 0;
 		    sheet.getRow(0).createCell( column ).setCellValue( (String) "Name" );
-		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).name ); }
+		    for( int i = 0 ; i < iMax ; i++ ) {    	
+		    	final Stock stock = selection.get(i);
+		    	createCell( sheet.getRow( i + 1 ), column, stock.name ).setCellStyle( createStyle( wb, stock, style -> {
+		    		if( stock.portfolio > 0 ) {
+		    			setBackgroundColor( style, HSSFColor.HSSFColorPredefined.PALE_BLUE );
+		    		}
+		    }));}
 		    
 		    // ISIN
 		    column++;
@@ -1172,25 +1287,70 @@ let modules = [
 		    // Ratio Book Value
 		    column++;
 		    sheet.getRow(0).createCell( column ).setCellValue( (String) "Book value ratio" );
-		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).ratioQuoteBV ).setCellStyle( precisionStyle.get(-2)); }
+		    for( int i = 0 ; i < iMax ; i++ ) {    	
+		    	final Stock stock = selection.get(i);
+		    	createCell( sheet.getRow( i + 1 ), column, stock.ratioQuoteBV ).setCellStyle( createStyle( wb, stock, style -> {
+		    					
+		    					style.setDataFormat( ch.createDataFormat().getFormat("#0.0"));
+		    					if( stock.ratioQuoteBV != null ) {
+		    						if( stock.ratioQuoteBV < 1.0 ) {
+		    							setBackgroundColor( style, HSSFColor.HSSFColorPredefined.LIGHT_GREEN );
+		    						}
+		    						if( stock.ratioQuoteBV > 2.0 ) {
+		    							setBackgroundColor( style, HSSFColor.HSSFColorPredefined.LIGHT_ORANGE );
+		    						}
+		    					}
+		    }));}
 
 		    // 5 years avg PER
 		    column++;
 		    sheet.getRow(0).createCell( column ).setCellValue( (String) "5y-Avg PER" );
-		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).avg5yPER ).setCellStyle( precisionStyle.get(-1)); }
+		    for( int i = 0 ; i < iMax ; i++ ) {
+		    	final Stock stock = selection.get(i);
+		    	createCell( sheet.getRow( i + 1 ), column, stock.avg5yPER ).setCellStyle( createStyle( wb, stock, style -> {
+		    					
+		    					style.setDataFormat( ch.createDataFormat().getFormat("#0.0"));
+		    					if( stock.avg5yPER != null ) {
+		    						if( stock.avg5yPER < 10.0 ) {
+		    							setBackgroundColor( style, HSSFColor.HSSFColorPredefined.LIGHT_GREEN );
+		    						}
+		    						if( stock.avg5yPER > 15.0 ) {
+		    							setBackgroundColor( style, HSSFColor.HSSFColorPredefined.LIGHT_ORANGE );
+		    						}
+		    					}
+		    }));}
 
 		    // VE / EBIT
 		    column++;
 		    sheet.getRow(0).createCell( column ).setCellValue( (String) "VE/EBIT" );
-		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).ratioVeOverEBIT ).setCellStyle( precisionStyle.get(-1)); }
+		    for( int i = 0 ; i < iMax ; i++ ) {
+		    	final Stock stock = selection.get(i);
+		    	createCell( sheet.getRow( i + 1 ), column, stock.ratioVeOverEBIT ).setCellStyle( createStyle( wb, stock, style -> {
+		    					
+		    					style.setDataFormat( ch.createDataFormat().getFormat("#0.0"));
+
+		    					if( stock.ratioVeOverEBIT != null ) {
+		    						if( stock.ratioVeOverEBIT < 8.0 ) {
+		    							setBackgroundColor( style, HSSFColor.HSSFColorPredefined.LIGHT_GREEN );
+		    						}
+		    						if( stock.ratioVeOverEBIT > 12.0 ) {
+		    							setBackgroundColor( style, HSSFColor.HSSFColorPredefined.LIGHT_ORANGE );
+		    						}
+		    					}
+		    }));}
 
 		    // progression vs previous Quote 1
 		    column++;
 		    sheet.getRow(0).createCell( column ).setCellValue( (String) "progressionVsQuote1" );
-		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).progressionVsQuote1 ).setCellStyle( precisionStyle.get(0)); }
-		    
-		    		    
-		    
+		    for( int i = 0 ; i < iMax ; i++ ) {
+		    	final Stock stock = selection.get(i);
+		    	createCell( sheet.getRow( i + 1 ), column, stock.progressionVsQuote1 ).setCellStyle( createStyle( wb, stock, style -> {
+		    					
+		    					style.setDataFormat( ch.createDataFormat().getFormat("#0.0"));
+		    					if( stock.progressionVsQuote1 != null && stock.progressionVsQuote1 < 0.0 ) {
+		    						setBackgroundColor( style, HSSFColor.HSSFColorPredefined.LIGHT_GREEN );
+		    					}
+		    }));}
 		    
 		    // Custom Rating
 //		    column++;

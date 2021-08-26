@@ -24,7 +24,7 @@ public class GetApi  {
 	public Context context;
 	public boolean cacheLoaded = false;
 	public boolean debug = false;
-	public boolean onlyUseCache = false;
+	public boolean onlyUseCache = true; // never try to recover online content : no HTTP communication allowed
 	
     // ISO-8859-1 =  ISO Latin Alphabet No. 1, a.k.a. ISO-LATIN-1
     // UTF-8      =  Eight-bit UCS Transformation Format	
@@ -91,7 +91,7 @@ public class GetApi  {
 			return;
 		}
 
-		String cacheFile = handler.getDumpFilename(stock);		
+		String cacheFile = handler.getDumpFilename(stock);
 		StringBuilder response = new StringBuilder();
 		
 		try {
@@ -122,11 +122,12 @@ public class GetApi  {
 			if( onlyUseCache == true ) {
 				
 				// no HTTP communication allowed
+				// never try to recover online content
 				return;
 			}
 		
 			try {
-							
+
 				// System.out.println( String.format( "%s for api %s", this.method, this.urlSuffix ));
 				
 				URL url = new URL( urlString.toString() );
@@ -149,8 +150,8 @@ public class GetApi  {
 					}
 					
 					System.out.println( String.format( "%s %s", this.method, urlString ));
-															
-					// Object content = connection.getContent();					
+
+					// Object content = connection.getContent();
 					// String encoding = connection.getContentEncoding();
 
 					status = connection.getResponseCode();
