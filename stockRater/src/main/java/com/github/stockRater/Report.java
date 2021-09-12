@@ -644,11 +644,14 @@ public class Report {
 			api.perform( zoneBourse );
 		});
 
+		/*
 		System.out.println( "	search dfn ..." );
 		
 		// https://www.zonebourse.com/cours/action/CAISSE-REGIONALE-DE-CREDI-5701/
 		// TODO : Dette nette 2020 ou Trésorie nette 2020 => calcul de la Valeur d'entreprise		
 
+		//pas mal d'erreur de parsing pour le moment
+		 
 		this.stocks.forEach( stock -> {
 			
 			if( stock.toIgnore == true ) { return; }
@@ -665,6 +668,7 @@ public class Report {
 			});			
 			api.perform( zoneBourse );
 		});
+		*/
 		
 		System.out.println( "	search ebit, VE ..." );
 		
@@ -1125,34 +1129,41 @@ let modules = [
 		return cell;
 	}
 
-	private boolean excludeFromReport( Stock stock ) {
+	private boolean excludeFromReport( Stock stock, boolean verbose ) {
 		
 		if( stock.capitalization != null && stock.capitalization < 50.0 ) {
 			// société trop petite
+			if( verbose ) { System.out.println( String.format( "exclude %s : see capitalization", stock.name )); }			
 			return true;
 		}
 		
 		if( stock.ratioVeOverEBIT != null && stock.ratioVeOverEBIT > 20.0 ) {
+			if( verbose ) { System.out.println( String.format( "exclude %s : see ratioVeOverEBIT", stock.name )); }
 			return true;
 		}
 		
 		if( stock.avg5yPER != null && stock.avg5yPER > 20.0 ) {
+			if( verbose ) { System.out.println( String.format( "exclude %s : see avg5yPER", stock.name )); }
 			return true;
 		}
 
 		if( stock.ratioQuoteBV != null && stock.ratioQuoteBV > 4.0 ) {
+			if( verbose ) { System.out.println( String.format( "exclude %s : see ratioQuoteBV", stock.name )); }
 			return true;
 		}
 		
 		if( stock.progressionVsQuote1 == null ) {
+			if( verbose ) { System.out.println( String.format( "exclude %s : see progressionVsQuote1", stock.name )); }
 			return true;
 		}
 		
 		if( stock.eventCount < 3 ) {
+			if( verbose ) { System.out.println( String.format( "exclude %s : see eventCount", stock.name )); }
 			return true;
 		}		
 
 		if( stock.ratioVeOverEBIT == null && stock.ratioVeOverEBIT == null && stock.ratioQuoteBV == null ) {
+			if( verbose ) { System.out.println( String.format( "exclude %s : see ratioVeOverEBIT", stock.name )); }
 			return true;
 		}
 
@@ -1210,15 +1221,23 @@ let modules = [
 		    
 		    for( int i = 0, row = 0 ; i < this.stocks.size() ; i++ ) {
 		    	
-		    	if( this.stocks.get(i).withinPEA == null || this.stocks.get(i).withinPEA == false ) {continue;}
-		    	if( this.stocks.get(i).toIgnore != null && this.stocks.get(i).toIgnore == true ) {continue;}
-		    	if( this.excludeFromReport( this.stocks.get(i) ) == true ) {continue;}
+		    	if( this.stocks.get(i).withinPEA == null || this.stocks.get(i).withinPEA == false ) {
+		    		continue;
+		    	}
+		    	if( this.stocks.get(i).toIgnore != null && this.stocks.get(i).toIgnore == true ) {
+		    		continue;
+		    	}
+		    	if( this.excludeFromReport( this.stocks.get(i), false ) == true ) {
+		    		continue;
+		    	}
 		    	
 		    	reportSheet.createRow( row + 1 ); // [ 0 : first row
 		    	sourcesSheet.createRow( row + 1 ); // [ 0 : first row
 		    	selection.add( this.stocks.get(i) );
 		    	row++;
 		    }
+		    
+		    System.out.println( String.format( "selection is about %d stock(s)", selection.size()));		    
 		    
 		    // ********************* Compose Report Sheet ***********************
 		    

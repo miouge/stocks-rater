@@ -24,7 +24,7 @@ public class GetApi  {
 	public Context context;
 	public boolean cacheLoaded = false;
 	public boolean debug = false;
-	public boolean onlyUseCache = true; // never try to recover online content : no HTTP communication allowed
+	public boolean onlyUseCache = false; // never try to recover online content : no HTTP communication allowed
 	
     // ISO-8859-1 =  ISO Latin Alphabet No. 1, a.k.a. ISO-LATIN-1
     // UTF-8      =  Eight-bit UCS Transformation Format	
