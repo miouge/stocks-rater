@@ -1,30 +1,19 @@
 package com.github.stockRater;
 
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.TreeMap;
-import java.util.function.Consumer;
 
 import org.apache.poi.hssf.util.HSSFColor;
-import org.apache.poi.hssf.util.HSSFColor.HSSFColorPredefined;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.CreationHelper;
-import org.apache.poi.ss.usermodel.FillPatternType;
-import org.apache.poi.ss.usermodel.Font;
-import org.apache.poi.xssf.usermodel.XSSFCell;
-import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
@@ -54,20 +43,11 @@ import com.opencsv.CSVReaderBuilder;
 import com.opencsv.CSVWriter;
 import com.opencsv.exceptions.CsvException;
 
-public class Report {
+public class Report extends ReportGeneric {
 
-	Context context;
-
-	@SuppressWarnings("unused")
-	private Report() {}
-	
 	public Report(Context context) {
-		super();
-		this.context = context;
+		super(context);
 	}
-
-	public ArrayList<Stock> stocks = new ArrayList<Stock>();
-	public TreeMap< String, Stock > stocksByIsin = new TreeMap< String, Stock >();
 
 	public void importNewIsinCsv() throws FileNotFoundException, IOException, CsvException {
 		
@@ -121,95 +101,6 @@ public class Report {
 				System.out.println( String.format( "%d stock definitions imported from %s", importedCount, fileToImport ));
 			}
 		}
-	}
-	
-	public void loadCsvData( String csvStockFile ) throws FileNotFoundException, IOException, CsvException {
-		
-		CSVParser csvParser = new CSVParserBuilder().withSeparator(';').build(); // custom separator
-	
-		String stocksCSV  = context.rootFolder + "/data/" + csvStockFile;
-		
-		try( CSVReader reader = new CSVReaderBuilder( new FileReader(stocksCSV))
-				.withCSVParser(csvParser) // custom CSV
-				.withSkipLines(1) // skip the first line (header info)
-				.build()
-		) {
-
-			List<String[]> lines = reader.readAll();
-			lines.forEach( fields -> {
-
-				int idx = 0;
-				
-				String isin = fields[idx++];
-				if( isin.length() != 12 ) { return; } // IsinCode = 12 characters length
-
-				Stock stock = new Stock();
-				stock.isin = isin;
-				
-				this.stocks.add( stock );
-				this.stocksByIsin.put(stock.isin, stock);
-				
-				stock.countryCode=fields[idx++];
-				//stock.countryCode = stock.isin.substring(0, 2);
-				
-				stock.mnemo      = fields[idx++]; // also named "ticker"
-				stock.yahooSymbol = fields[idx++];
-				stock.name       = fields[idx++];
-				
-				if( fields[idx].length() > 0 ) {stock.withinPEA=Boolean.parseBoolean( fields[idx] ); }; idx++;
-				if( fields[idx].length() > 0 ) {stock.toIgnore=Boolean.parseBoolean( fields[idx]); }; idx++;
-				
-				// System.out.println( stock.mnemo + " PEA=" + stock.withinPEA + "/ Ignore=" + stock.toIgnore );
-				
-				stock.comment=fields[idx++];
- 				stock.activity=fields[idx++];
-			});
-		}
-		
-		this.stocks.forEach( stock -> {
-
-			if( stock.withinPEA == null ) {
-				stock.withinPEA = false;
-			}
-			if( stock.toIgnore == null ) {
-				stock.toIgnore = false;
-			}
-			if( stock.withTTF == null ) {
-				stock.withTTF = false;
-			}
-			if( stock.withinPEA ) {
-				stock.withinPEALabel = "PEA";
-			}
-			
-			if( stock.isin != null && stock.isin.length() > 0 && stock.mnemo != null && stock.mnemo.length() > 0 ) {
-
-				// check presence of overrides ...
-				String overrideFile = context.rootFolder + "/data/overrides/" + stock.mnemo + "-" + stock.isin + ".ini";				
-				Path path = Paths.get( overrideFile );
-				
-				// file exists and it is not a directory
-				if( Files.exists(path) && !Files.isDirectory(path)) {
-					
-					System.out.println(String.format( "loading override for %s-%s ...", stock.mnemo, stock.isin ));
-					
-					String value = Tools.getIniSetting(overrideFile, "General", "SharesCount", "");
-
-					if( value != null && value.length() > 0 ) {
-						stock.overrides.sharesCount = Long.parseLong(value);
-					}
-					/* TODO : move on specific file ini file override 
-					if( fields[idx].length() > 0 ) { stock.initShareCount=Long.parseLong(fields[idx]); }; idx++;
-					if( fields[idx].length() > 0 ) { stock.offsetRNPG=Long.parseLong(fields[idx]); }; idx++;
-					if( fields[idx].length() > 0 ) { stock.offsetFCFW=Long.parseLong(fields[idx]); }; idx++;
-					if( fields[idx].length() > 0 ) { stock.offsetDividends=Double.parseDouble(fields[idx]); }; idx++;
-					*/				
-				}
-			}
-		});
-
-		System.out.println( String.format( "%d stock definitions loaded", this.stocks.size() ));
-
-		// this.importNewIsinCsv();
 	}
 	
 	public void loadPortfolio( String csvPortfolioFile ) throws FileNotFoundException, IOException, CsvException {
@@ -320,7 +211,7 @@ public class Report {
 	     
 	     System.out.println( String.format( "flush stock definitions Csv for %d stock(s) : OK", stocks.size()));
 	}
-	
+		
 	public void unused( Stock stock ) throws Exception {
 		
 		// TODO : https://live.euronext.com/fr/product/equities/FR0000031775-XPAR
@@ -400,7 +291,7 @@ public class Report {
 //		});		
 		
 	}
-	
+		
 	public void fetchDataAbc() throws Exception {
 		
 		// ---------------- ABC BOURSE -------------------
@@ -868,6 +759,7 @@ let modules = [
 		// TODO : voir https://www.reuters.com/companies/api/getFetchCompanyKeyMetrics/goog.oq
 	}
 		
+	@Override
 	public void compute( Stock stock ) {
 		
 		//System.out.println( String.format( "compute for stock <%s> ...", stock.name ));
@@ -1002,133 +894,9 @@ let modules = [
 //			stock.rating = ratings.stream().mapToDouble( i -> i ).average().getAsDouble();
 //		}
 	}	
-		
-	public void computeAll() throws Exception { 
-		
-		for( Stock stock : this.stocks ) {
-			
-			compute( stock );
-		}		
-		
-		// now sort stock list by stock name
-		this.stocks.sort( (st1, st2 ) -> {
-			return st1.name.compareTo( st2.name );
-		});
-	}
-	
-	CellStyle createStyle( XSSFWorkbook wb, Stock stock, Consumer<CellStyle> consumer ) throws Exception {
 
-    	final CellStyle style = wb.createCellStyle();
-
-    	if( consumer != null ) {
-    		consumer.accept( style );
-    	}
-    	
-    	if( stock.portfolio > 0 ) {
-
-    		final Font font = wb.createFont ();
-    		font.setFontName( "Calibri" );
-    		font.setItalic( true );
-    		font.setBold( true );
-    		style.setFont(font);
-    	}
-
-// cellStyle.setAlignment(HorizontalAlignment.LEFT);
-// cellStyle.setAlignment(HorizontalAlignment.CENTER);
-//    	HSSFColor.HSSFColorPredefined.
-//    	AQUA 
-//    	AUTOMATIC
-//    	Special Default/Normal/Automatic color.
-//    	BLACK 
-//    	BLUE 
-//    	BLUE_GREY 
-//    	BRIGHT_GREEN 
-//    	BROWN 
-//    	CORAL 
-//    	CORNFLOWER_BLUE 
-//    	DARK_BLUE 
-//    	DARK_GREEN 
-//    	DARK_RED 
-//    	DARK_TEAL 
-//    	DARK_YELLOW 
-//    	GOLD 
-//    	GREEN 
-//    	GREY_25_PERCENT 
-//    	GREY_40_PERCENT 
-//    	GREY_50_PERCENT 
-//    	GREY_80_PERCENT 
-//    	INDIGO 
-//    	LAVENDER 
-//    	LEMON_CHIFFON 
-//    	LIGHT_BLUE 
-//    	LIGHT_CORNFLOWER_BLUE 
-//    	LIGHT_GREEN 
-//    	LIGHT_ORANGE 
-//    	LIGHT_TURQUOISE 
-//    	LIGHT_YELLOW 
-//    	LIME 
-//    	MAROON 
-//    	OLIVE_GREEN 
-//    	ORANGE 
-//    	ORCHID 
-//    	PALE_BLUE 
-//    	PINK 
-//    	PLUM 
-//    	RED 
-//    	ROSE 
-//    	ROYAL_BLUE 
-//    	SEA_GREEN 
-//    	SKY_BLUE 
-//    	TAN 
-//    	TEAL 
-//    	TURQUOISE 
-//    	VIOLET 
-//    	WHITE 
-//    	YELLOW     	
-
-    	return style;
-	}
-
-	private void setBackgroundColor( CellStyle style, HSSFColorPredefined color ) {
-		
-		// HSSFColor.HSSFColorPredefined.BLACK.getIndex()
-	    style.setFillForegroundColor( color.getIndex() );
-	    style.setFillPattern( FillPatternType.SOLID_FOREGROUND );
-	}
-		
-	private XSSFCell createCell( XSSFRow row, int column, Object content ) {
-		
-		XSSFCell cell = row.createCell(column);
-		
-		if( content == null ) {
-			
-			cell.setBlank();
-		}
-		else if( content instanceof Boolean ) {
-			
-			cell.setCellValue( (Boolean) content );
-		}		
-		else if( content instanceof String ) {
-			
-			cell.setCellValue( (String) content );
-		}
-		else if(  content instanceof Integer  ) {
-			
-			cell.setCellValue( (Integer) content );
-		}		
-		else if(  content instanceof Long  ) {
-			
-			cell.setCellValue( (Long) content );
-		}
-		else if(  content instanceof Double  ) {
-			
-			cell.setCellValue( (Double) content );
-		}
-		
-		return cell;
-	}
-
-	private boolean excludeFromReport( Stock stock, boolean verbose ) {
+	@Override
+	protected boolean excludeFromReport( Stock stock, boolean verbose ) {
 		
 		if( stock.capitalization != null && stock.capitalization < 50.0 ) {
 			// société trop petite
@@ -1169,314 +937,254 @@ let modules = [
 		return false;
 	}
 	
-	public void outputReport() throws Exception {
+	@Override
+	protected void composeReport( XSSFWorkbook wb, HashMap<Integer, CellStyle> precisionStyle, ArrayList<Stock> selection ) throws Exception {
 			
-	    // create 1 empty workbook
-	    try( XSSFWorkbook wb = new XSSFWorkbook()) {
-	    	
-	    	CreationHelper ch = wb.getCreationHelper();
-	    	
-	    	// create the style for all the date
-	    	CellStyle cellDateStyle = wb.createCellStyle();
-	        cellDateStyle.setDataFormat( ch.createDataFormat().getFormat("yyyy/mm/dd hh:mm:ss") );
-	        
-	        // create predefined style to go along with some data precision if needed
-	        HashMap<Integer,CellStyle> precisionStyle = new HashMap<Integer,CellStyle>();
-	        
-	        { // could also use the 'Double Brace Initialization' 
-	        	CellStyle style = wb.createCellStyle();
-	        	style.setDataFormat( ch.createDataFormat().getFormat("#0.0000"));
-	        	precisionStyle.put( -4, style );
-	        }
-	        {
-	        	CellStyle style = wb.createCellStyle();
-	        	style.setDataFormat( ch.createDataFormat().getFormat("#0.000"));
-	        	precisionStyle.put( -3, style );
-	        }
-	        {
-	        	CellStyle style = wb.createCellStyle();
-	        	style.setDataFormat( ch.createDataFormat().getFormat("#0.00"));
-	        	precisionStyle.put( -2, style );
-	        }
-	        {
-	        	CellStyle style = wb.createCellStyle();
-	        	style.setDataFormat( ch.createDataFormat().getFormat("#0.0"));
-	        	precisionStyle.put( -1, style );
-	        }
-	    		        
-		    // create an empty work sheet
-		    XSSFSheet reportSheet = wb.createSheet("report");
-		    // create an empty work sheet
-		    XSSFSheet sourcesSheet = wb.createSheet("sources");
-		    		    
-		    // header row
-		    reportSheet.createRow( 0 ); // [ 0 : first row
-		    sourcesSheet.createRow( 0 ); // [ 0 : first row
+		CreationHelper ch = wb.getCreationHelper();
+		
+	    // create an empty work sheet
+	    XSSFSheet reportSheet = wb.createSheet("report");
+	    // create an empty work sheet
+	    XSSFSheet sourcesSheet = wb.createSheet("sources");
+	    		    
+	    // header row
+	    reportSheet.createRow( 0 ); // [ 0 : first row
+	    sourcesSheet.createRow( 0 ); // [ 0 : first row
+		
+	    // prepare 1 row for each selected stock
+		for( int row = 0 ; row < selection.size() ; row++ ) {
+		
+	    	reportSheet.createRow( row + 1 ); // [ 0 : first row
+	    	sourcesSheet.createRow( row + 1 ); // [ 0 : first row
+	    	row++;
+		}
 
-		    // prepare 1 row for each selected stock
-		    // and compose the selection (only withinPEA and not to be ignored)
+	    // ********************* Compose Report Sheet ***********************
+	    
+	    XSSFSheet sheet = reportSheet;
+	    
+	    int column;
+	    int iMax = selection.size();
+	    
+	    // NAME 		    
+	    column = 0;
+	    sheet.getRow(0).createCell( column ).setCellValue( (String) "Name" );
+	    for( int i = 0 ; i < iMax ; i++ ) {    	
+	    	final Stock stock = selection.get(i);
+	    	createCell( sheet.getRow( i + 1 ), column, stock.name ).setCellStyle( createStyle( wb, stock, style -> {
+	    		if( stock.portfolio > 0 ) {
+	    			setBackgroundColor( style, HSSFColor.HSSFColorPredefined.PALE_BLUE );
+	    		}
+	    }));}
+	    
+	    // ISIN
+	    column++;
+	    sheet.getRow(0).createCell( column ).setCellValue( (String) "ISIN" );
+	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).isin ); }
+	    
+	    // with TTF
+	    column++;
+	    sheet.getRow(0).createCell( column ).setCellValue( (String) "TTF" );
+	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).withTTFLabel ); }		    
 
-		    ArrayList<Stock> selection = new ArrayList<Stock>(); 
-		    
-		    for( int i = 0, row = 0 ; i < this.stocks.size() ; i++ ) {
-		    	
-		    	if( this.stocks.get(i).withinPEA == null || this.stocks.get(i).withinPEA == false ) {
-		    		continue;
-		    	}
-		    	if( this.stocks.get(i).toIgnore != null && this.stocks.get(i).toIgnore == true ) {
-		    		continue;
-		    	}
-		    	if( this.excludeFromReport( this.stocks.get(i), false ) == true ) {
-		    		continue;
-		    	}
-		    	
-		    	reportSheet.createRow( row + 1 ); // [ 0 : first row
-		    	sourcesSheet.createRow( row + 1 ); // [ 0 : first row
-		    	selection.add( this.stocks.get(i) );
-		    	row++;
-		    }
-		    
-		    System.out.println( String.format( "selection is about %d stock(s)", selection.size()));		    
-		    
-		    // ********************* Compose Report Sheet ***********************
-		    
-		    XSSFSheet sheet = reportSheet;
-		    
-		    int column;
-		    int iMax = selection.size();
-		    
-		    // NAME 		    
-		    column = 0;
-		    sheet.getRow(0).createCell( column ).setCellValue( (String) "Name" );
-		    for( int i = 0 ; i < iMax ; i++ ) {    	
-		    	final Stock stock = selection.get(i);
-		    	createCell( sheet.getRow( i + 1 ), column, stock.name ).setCellStyle( createStyle( wb, stock, style -> {
-		    		if( stock.portfolio > 0 ) {
-		    			setBackgroundColor( style, HSSFColor.HSSFColorPredefined.PALE_BLUE );
-		    		}
-		    }));}
-		    
-		    // ISIN
-		    column++;
-		    sheet.getRow(0).createCell( column ).setCellValue( (String) "ISIN" );
-		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).isin ); }
-		    
-		    // with TTF
-		    column++;
-		    sheet.getRow(0).createCell( column ).setCellValue( (String) "TTF" );
-		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).withTTFLabel ); }		    
+	    // MNEMO		    
+	    column++;
+	    sheet.getRow(0).createCell( column ).setCellValue( (String) "Mnemo" );
+	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).mnemo ); }
+	    
+	    // Effectif		    
+	    column++;
+	    sheet.getRow(0).createCell( column ).setCellValue( (String) "Effectif" );
+	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).effectif ); }
 
-		    // MNEMO		    
-		    column++;
-		    sheet.getRow(0).createCell( column ).setCellValue( (String) "Mnemo" );
-		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).mnemo ); }
-		    
-		    // Effectif		    
-		    column++;
-		    sheet.getRow(0).createCell( column ).setCellValue( (String) "Effectif" );
-		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).effectif ); }
+	    // lastQuote		    
+	    column++;
+	    sheet.getRow(0).createCell( column ).setCellValue( (String) "Last Quote" );
+	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).lastQuote ); }
+	    
+	    // capitalisation
+	    column++;
+	    sheet.getRow(0).createCell( column ).setCellValue( (String) "Capitalization (M€)" );
+	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).capitalization ).setCellStyle( precisionStyle.get(-1)); }
 
-		    // lastQuote		    
-		    column++;
-		    sheet.getRow(0).createCell( column ).setCellValue( (String) "Last Quote" );
-		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).lastQuote ); }
-		    
-		    // capitalisation
-		    column++;
-		    sheet.getRow(0).createCell( column ).setCellValue( (String) "Capitalization (M€)" );
-		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).capitalization ).setCellStyle( precisionStyle.get(-1)); }
+	    // soulteVE
+	    column++;
+	    sheet.getRow(0).createCell( column ).setCellValue( (String) "SoulteVE (M€)" );
+	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).soulteVE ).setCellStyle( precisionStyle.get(-1)); }		    
+	    
+	    // Dette financiere nette		    
+	    column++;
+	    sheet.getRow(0).createCell( column ).setCellValue( (String) "DFN (M€)" );
+	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).dfn ); }		    
+	    
+	    		    
+	    // Ratio d'endettement
+	    column++;
+	    sheet.getRow(0).createCell( column ).setCellValue( (String) "Endettement %" );
+	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).debtRatio ); }
+	    
+	    // Ratio Book Value
+	    column++;
+	    sheet.getRow(0).createCell( column ).setCellValue( (String) "Book value ratio" );
+	    for( int i = 0 ; i < iMax ; i++ ) {    	
+	    	final Stock stock = selection.get(i);
+	    	createCell( sheet.getRow( i + 1 ), column, stock.ratioQuoteBV ).setCellStyle( createStyle( wb, stock, style -> {
+	    					
+	    					style.setDataFormat( ch.createDataFormat().getFormat("#0.0"));
+	    					if( stock.ratioQuoteBV != null ) {
+	    						if( stock.ratioQuoteBV < 1.0 ) {
+	    							setBackgroundColor( style, HSSFColor.HSSFColorPredefined.LIGHT_GREEN );
+	    						}
+	    						if( stock.ratioQuoteBV > 2.0 ) {
+	    							setBackgroundColor( style, HSSFColor.HSSFColorPredefined.LIGHT_ORANGE );
+	    						}
+	    					}
+	    }));}
 
-		    // soulteVE
-		    column++;
-		    sheet.getRow(0).createCell( column ).setCellValue( (String) "SoulteVE (M€)" );
-		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).soulteVE ).setCellStyle( precisionStyle.get(-1)); }		    
-		    
-		    // Dette financiere nette		    
-		    column++;
-		    sheet.getRow(0).createCell( column ).setCellValue( (String) "DFN (M€)" );
-		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).dfn ); }		    
-		    
-		    		    
-		    // Ratio d'endettement
-		    column++;
-		    sheet.getRow(0).createCell( column ).setCellValue( (String) "Endettement %" );
-		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).debtRatio ); }
-		    
-		    // Ratio Book Value
-		    column++;
-		    sheet.getRow(0).createCell( column ).setCellValue( (String) "Book value ratio" );
-		    for( int i = 0 ; i < iMax ; i++ ) {    	
-		    	final Stock stock = selection.get(i);
-		    	createCell( sheet.getRow( i + 1 ), column, stock.ratioQuoteBV ).setCellStyle( createStyle( wb, stock, style -> {
-		    					
-		    					style.setDataFormat( ch.createDataFormat().getFormat("#0.0"));
-		    					if( stock.ratioQuoteBV != null ) {
-		    						if( stock.ratioQuoteBV < 1.0 ) {
-		    							setBackgroundColor( style, HSSFColor.HSSFColorPredefined.LIGHT_GREEN );
-		    						}
-		    						if( stock.ratioQuoteBV > 2.0 ) {
-		    							setBackgroundColor( style, HSSFColor.HSSFColorPredefined.LIGHT_ORANGE );
-		    						}
-		    					}
-		    }));}
+	    // 5 years avg PER
+	    column++;
+	    sheet.getRow(0).createCell( column ).setCellValue( (String) "5y-Avg PER" );
+	    for( int i = 0 ; i < iMax ; i++ ) {
+	    	final Stock stock = selection.get(i);
+	    	createCell( sheet.getRow( i + 1 ), column, stock.avg5yPER ).setCellStyle( createStyle( wb, stock, style -> {
+	    					
+	    					style.setDataFormat( ch.createDataFormat().getFormat("#0.0"));
+	    					if( stock.avg5yPER != null ) {
+	    						if( stock.avg5yPER < 10.0 ) {
+	    							setBackgroundColor( style, HSSFColor.HSSFColorPredefined.LIGHT_GREEN );
+	    						}
+	    						if( stock.avg5yPER > 15.0 ) {
+	    							setBackgroundColor( style, HSSFColor.HSSFColorPredefined.LIGHT_ORANGE );
+	    						}
+	    					}
+	    }));}
 
-		    // 5 years avg PER
-		    column++;
-		    sheet.getRow(0).createCell( column ).setCellValue( (String) "5y-Avg PER" );
-		    for( int i = 0 ; i < iMax ; i++ ) {
-		    	final Stock stock = selection.get(i);
-		    	createCell( sheet.getRow( i + 1 ), column, stock.avg5yPER ).setCellStyle( createStyle( wb, stock, style -> {
-		    					
-		    					style.setDataFormat( ch.createDataFormat().getFormat("#0.0"));
-		    					if( stock.avg5yPER != null ) {
-		    						if( stock.avg5yPER < 10.0 ) {
-		    							setBackgroundColor( style, HSSFColor.HSSFColorPredefined.LIGHT_GREEN );
-		    						}
-		    						if( stock.avg5yPER > 15.0 ) {
-		    							setBackgroundColor( style, HSSFColor.HSSFColorPredefined.LIGHT_ORANGE );
-		    						}
-		    					}
-		    }));}
+	    // VE / EBIT
+	    column++;
+	    sheet.getRow(0).createCell( column ).setCellValue( (String) "VE/EBIT" );
+	    for( int i = 0 ; i < iMax ; i++ ) {
+	    	final Stock stock = selection.get(i);
+	    	createCell( sheet.getRow( i + 1 ), column, stock.ratioVeOverEBIT ).setCellStyle( createStyle( wb, stock, style -> {
+	    					
+	    					style.setDataFormat( ch.createDataFormat().getFormat("#0.0"));
 
-		    // VE / EBIT
-		    column++;
-		    sheet.getRow(0).createCell( column ).setCellValue( (String) "VE/EBIT" );
-		    for( int i = 0 ; i < iMax ; i++ ) {
-		    	final Stock stock = selection.get(i);
-		    	createCell( sheet.getRow( i + 1 ), column, stock.ratioVeOverEBIT ).setCellStyle( createStyle( wb, stock, style -> {
-		    					
-		    					style.setDataFormat( ch.createDataFormat().getFormat("#0.0"));
+	    					if( stock.ratioVeOverEBIT != null ) {
+	    						if( stock.ratioVeOverEBIT < 8.0 ) {
+	    							setBackgroundColor( style, HSSFColor.HSSFColorPredefined.LIGHT_GREEN );
+	    						}
+	    						if( stock.ratioVeOverEBIT > 12.0 ) {
+	    							setBackgroundColor( style, HSSFColor.HSSFColorPredefined.LIGHT_ORANGE );
+	    						}
+	    					}
+	    }));}
 
-		    					if( stock.ratioVeOverEBIT != null ) {
-		    						if( stock.ratioVeOverEBIT < 8.0 ) {
-		    							setBackgroundColor( style, HSSFColor.HSSFColorPredefined.LIGHT_GREEN );
-		    						}
-		    						if( stock.ratioVeOverEBIT > 12.0 ) {
-		    							setBackgroundColor( style, HSSFColor.HSSFColorPredefined.LIGHT_ORANGE );
-		    						}
-		    					}
-		    }));}
-
-		    // progression vs previous Quote 1
-		    column++;
-		    sheet.getRow(0).createCell( column ).setCellValue( (String) "progressionVsQuote1" );
-		    for( int i = 0 ; i < iMax ; i++ ) {
-		    	final Stock stock = selection.get(i);
-		    	createCell( sheet.getRow( i + 1 ), column, stock.progressionVsQuote1 ).setCellStyle( createStyle( wb, stock, style -> {
-		    					
-		    					style.setDataFormat( ch.createDataFormat().getFormat("#0.0"));
-		    					if( stock.progressionVsQuote1 != null && stock.progressionVsQuote1 < 0.0 ) {
-		    						setBackgroundColor( style, HSSFColor.HSSFColorPredefined.LIGHT_GREEN );
-		    					}
-		    }));}
-		    
-		    // Custom Rating
+	    // progression vs previous Quote 1
+	    column++;
+	    sheet.getRow(0).createCell( column ).setCellValue( (String) "progressionVsQuote1" );
+	    for( int i = 0 ; i < iMax ; i++ ) {
+	    	final Stock stock = selection.get(i);
+	    	createCell( sheet.getRow( i + 1 ), column, stock.progressionVsQuote1 ).setCellStyle( createStyle( wb, stock, style -> {
+	    					
+	    					style.setDataFormat( ch.createDataFormat().getFormat("#0.0"));
+	    					if( stock.progressionVsQuote1 != null && stock.progressionVsQuote1 < 0.0 ) {
+	    						setBackgroundColor( style, HSSFColor.HSSFColorPredefined.LIGHT_GREEN );
+	    					}
+	    }));}
+	    
+	    // Custom Rating
 //		    column++;
 //		    sheet.getRow(0).createCell( column ).setCellValue( (String) "Investment Rating" );
 //		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).rating ); }
  
 		    // ---------------- Web Sites URL ...
-		    
-		    // trading Sat URL
-		    column++;
-		    sheet.getRow(0).createCell( column ).setCellValue( (String) "TradingSat URL" );
-		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).tradingSatUrl ); }
-		    
-		    // Zone Bourse URL
-		    column++;
-		    sheet.getRow(0).createCell( column ).setCellValue( (String) "Zone Bourse URL" );
-		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).zbUrl ); }
+	    
+	    // trading Sat URL
+	    column++;
+	    sheet.getRow(0).createCell( column ).setCellValue( (String) "TradingSat URL" );
+	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).tradingSatUrl ); }
+	    
+	    // Zone Bourse URL
+	    column++;
+	    sheet.getRow(0).createCell( column ).setCellValue( (String) "Zone Bourse URL" );
+	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).zbUrl ); }
 
-		    // ********************* Compose sources Sheet ***********************
-		    
-		    sheet = sourcesSheet;		    
-		    
-		    // NAME 		    
-		    column = 0;
-		    sheet.getRow(0).createCell( column ).setCellValue( (String) "Name" );
-		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).name ); }
-		    
-		    // ISIN
-		    column++;
-		    sheet.getRow(0).createCell( column ).setCellValue( (String) "ISIN" );
-		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).isin ); }
-		    	    
-		    // MNEMO		    
-		    column++;
-		    sheet.getRow(0).createCell( column ).setCellValue( (String) "Mnemo" );
-		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).mnemo ); }
+	    // ********************* Compose sources Sheet ***********************
+	    
+	    sheet = sourcesSheet;		    
+	    
+	    // NAME 		    
+	    column = 0;
+	    sheet.getRow(0).createCell( column ).setCellValue( (String) "Name" );
+	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).name ); }
+	    
+	    // ISIN
+	    column++;
+	    sheet.getRow(0).createCell( column ).setCellValue( (String) "ISIN" );
+	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).isin ); }
+	    	    
+	    // MNEMO		    
+	    column++;
+	    sheet.getRow(0).createCell( column ).setCellValue( (String) "Mnemo" );
+	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).mnemo ); }
 
-		    // ---------------- Web Sites Suffix and URL ...
+	    // ---------------- Web Sites Suffix and URL ...
 
-		    // ABC Bourse Suffix
-		    column++;
-		    sheet.getRow(0).createCell( column ).setCellValue( (String) "ABC Bourse Suffix" );
-		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).abcSuffix ); }
+	    // ABC Bourse Suffix
+	    column++;
+	    sheet.getRow(0).createCell( column ).setCellValue( (String) "ABC Bourse Suffix" );
+	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).abcSuffix ); }
 
-		    // trading Sat Suffix
-		    column++;
-		    sheet.getRow(0).createCell( column ).setCellValue( (String) "TradingSat Suffix" );
-		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).tsSuffix ); }
-		    
-		    // Zone Bourse Suffix
-		    column++;
-		    sheet.getRow(0).createCell( column ).setCellValue( (String) "Zone Bourse Suffix" );
-		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).zbSuffix ); }
-		    
-		    // Boursorama Suffix
-		    column++;
-		    sheet.getRow(0).createCell( column ).setCellValue( (String) "Boursorama Suffix" );
-		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).bmaSuffix ); }
-		    		    
-		    // Yahoo Suffix
+	    // trading Sat Suffix
+	    column++;
+	    sheet.getRow(0).createCell( column ).setCellValue( (String) "TradingSat Suffix" );
+	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).tsSuffix ); }
+	    
+	    // Zone Bourse Suffix
+	    column++;
+	    sheet.getRow(0).createCell( column ).setCellValue( (String) "Zone Bourse Suffix" );
+	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).zbSuffix ); }
+	    
+	    // Boursorama Suffix
+	    column++;
+	    sheet.getRow(0).createCell( column ).setCellValue( (String) "Boursorama Suffix" );
+	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).bmaSuffix ); }
+	    		    
+	    // Yahoo Suffix
 //		    column++;
 //		    sheet.getRow(0).createCell( column ).setCellValue( (String) "Yahoo Suffix" );
 //		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).yahooSuffix ); }
-		    
-		    // elligible PEA
-		    column++;
-		    sheet.getRow(0).createCell( column ).setCellValue( (String) "PEA" );
-		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).withinPEALabel ); }
-		    
+	    
+	    // elligible PEA
+	    column++;
+	    sheet.getRow(0).createCell( column ).setCellValue( (String) "PEA" );
+	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).withinPEALabel ); }
+	    
 
-		    // Nombre d'actions		    
-		    column++; sheet.getRow(0).createCell( column ).setCellValue( (String) "Share Count (ABC)" );
-		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).abcSharesCount ); }
-		    column++; sheet.getRow(0).createCell( column ).setCellValue( (String) "Share Count (TS)" );
-		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).tsSharesCount ); }
-		    column++; sheet.getRow(0).createCell( column ).setCellValue( (String) "Share Count (BMA)" );
-		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).bmaSharesCount ); }
-		    column++; sheet.getRow(0).createCell( column ).setCellValue( (String) "Share Count Override" );
-		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).overrides.sharesCount ); }		    
-		    column++; sheet.getRow(0).createCell( column ).setCellValue( (String) "Share Count" );
-		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).sharesCount ); }
-		    
-		    // Dividend Event count
-		    column++;
-		    sheet.getRow(0).createCell( column ).setCellValue( (String) "Dividend Ev Nb" );
-		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).eventCount ); }
-		    
-		    // capitaux propres		    
-		    column++;
-		    sheet.getRow(0).createCell( column ).setCellValue( (String) "Capitaux propres (M€)" );
-		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).capitauxPropres ); }
-		    
-		    // avgRNPG		    
-		    column++;
-		    sheet.getRow(0).createCell( column ).setCellValue( (String) "5y-Avg RNPG (K€)" );
-		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).avgRNPG ); }
-		    
-		    // write file
-		    
-			String reportXLS = this.context.rootFolder + "/" + "output/report.xlsx";
-		    
-	        try( FileOutputStream outputStream = new FileOutputStream( reportXLS ) ) {
-
-	            wb.write(outputStream);
-	        }
-
-	        System.out.println( String.format( "report generation for %d stock(s) : OK", selection.size()));
-	    }	    
+	    // Nombre d'actions		    
+	    column++; sheet.getRow(0).createCell( column ).setCellValue( (String) "Share Count (ABC)" );
+	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).abcSharesCount ); }
+	    column++; sheet.getRow(0).createCell( column ).setCellValue( (String) "Share Count (TS)" );
+	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).tsSharesCount ); }
+	    column++; sheet.getRow(0).createCell( column ).setCellValue( (String) "Share Count (BMA)" );
+	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).bmaSharesCount ); }
+	    column++; sheet.getRow(0).createCell( column ).setCellValue( (String) "Share Count Override" );
+	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).overrides.sharesCount ); }		    
+	    column++; sheet.getRow(0).createCell( column ).setCellValue( (String) "Share Count" );
+	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).sharesCount ); }
+	    
+	    // Dividend Event count
+	    column++;
+	    sheet.getRow(0).createCell( column ).setCellValue( (String) "Dividend Ev Nb" );
+	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).eventCount ); }
+	    
+	    // capitaux propres		    
+	    column++;
+	    sheet.getRow(0).createCell( column ).setCellValue( (String) "Capitaux propres (M€)" );
+	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).capitauxPropres ); }
+	    
+	    // avgRNPG		    
+	    column++;
+	    sheet.getRow(0).createCell( column ).setCellValue( (String) "5y-Avg RNPG (K€)" );
+	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).avgRNPG ); }		        
 	}
-
 }

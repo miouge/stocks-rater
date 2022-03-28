@@ -34,7 +34,7 @@ public class StocksRaterMain
 				report.flushCsvData( "stocks-output.csv" );
 				
 				// generate report
-				report.outputReport();
+				report.outputReport( "reportA.xlsx" );
 			}
 			
 			if( generateReportB ) {
