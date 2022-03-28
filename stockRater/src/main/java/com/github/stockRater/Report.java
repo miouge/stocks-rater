@@ -46,7 +46,6 @@ import com.github.stockRater.handlers.TSSocieteHandler;
 import com.github.stockRater.handlers.YahooHistoQuoteHandler;
 import com.github.stockRater.handlers.YahooSearchHandler;
 import com.github.stockRater.handlers.ZbFondamentalHandler;
-import com.github.stockRater.handlers.ZbResumeHandler;
 import com.github.stockRater.handlers.ZbSearchHandler;
 import com.opencsv.CSVParser;
 import com.opencsv.CSVParserBuilder;
@@ -1479,4 +1478,5 @@ let modules = [
 	        System.out.println( String.format( "report generation for %d stock(s) : OK", selection.size()));
 	    }	    
 	}
+
 }

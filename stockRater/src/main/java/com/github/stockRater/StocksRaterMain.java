@@ -11,25 +11,51 @@ public class StocksRaterMain
 			
 			Context context = new Context();
 			
-			Report report = new Report( context );
+			boolean generateReportA = false;
+			boolean generateReportB = true;
 			
-			// load the stocks reference CSV file
-			report.loadCsvData( "stocks-input.csv" );
+			if( generateReportA ) {
+				
+				Report report = new Report( context );
+				
+				// load the stocks reference CSV file
+				report.loadCsvData( "stocks-input.csv" );
+				
+				// load the portfolio CSV file
+				report.loadPortfolio( "portfolio.csv" );
+	
+				// retrieve needed data asking some websites
+				report.fetchData();
+	
+				// compute ratio
+				report.computeAll();
+	
+				// generate CSV
+				report.flushCsvData( "stocks-output.csv" );
+				
+				// generate report
+				report.outputReport();
+			}
 			
-			// load the portfolio CSV file
-			report.loadPortfolio( "portfolio.csv" );
-
-			// retrieve needed data asking some websites
-			report.fetchData();
-
-			// compute ratio
-			report.computeAll();
-
-			// generate CSV
-			report.flushCsvData( "stocks-output.csv" );
-			
-			// generate report
-			report.outputReport();
+			if( generateReportB ) {
+				
+				ReportB reportB = new ReportB( context );
+				
+				// load the stocks reference CSV file
+				reportB.loadCsvData( "stocks-input.csv" );
+				
+				// load the portfolio CSV file
+				// report.loadPortfolio( "portfolio.csv" );
+	
+				// retrieve needed data asking some websites
+				reportB.fetchData();
+	
+				// compute ratio
+				reportB.computeAll();
+					
+				// generate report
+				reportB.outputReport( "reportB.xlsx" );
+			}			
 			
 		} catch (Exception e) {
 			
