@@ -13,7 +13,7 @@ public class TSFinancialDataHandler extends ResponseHandlerTemplate {
 	}
 	
 	@Override
-	public boolean customProcess(Stock stock, StringBuilder response ) throws Exception {
+	public boolean customProcess(Stock stock, StringBuilder response, boolean debug ) throws Exception {
 
 		PatternFinder pf;
 		String data;
@@ -32,9 +32,7 @@ public class TSFinancialDataHandler extends ResponseHandlerTemplate {
 		if( stock.histoRNPG == null ) {
 			stock.histoRNPG = new ArrayList<Long>();
 		}
-		
-		boolean debug = false;
-		
+				
 		data = pf.find().replace( "&nbsp;", "" ); // N-5
 		addIfNonNull( data, Long::parseLong, stock.histoRNPG, debug );
 

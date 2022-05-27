@@ -67,7 +67,7 @@ public class GetApi  {
 		}
 	}
 	
-	public void perform( TargetServer target ) {
+	public void perform( TargetServer target, boolean debug ) {
 
 		StringBuilder urlString = new StringBuilder();
 		boolean urlStringOK = false;
@@ -98,12 +98,16 @@ public class GetApi  {
 
 			if( handler.cacheSubFolder != null && cacheFile != null ) {
 				
-				Path path = Paths.get( this.context.rootFolder + "/" + handler.cacheSubFolder + "/" + cacheFile );
+				String lookupPath = this.context.rootFolder + "/" + handler.cacheSubFolder + "/" + cacheFile;
+				Path path = Paths.get( lookupPath );
 					
 				// file exists and it is not a directory
 				if( Files.exists(path) && !Files.isDirectory(path)) {
 					
-					// System.out.println("response is already present in cache folder");
+					if( debug ) {
+						//System.out.println("response is already present in cache folder");
+						System.out.println("reusing " + lookupPath );
+					}
 	
 					// load the file then call the handler directly
 		            List<String> content = Files.readAllLines( path, charset );
@@ -209,7 +213,7 @@ public class GetApi  {
 
 			try {
 
-				this.handler.process( this.context, this.stock, response, this.cacheLoaded, this.charset.toString() );
+				this.handler.process( this.context, this.stock, response, this.cacheLoaded, this.charset.toString(), debug );
 
 			} catch( Exception e ) {
 

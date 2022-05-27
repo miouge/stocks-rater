@@ -320,7 +320,7 @@ public class Report extends ReportGeneric {
 				theApi.handler = new AbcSearchHandler();
 				theApi.handler.cacheSubFolder = "/cache/abc-searched";
 			});			
-			api.perform( abcBourse );
+			api.perform( abcBourse, false );
 		});
 		
 		// https://www.abcbourse.com/analyses/chiffres/CNPp
@@ -341,7 +341,7 @@ public class Report extends ReportGeneric {
 				theApi.handler = new AbcSocieteHandler();
 				theApi.handler.cacheSubFolder = "/cache/abc-societe";
 			});			
-			api.perform( abcBourse );
+			api.perform( abcBourse, false );
 		});
 		
 		// https://www.abcbourse.com/marches/events/VCTp
@@ -362,7 +362,7 @@ public class Report extends ReportGeneric {
 					theApi.handler = new AbcEventsAndQuoteHandler();
 					theApi.handler.cacheSubFolder = "/cache/abc-last-quotation";
 				});			
-				api.perform( abcBourse );
+				api.perform( abcBourse, false );
 			}
 		});
 
@@ -383,7 +383,7 @@ public class Report extends ReportGeneric {
 					theApi.handler = new AbcDividendEventsHandler();
 					theApi.handler.cacheSubFolder = "/cache/abc-dividends";
 				});			
-				api.perform( abcBourse );
+				api.perform( abcBourse, false );
 			}
 		});
 
@@ -404,7 +404,7 @@ public class Report extends ReportGeneric {
 					theApi.handler = new AbcDivisionEventsHandler();
 					theApi.handler.cacheSubFolder = "/cache/abc-divisions";
 				});			
-				api.perform( abcBourse );
+				api.perform( abcBourse, false );
 			}
 		});		
 		
@@ -424,7 +424,7 @@ public class Report extends ReportGeneric {
 					theApi.handler = new AbcAugCapitalEventsHandler();
 					theApi.handler.cacheSubFolder = "/cache/abc-aug-capital";
 				});			
-				api.perform( abcBourse );
+				api.perform( abcBourse, false );
 			}
 		});
 		
@@ -461,7 +461,7 @@ public class Report extends ReportGeneric {
 				theApi.handler = new TSSearchIsinHandler();
 				theApi.handler.cacheSubFolder = "/cache/ts-searched";
 			});			
-			api.perform( tradingSat );
+			api.perform( tradingSat, false );
 		});
 		
 		// https://www.tradingsat.com/vicat-FR0000031775/societe.html
@@ -480,7 +480,7 @@ public class Report extends ReportGeneric {
 					theApi.handler = new TSSocieteHandler();
 					theApi.handler.cacheSubFolder = "/cache/ts-societe";
 				});			
-				api.perform( tradingSat );
+				api.perform( tradingSat, false );
 			}
 		});
 		
@@ -501,7 +501,7 @@ public class Report extends ReportGeneric {
 				theApi.handler = new TSFinancialDataHandler();
 				theApi.handler.cacheSubFolder = "/cache/ts-donnees-financieres";
 			});			
-			api.perform( tradingSat );
+			api.perform( tradingSat, false );
 		});		
 	}
 
@@ -531,7 +531,7 @@ public class Report extends ReportGeneric {
 				theApi.handler = new ZbSearchHandler();
 				theApi.handler.cacheSubFolder = "/cache/zb-searched";
 			});			
-			api.perform( zoneBourse );
+			api.perform( zoneBourse, false );
 		});
 
 		/*
@@ -584,7 +584,7 @@ public class Report extends ReportGeneric {
 				theApi.handler.cacheSubFolder = "/cache/zb-fondamentaux";
 				theApi.charset = StandardCharsets.ISO_8859_1;
 			});			
-			api.perform( zoneBourse );
+			api.perform( zoneBourse, false );
 		});
 		
 	}
@@ -613,7 +613,7 @@ public class Report extends ReportGeneric {
 				theApi.handler = new BmaSearchHandler();
 				theApi.handler.cacheSubFolder = "/cache/bma-searched";
 			});			
-			api.perform( boursorama );
+			api.perform( boursorama, false );
 		});
 		
 		
@@ -632,7 +632,7 @@ public class Report extends ReportGeneric {
 				theApi.handler = new BmaSocieteHandler();
 				theApi.handler.cacheSubFolder = "/cache/bma-societe";
 			});
-			api.perform( boursorama );
+			api.perform( boursorama, false );
 		});
 		
 		// https://www.boursorama.com/cours/consensus/1rPLTA/
@@ -689,7 +689,7 @@ public class Report extends ReportGeneric {
 			});
 			
 			yahoo2.purgeCookieStore();
-			api.perform( yahoo2 );
+			api.perform( yahoo2, false );
 			
 			if( api.cacheLoaded == false ) {
 				Tools.waitMs( 1000 );
@@ -722,7 +722,7 @@ public class Report extends ReportGeneric {
 				theApi.onlyUseCache = true;
 			});
 			api.debug = true;
-			api.perform( yahoo2 );			
+			api.perform( yahoo2, false );
 		});	
 		
 		/*

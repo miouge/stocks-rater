@@ -1,14 +1,6 @@
 package com.github.stockRater.handlers;
 
-import java.util.List;
-
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.stockRater.Tools;
 import com.github.stockRater.beans.Stock;
-import com.github.stockRater.beans.jsonMapping.AbcDividend;
-import com.github.stockRater.beans.jsonMapping.DividendEvent;
 
 public class AbcDivisionEventsHandler extends ResponseHandlerTemplate {
 
@@ -19,8 +11,9 @@ public class AbcDivisionEventsHandler extends ResponseHandlerTemplate {
 	}
 
 	@Override
-	public boolean customProcess(Stock stock, StringBuilder response) throws Exception {
+	public boolean customProcess(Stock stock, StringBuilder response, boolean debug) throws Exception {
 
+		@SuppressWarnings("unused")
 		boolean success = false;
 		
 		// System.out.println( String.format( "customProcess for %s ...", stock.name ));		

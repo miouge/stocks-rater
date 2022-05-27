@@ -19,8 +19,6 @@ import com.github.stockRater.handlers.ZbSearchHandler;
 
 public class ReportB extends ReportGeneric {
 
-	Context context;
-
 	public ReportB(Context context) {
 		super(context);
 	}
@@ -51,7 +49,7 @@ public class ReportB extends ReportGeneric {
 				theApi.handler = new ZbSearchHandler();
 				theApi.handler.cacheSubFolder = "/cache/zb-searched";
 			});			
-			api.perform( zoneBourse );
+			api.perform( zoneBourse, false );
 		});
 		
 		System.out.println( "	search ebit, VE ..." );
@@ -78,7 +76,7 @@ public class ReportB extends ReportGeneric {
 				theApi.handler.cacheSubFolder = "/cache/zb-fondamentaux";
 				theApi.charset = StandardCharsets.ISO_8859_1;
 			});			
-			api.perform( zoneBourse );
+			api.perform( zoneBourse, false );
 		});		
 	}	
 	

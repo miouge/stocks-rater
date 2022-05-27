@@ -17,7 +17,7 @@ public class AlphaSearchHandler extends ResponseHandlerTemplate {
 	}
 
 	@Override
-	public boolean customProcess(Stock stock, StringBuilder response) throws Exception {
+	public boolean customProcess(Stock stock, StringBuilder response, boolean debug) throws Exception {
 
 		boolean success = false;
 		

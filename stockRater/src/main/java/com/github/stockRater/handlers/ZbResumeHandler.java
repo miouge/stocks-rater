@@ -11,7 +11,7 @@ public class ZbResumeHandler extends ResponseHandlerTemplate {
 	}
 
 	@Override
-	public boolean customProcess(Stock stock, StringBuilder response ) throws Exception {
+	public boolean customProcess(Stock stock, StringBuilder response, boolean debug ) throws Exception {
 
 		// System.out.println( String.format( "processing %s ...", this.getDumpFilename(stock)));
 

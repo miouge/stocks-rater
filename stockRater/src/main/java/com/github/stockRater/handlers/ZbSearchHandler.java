@@ -11,13 +11,12 @@ public class ZbSearchHandler extends ResponseHandlerTemplate {
 	}
 
 	@Override
-	public boolean customProcess(Stock stock, StringBuilder response ) throws Exception {
+	public boolean customProcess(Stock stock, StringBuilder response, boolean debug ) throws Exception {
 
 		PatternFinder pf;
 		String data;
 
-		// custom suffix
-		
+		// custom suffix		
 		pf = new PatternFinder( response, thePf -> {
 
 			//thePf.contextPatterns.add( "</td><!-- inner td --></tr>" );
@@ -30,6 +29,10 @@ public class ZbSearchHandler extends ResponseHandlerTemplate {
 		if( data.equals( "-" ) == false ) {
 			stock.zbSuffix = data;  
 			stock.zbUrl = String.format("https://www.zonebourse.com/cours/action/%s/fondamentaux/", stock.zbSuffix );
+			
+			if( debug ) {
+				System.out.format("%s -> found stock.zbSuffix = [%s]\n", stock.name, stock.zbSuffix );
+			}
 		}
 		
 		return true;

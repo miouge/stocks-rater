@@ -63,7 +63,7 @@ public abstract class ResponseHandlerTemplate {
 			String tmp = data.replace(",", "." );			
 			Object converted = converter.apply( tmp  );
 			if( debug ) {
-				System.out.println( "addding :" + converted );
+				System.out.println( "adding <" + converted + ">" );
 			}			
 			list.add( (Double) converted );
 		} catch (Exception e) {
@@ -102,9 +102,9 @@ public abstract class ResponseHandlerTemplate {
         
 	}	
 	
-	public boolean customProcess( Stock stock, StringBuilder response ) throws Exception { return false; }
+	public boolean customProcess( Stock stock, StringBuilder response, boolean debug ) throws Exception { return false; }
 	
-	public void process( Context context, Stock stock, StringBuilder response, boolean cacheLoaded, String charset ) throws Exception {
+	public void process( Context context, Stock stock, StringBuilder response, boolean cacheLoaded, String charset, boolean debug ) throws Exception {
 		
 		this.context = context;
 		
@@ -118,7 +118,7 @@ public abstract class ResponseHandlerTemplate {
 		
 		try {
 			
-			this.success = this.customProcess( stock, response );			
+			this.success = this.customProcess( stock, response, debug );			
 			
 		} catch ( Exception e ) {
 		

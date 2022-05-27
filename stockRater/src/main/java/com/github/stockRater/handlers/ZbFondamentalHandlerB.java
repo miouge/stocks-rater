@@ -13,14 +13,12 @@ public class ZbFondamentalHandlerB extends ResponseHandlerTemplate {
 	}
 
 	@Override
-	public boolean customProcess(Stock stock, StringBuilder response ) throws Exception {
+	public boolean customProcess(Stock stock, StringBuilder response, boolean debug ) throws Exception {
 
 		// System.out.println( String.format( "processing %s ...", this.getDumpFilename(stock)));
 
 		PatternFinder pf;
 		String data;
-
-		boolean debug = false;
 	
 		// -------------------- EBIT ----------------
 		stock.histoEBIT = new ArrayList<Double>();
@@ -47,8 +45,10 @@ public class ZbFondamentalHandlerB extends ResponseHandlerTemplate {
 		if( stock.histoEBIT.size() > 0 ) {			
 			stock.histoEBIT.forEach( ebit -> {
 				
-				// System.out.println( String.format( "stock <%s> histoEBIT size = %d", stock.name, stock.histoEBIT.size() ));
-				// System.out.println( String.format( "stock <%s> ebit =%.2f", stock.name, ebit ));				
+				if( debug ) {
+					System.out.println( String.format( "stock <%s> histoEBIT size = %d", stock.name, stock.histoEBIT.size() ));
+					System.out.println( String.format( "stock <%s> ebit =%.2f", stock.name, ebit ));
+				}
 			});
 		}
 				
@@ -70,8 +70,10 @@ public class ZbFondamentalHandlerB extends ResponseHandlerTemplate {
 			
 			stock.histoVE.forEach( ebit -> {
 
-				// System.out.println( String.format( "stock <%s> histoVE size = %d", stock.name, stock.histoVE.size() ));
-				// System.out.println( String.format( "stock <%s> ve =%.2f", stock.name, ebit ));
+				if( debug ) {
+					System.out.println( String.format( "stock <%s> histoVE size = %d", stock.name, stock.histoVE.size() ));
+					System.out.println( String.format( "stock <%s> ve =%.2f", stock.name, ebit ));
+				}
 			});
 		}	
 	
