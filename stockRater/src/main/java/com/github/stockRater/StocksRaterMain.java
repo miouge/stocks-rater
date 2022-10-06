@@ -55,10 +55,10 @@ public class StocksRaterMain
 		reportB.fetchData();
 
 		// compute ratio
-		reportB.computeAll();
+		//reportB.computeAll();
 			
 		// generate report
-		reportB.outputReport( "reportB.xlsx" );
+		//reportB.outputReport( "reportB.xlsx" );
 	}
 	
 	public static void main( String[] args )
@@ -68,9 +68,9 @@ public class StocksRaterMain
 			Context context = new Context();
 			
 			
-			testHandlers( context );
+			//testHandlers( context );
 			//generateReportA( context );
-			//generateReportB( context );
+			generateReportB( context );
 			
 		} catch (Exception e) {
 			
