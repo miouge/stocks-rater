@@ -1,4 +1,4 @@
-package com.github.stockRater;
+package miouge;
 
 import java.io.File;
 import java.time.LocalDateTime;

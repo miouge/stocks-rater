@@ -1,4 +1,4 @@
-package com.github.stockRater;
+package miouge;
 
 import com.github.stockRater.beans.Context;
 

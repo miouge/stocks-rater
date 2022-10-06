@@ -1,4 +1,4 @@
-package com.github.stockRater;
+package miouge;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;

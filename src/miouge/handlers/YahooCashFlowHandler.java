@@ -1,4 +1,4 @@
-package com.github.stockRater.handlers;
+package miouge.handlers;
 
 import com.github.stockRater.beans.Stock;
 

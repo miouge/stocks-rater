@@ -1,4 +1,4 @@
-package com.github.stockRater.beans.jsonMapping;
+package miouge.beans.jsonMapping;
 
 public class TSSearchedIsin {
 	

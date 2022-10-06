@@ -1,4 +1,4 @@
-package com.github.stockRater;
+package miouge;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;

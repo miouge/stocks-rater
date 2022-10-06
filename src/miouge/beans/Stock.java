@@ -1,4 +1,4 @@
-package com.github.stockRater.beans;
+package miouge.beans;
 
 import java.util.ArrayList;
 import java.util.TreeMap;
