@@ -1,21 +1,10 @@
+
 package miouge;
 
-import com.github.stockRater.beans.Context;
+import miouge.beans.Context;
 
 public class StocksRaterMain 
 {
-	@SuppressWarnings("unused")
-	private static void testHandlers( Context context ) throws Exception {
-		
-		ReportTestHandler report = new ReportTestHandler( context );
-		
-		// load the stocks reference CSV file
-		report.loadCsvData( "stocks-input.csv" );
-			
-		// retrieve needed data asking some websites
-		report.fetchData();
-	}
-	
 	@SuppressWarnings("unused")
 	private static void generateReportA( Context context ) throws Exception {
 		
@@ -43,22 +32,25 @@ public class StocksRaterMain
 	@SuppressWarnings("unused")
 	private static void generateReportB( Context context ) throws Exception {
 		
-		ReportB reportB = new ReportB( context );
+		ReportZB reportZB = new ReportZB( context );
 		
 		// load the stocks reference CSV file
-		reportB.loadCsvData( "stocks-input.csv" );
+		reportZB.loadCsvData( "stocks-input-ZB.csv" );
 		
 		// load the portfolio CSV file
 		// report.loadPortfolio( "portfolio.csv" );
 
 		// retrieve needed data asking some websites
-		reportB.fetchData();
+		reportZB.fetchData();
 
 		// compute ratio
-		//reportB.computeAll();
+		reportZB.computeAll();
+		
+		// generate CSV
+		// reportZB.flushCsvData( "stocks-output-ZB.csv" );
 			
 		// generate report
-		//reportB.outputReport( "reportB.xlsx" );
+		reportZB.outputReport( "reportZB.xlsx" );
 	}
 	
 	public static void main( String[] args )

@@ -1,6 +1,6 @@
 package miouge.handlers;
 
-import com.github.stockRater.beans.Stock;
+import miouge.beans.Stock;
 
 public class AbcSearchHandler extends ResponseHandlerTemplate {
 
@@ -70,22 +70,7 @@ public class AbcSearchHandler extends ResponseHandlerTemplate {
 				stock.withinPEA = true;
 			}
 		}
-		
-		// TTF
-		
-		pf = new PatternFinder( response, thePf -> {
-
-			thePf.contextPatterns.add( ">TTF</a>" );
-			thePf.outOfContextPattern = "</table>";
-			thePf.leftPattern = "<td class=\"alri\">";
-			thePf.rightPattern = "</td>";
-		}); 		
-		data = pf.find().trim().toLowerCase();
-		if( data.equals("oui")) {
-			stock.withTTF = true;
-			stock.withTTFLabel = "TTF";
-		}
-		
+				
 		// System.out.println(String.format("%s-%s-%s", stock.isin, stock.mnemo, stock.name));
 		
 		return true;

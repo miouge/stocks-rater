@@ -8,8 +8,9 @@ import java.util.function.Function;
 
 import org.apache.commons.io.FileUtils;
 
-import com.github.stockRater.beans.Context;
-import com.github.stockRater.beans.Stock;
+import miouge.beans.Context;
+import miouge.beans.Stock;
+
 
 // import org.jsoup.Jsoup;
 // import org.jsoup.nodes.Document;

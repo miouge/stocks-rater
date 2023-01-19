@@ -4,9 +4,9 @@ import java.util.ArrayList;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.stockRater.beans.Stock;
-import com.github.stockRater.beans.jsonMapping.AlphaMatch;
-import com.github.stockRater.beans.jsonMapping.AlphaSearched;
+import miouge.beans.Stock;
+import miouge.beans.jsonMapping.AlphaMatch;
+import miouge.beans.jsonMapping.AlphaSearched;
 
 public class AlphaSearchHandler extends ResponseHandlerTemplate {
 

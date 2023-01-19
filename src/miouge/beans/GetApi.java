@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
-import com.github.stockRater.handlers.ResponseHandlerTemplate;
+import miouge.handlers.ResponseHandlerTemplate;
 
 public class GetApi  {
 	
@@ -98,13 +98,14 @@ public class GetApi  {
 
 			if( handler.cacheSubFolder != null && cacheFile != null ) {
 				
-				String lookupPath = this.context.rootFolder + "/" + handler.cacheSubFolder + "/" + cacheFile;
+				String lookupPath = this.context.rootFolder + handler.cacheSubFolder + "/" + cacheFile;
 				Path path = Paths.get( lookupPath );
 					
 				// file exists and it is not a directory
 				if( Files.exists(path) && !Files.isDirectory(path)) {
 					
-					if( debug ) {
+					if( debug )
+					{
 						//System.out.println("response is already present in cache folder");
 						System.out.println("reusing " + lookupPath );
 					}

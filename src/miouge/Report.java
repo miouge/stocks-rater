@@ -17,25 +17,25 @@ import org.apache.poi.ss.usermodel.CreationHelper;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
-import com.github.stockRater.beans.Context;
-import com.github.stockRater.beans.GetApi;
-import com.github.stockRater.beans.Stock;
-import com.github.stockRater.beans.TargetServer;
-import com.github.stockRater.handlers.AbcAugCapitalEventsHandler;
-import com.github.stockRater.handlers.AbcDividendEventsHandler;
-import com.github.stockRater.handlers.AbcDivisionEventsHandler;
-import com.github.stockRater.handlers.AbcEventsAndQuoteHandler;
-import com.github.stockRater.handlers.AbcSearchHandler;
-import com.github.stockRater.handlers.AbcSocieteHandler;
-import com.github.stockRater.handlers.BmaSearchHandler;
-import com.github.stockRater.handlers.BmaSocieteHandler;
-import com.github.stockRater.handlers.TSFinancialDataHandler;
-import com.github.stockRater.handlers.TSSearchIsinHandler;
-import com.github.stockRater.handlers.TSSocieteHandler;
-import com.github.stockRater.handlers.YahooHistoQuoteHandler;
-import com.github.stockRater.handlers.YahooSearchHandler;
-import com.github.stockRater.handlers.ZbFondamentalHandler;
-import com.github.stockRater.handlers.ZbSearchHandler;
+import miouge.beans.Context;
+import miouge.beans.GetApi;
+import miouge.beans.Stock;
+import miouge.beans.TargetServer;
+import miouge.handlers.AbcAugCapitalEventsHandler;
+import miouge.handlers.AbcDividendEventsHandler;
+import miouge.handlers.AbcDivisionEventsHandler;
+import miouge.handlers.AbcEventsAndQuoteHandler;
+import miouge.handlers.AbcSearchHandler;
+import miouge.handlers.AbcSocieteHandler;
+import miouge.handlers.BmaSearchHandler;
+import miouge.handlers.BmaSocieteHandler;
+import miouge.handlers.TSFinancialDataHandler;
+import miouge.handlers.TSSearchIsinHandler;
+import miouge.handlers.TSSocieteHandler;
+import miouge.handlers.YahooHistoQuoteHandler;
+import miouge.handlers.YahooSearchHandler;
+import miouge.handlers.ZbFondamentalHandler;
+import miouge.handlers.ZbSearchHandler;
 import com.opencsv.CSVParser;
 import com.opencsv.CSVParserBuilder;
 import com.opencsv.CSVReader;
@@ -956,7 +956,6 @@ let modules = [
 		
 	    	reportSheet.createRow( row + 1 ); // [ 0 : first row
 	    	sourcesSheet.createRow( row + 1 ); // [ 0 : first row
-	    	row++;
 		}
 
 	    // ********************* Compose Report Sheet ***********************
@@ -982,11 +981,6 @@ let modules = [
 	    sheet.getRow(0).createCell( column ).setCellValue( (String) "ISIN" );
 	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).isin ); }
 	    
-	    // with TTF
-	    column++;
-	    sheet.getRow(0).createCell( column ).setCellValue( (String) "TTF" );
-	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).withTTFLabel ); }		    
-
 	    // MNEMO		    
 	    column++;
 	    sheet.getRow(0).createCell( column ).setCellValue( (String) "Mnemo" );

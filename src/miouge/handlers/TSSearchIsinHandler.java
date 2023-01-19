@@ -5,8 +5,8 @@ import java.util.List;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.stockRater.beans.Stock;
-import com.github.stockRater.beans.jsonMapping.TSSearchedIsin;
+import miouge.beans.Stock;
+import miouge.beans.jsonMapping.TSSearchedIsin;
 
 public class TSSearchIsinHandler extends ResponseHandlerTemplate {
 

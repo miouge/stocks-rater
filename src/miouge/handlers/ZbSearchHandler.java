@@ -1,6 +1,6 @@
 package miouge.handlers;
 
-import com.github.stockRater.beans.Stock;
+import miouge.beans.Stock;
 
 public class ZbSearchHandler extends ResponseHandlerTemplate {
 
@@ -30,7 +30,8 @@ public class ZbSearchHandler extends ResponseHandlerTemplate {
 			stock.zbSuffix = data;  
 			stock.zbUrl = String.format("https://www.zonebourse.com/cours/action/%s/fondamentaux/", stock.zbSuffix );
 			
-			if( debug ) {
+			// if( debug )
+			{
 				System.out.format("%s -> found stock.zbSuffix = [%s]\n", stock.name, stock.zbSuffix );
 			}
 		}

@@ -1,6 +1,6 @@
 package miouge.beans.jsonMapping;
 
-import com.github.stockRater.beans.Event;
+import miouge.beans.Event;
 
 public class DividendEvent extends Event {
 

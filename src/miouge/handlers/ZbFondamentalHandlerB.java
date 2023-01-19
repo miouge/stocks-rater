@@ -2,7 +2,7 @@ package miouge.handlers;
 
 import java.util.ArrayList;
 
-import com.github.stockRater.beans.Stock;
+import miouge.beans.Stock;
 
 public class ZbFondamentalHandlerB extends ResponseHandlerTemplate {
 
@@ -15,7 +15,7 @@ public class ZbFondamentalHandlerB extends ResponseHandlerTemplate {
 	@Override
 	public boolean customProcess(Stock stock, StringBuilder response, boolean debug ) throws Exception {
 
-		// System.out.println( String.format( "processing %s ...", this.getDumpFilename(stock)));
+		System.out.println( String.format( "processing %s ...", this.getDumpFilename(stock)));
 
 		PatternFinder pf;
 		String data;
@@ -50,6 +50,26 @@ public class ZbFondamentalHandlerB extends ResponseHandlerTemplate {
 					System.out.println( String.format( "stock <%s> ebit =%.2f", stock.name, ebit ));
 				}
 			});
+		}
+		
+		// -------------------- RESULTAT NET ----------------
+		stock.histoRN = new ArrayList<Double>();
+		
+		for( int i = 0 ; i <= 7 ; i++ ) {
+			
+			tag.setLength( 0 );
+			tag.append( "bc2V tableCol" + i  );
+			
+			pf = new PatternFinder( response, thePf -> {
+	
+				thePf.contextPatterns.add( ">Résultat net</a>" );
+				thePf.contextPatterns.add( tag.toString() ); // [ bc2V tableCol0 -> bc2V tableCol7 ]
+				thePf.outOfContextPattern = "<i>Marge nette</i>";			
+				thePf.leftPattern = ">";
+				thePf.rightPattern = "</td>";
+			});
+			data = pf.find().replace( " ", "" );
+			addDoubleIfNonNull( data, Double::parseDouble, stock.histoRN, debug );
 		}
 				
 		// -------------------- Valeur Entreprise ----------------

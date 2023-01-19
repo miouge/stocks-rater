@@ -2,7 +2,7 @@ package miouge.handlers;
 
 import java.util.ArrayList;
 
-import com.github.stockRater.beans.Stock;
+import miouge.beans.Stock;
 
 public class TSFinancialDataHandler extends ResponseHandlerTemplate {
 

@@ -22,8 +22,8 @@ import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
-import com.github.stockRater.beans.Context;
-import com.github.stockRater.beans.Stock;
+import miouge.beans.Context;
+import miouge.beans.Stock;
 import com.opencsv.CSVParser;
 import com.opencsv.CSVParserBuilder;
 import com.opencsv.CSVReader;
@@ -73,20 +73,22 @@ public abstract class ReportGeneric {
 				this.stocks.add( stock );
 				this.stocksByIsin.put(stock.isin, stock);
 				
-				stock.countryCode=fields[idx++];
+				//stock.countryCode=fields[idx++];
 				//stock.countryCode = stock.isin.substring(0, 2);
 				
-				stock.mnemo      = fields[idx++]; // also named "ticker"
-				stock.yahooSymbol = fields[idx++];
 				stock.name       = fields[idx++];
-				
+				stock.mnemo      = fields[idx++]; // also named "ticker"
+				stock.zbSuffix   = fields[idx++];
+				stock.yahooSymbol= fields[idx++];
+								
 				if( fields[idx].length() > 0 ) {stock.withinPEA=Boolean.parseBoolean( fields[idx] ); }; idx++;
 				if( fields[idx].length() > 0 ) {stock.toIgnore=Boolean.parseBoolean( fields[idx]); }; idx++;
+				if( fields[idx].length() > 0 ) {
+					Boolean owned = Boolean.parseBoolean( fields[idx]);
+					if( owned ) { stock.portfolio = 1; }
+				}; idx++;
 				
 				// System.out.println( stock.mnemo + " PEA=" + stock.withinPEA + "/ Ignore=" + stock.toIgnore );
-				
-				stock.comment=fields[idx++];
- 				stock.activity=fields[idx++];
 			});
 		}
 		
@@ -97,9 +99,6 @@ public abstract class ReportGeneric {
 			}
 			if( stock.toIgnore == null ) {
 				stock.toIgnore = false;
-			}
-			if( stock.withTTF == null ) {
-				stock.withTTF = false;
 			}
 			if( stock.withinPEA ) {
 				stock.withinPEALabel = "PEA";

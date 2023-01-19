@@ -7,10 +7,10 @@ import java.util.List;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.stockRater.Tools;
-import com.github.stockRater.beans.Stock;
-import com.github.stockRater.beans.jsonMapping.AbcDividend;
-import com.github.stockRater.beans.jsonMapping.DividendEvent;
+import miouge.Tools;
+import miouge.beans.Stock;
+import miouge.beans.jsonMapping.AbcDividend;
+import miouge.beans.jsonMapping.DividendEvent;
 
 public class AbcDividendEventsHandler extends ResponseHandlerTemplate {
 		

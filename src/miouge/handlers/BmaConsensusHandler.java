@@ -1,6 +1,6 @@
 package miouge.handlers;
 
-import com.github.stockRater.beans.Stock;
+import miouge.beans.Stock;
 
 public class BmaConsensusHandler extends ResponseHandlerTemplate {
 

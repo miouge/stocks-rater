@@ -15,8 +15,6 @@ public class Stock {
 	public String comment;
 	public Integer portfolio = 0; // current nb of stock in portfolio
 
-	public Boolean withTTF; // from ABC Bourse	
-	public String withTTFLabel; // "TTF" ou null
 	public String withinPEALabel; // "PEA" ou null
 
 	public Long effectif;
@@ -70,6 +68,7 @@ public class Stock {
 	public Double avgCA;
 	
 	public ArrayList<Long> histoRNPG; // K€
+	public ArrayList<Double> histoRN; // K€
 	public Double avgRNPG;
 	
 	public ArrayList<Long> histoCP; // K€
@@ -84,6 +83,7 @@ public class Stock {
 	public ArrayList<Double> histoNetTres; // Trésorerie Nette
 	
 	public ArrayList<Double> histoVE; // Valeur d'entreprise (Capitalization + Dette financiere nette) en M€ (from Zb)
+	public Double lastVE;                    // last Valeur d'entreprise si histoVE > 0;
 	public Double soulteVE; // en M€ uantité à ajouter a la capitalization pour avoir la valeur d'entreprise
 	
 	// Dividends
