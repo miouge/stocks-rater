@@ -26,11 +26,11 @@ public class ReportZB extends ReportGeneric {
 	public ReportZB(Context context) {
 		super(context);
 	}
-
-	public void fetchDataZb() throws Exception {
+	
+	public void fetchData() throws Exception {
 		
 		System.out.println( String.format( "stocks list size = %d", this.stocks.size()) );
-				
+		
 		// ---------------- ZONE BOURSE -------------------
 		
 		System.out.println( "fetch data from ZONE BOURSE ..." );
@@ -65,34 +65,33 @@ public class ReportZB extends ReportGeneric {
 		// retrieve Zone Bourse fondamentaux		
 		this.stocks.forEach( stock -> {
 			
-			// System.out.println( String.format( "[%s] stock.zbSuffix=[%s] ignore=%s", stock.name, stock.zbSuffix, stock.toIgnore.toString() ) );
-			
-			if( stock.toIgnore == true ) { return; }
+			if( stock.toIgnore == true ) {
+				
+				System.out.println( String.format( "IGNORED : [%s] zbSuffix=[%s] ignore=%s", stock.name, stock.zbSuffix, stock.toIgnore.toString() ) );
+				return;
+			}
 			//if( stock.withinPEA == false ) { return; }
 			if( stock.zbSuffix == null ) { return; }
+			stock.zbUrl = String.format("https://www.zonebourse.com/cours/action/%s/fondamentaux/", stock.zbSuffix );
 			
 			GetApi api = new GetApi( this.context, theApi -> {
 				
 				theApi.urlSuffix = String.format( "/cours/action/%s/fondamentaux/", stock.zbSuffix );
-				theApi.stock = stock;
-				theApi.stock.zbUrl = String.format("https://www.zonebourse.com/cours/action/%s/fondamentaux/", stock.zbSuffix );				
+				theApi.stock = stock;				
 				theApi.handler = new ZbFondamentalHandlerB();
 				theApi.handler.cacheSubFolder = "/cache/zb-fondamentaux";
 				theApi.charset = StandardCharsets.ISO_8859_1;
 			});			
 			api.perform( zoneBourse, false );
 		});
-	}
-	
-	public void fetchData() throws Exception {
 		
-		fetchDataZb();
+		System.out.println( "fetch data completed." );
 	}		
 
 	@Override
 	public void compute( Stock stock ) {
 		
-		//System.out.println( String.format( "compute for stock <%s> ...", stock.name ));
+		System.out.println( String.format( "compute for stock <%s> ...", stock.name ));
 
 		if( stock.histoVE != null && stock.histoVE.size() > 0 ) {
 			
@@ -107,6 +106,23 @@ public class ReportZB extends ReportGeneric {
 				stock.ratioVeOverEBIT = stock.lastVE / stock.avgEBIT;
 			}
 		}
+		
+		if( stock.histoBNA != null && stock.histoBNA.size() > 0 ) {
+			stock.avgBNA = stock.histoBNA.stream().mapToDouble( i -> i ).average().getAsDouble();
+		}
+		if( stock.histoDIV != null && stock.histoDIV.size() > 0 ) {
+			stock.avgDIV = stock.histoDIV.stream().mapToDouble( i -> i ).average().getAsDouble();
+		}
+		
+		if( stock.lastQuote != null && stock.avgDIV != null && stock.avgDIV > 0 ) {
+		
+			stock.rdtPercent = ( stock.avgDIV / stock.lastQuote ) * 100.0;
+		}
+		if( stock.avgBNA != null && stock.avgBNA > 0 && stock.avgDIV != null && stock.avgDIV > 0 ) {
+			
+			stock.payout = ( stock.avgDIV / stock.avgBNA ) * 100.0;
+		}		
+		
 	}
 			
 	private void setCsvCell( String[] fieldsOfLine, int columnIdx, Object content ) {
@@ -258,17 +274,29 @@ public class ReportZB extends ReportGeneric {
 	    // lastVE
 	    column++;
 	    sheet.getRow(0).createCell( column ).setCellValue( (String) "VE (M€)" );
-	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).lastVE ).setCellStyle( precisionStyle.get(-1)); }		    	    
+	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).lastVE ).setCellStyle( precisionStyle.get(-1)); }
+	    
+	    
+	    // Rendement %
+	    column++;
+	    sheet.getRow(0).createCell( column ).setCellValue( (String) "Rendement %" );
+	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).rdtPercent ).setCellStyle( precisionStyle.get(-1)); }		    
+
+	    // payout %
+	    column++;
+	    sheet.getRow(0).createCell( column ).setCellValue( (String) "Payout %" );
+	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).payout ).setCellStyle( precisionStyle.get(-1)); }		    
+
 	    
 	    // avg EBIT
-	    column++;
-	    sheet.getRow(0).createCell( column ).setCellValue( (String) "avg EBIT (M€)" );
-	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).avgEBIT ).setCellStyle( precisionStyle.get(-1)); }		    
+//	    column++;
+//	    sheet.getRow(0).createCell( column ).setCellValue( (String) "avg EBIT (M€)" );
+//	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).avgEBIT ).setCellStyle( precisionStyle.get(-1)); }		    
 	    
 	    // nb EBIT
-	    column++;
-	    sheet.getRow(0).createCell( column ).setCellValue( (String) "EBIT Nb" );
-	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).histoEBIT.size() ).setCellStyle( precisionStyle.get(0)); }		    
+//	    column++;
+//	    sheet.getRow(0).createCell( column ).setCellValue( (String) "EBIT Nb" );
+//	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).histoEBIT.size() ).setCellStyle( precisionStyle.get(0)); }		    
     
 	    
 	    // ---------------- Web Sites URL ...		    

@@ -75,6 +75,15 @@ public class Stock {
 	
 	public ArrayList<Double> histoEBIT;
 	public Double avgEBIT;
+
+	public ArrayList<Double> histoBNA;
+	public Double avgBNA;
+
+	public ArrayList<Double> histoDIV;
+	public Double avgDIV;
+	
+	public Double rdtPercent; // rendement en %
+	public Double payout;     // payout %
 	
 	public ArrayList<Double> histoDebtRatio; // ratio d'endettement en %
 	public Double debtRatio;                 // en %	

@@ -64,7 +64,7 @@ public abstract class ReportGeneric {
 
 				int idx = 0;
 				
-				String isin = fields[idx++];
+				String isin = fields[idx++]; // reading of column ISIN
 				if( isin.length() != 12 ) { return; } // IsinCode = 12 characters length
 
 				Stock stock = new Stock();
@@ -81,8 +81,8 @@ public abstract class ReportGeneric {
 				stock.zbSuffix   = fields[idx++];
 				stock.yahooSymbol= fields[idx++];
 								
-				if( fields[idx].length() > 0 ) {stock.withinPEA=Boolean.parseBoolean( fields[idx] ); }; idx++;
 				if( fields[idx].length() > 0 ) {stock.toIgnore=Boolean.parseBoolean( fields[idx]); }; idx++;
+				if( fields[idx].length() > 0 ) {stock.withinPEA=Boolean.parseBoolean( fields[idx] ); }; idx++;				
 				if( fields[idx].length() > 0 ) {
 					Boolean owned = Boolean.parseBoolean( fields[idx]);
 					if( owned ) { stock.portfolio = 1; }
@@ -91,6 +91,10 @@ public abstract class ReportGeneric {
 				// System.out.println( stock.mnemo + " PEA=" + stock.withinPEA + "/ Ignore=" + stock.toIgnore );
 			});
 		}
+		
+		System.out.println( String.format( "Stock definitions loaded : %d", this.stocks.size() ));
+		
+		List<Stock> overrided = new ArrayList<Stock>();
 		
 		this.stocks.forEach( stock -> {
 
@@ -113,7 +117,8 @@ public abstract class ReportGeneric {
 				// file exists and it is not a directory
 				if( Files.exists(path) && !Files.isDirectory(path)) {
 					
-					System.out.println(String.format( "loading override for %s-%s ...", stock.mnemo, stock.isin ));
+					// System.out.println(String.format( "loading override for %s-%s ...", stock.mnemo, stock.isin ));
+					overrided.add( stock );
 					
 					String value = Tools.getIniSetting(overrideFile, "General", "SharesCount", "");
 
@@ -130,8 +135,9 @@ public abstract class ReportGeneric {
 			}
 		});
 
-		System.out.println( String.format( "%d stock definitions loaded", this.stocks.size() ));
-
+		
+		System.out.println( String.format( "Overrides loaded : %d", overrided.size() ));
+		
 		// this.importNewIsinCsv();
 	}
 	
