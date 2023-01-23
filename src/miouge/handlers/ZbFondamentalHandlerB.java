@@ -44,6 +44,9 @@ public class ZbFondamentalHandlerB extends ResponseHandlerTemplate {
 					System.out.println( String.format( "stock <%s> ve =%.2f", stock.name, ebit ));
 				}
 			});
+			
+			// take last element of the list to be the current VE
+			stock.lastVE = stock.histoVE.get( stock.histoVE.size() - 1 );
 		}
 		
 		// -------------------- Cours de référence  ----------------		
@@ -66,24 +69,22 @@ public class ZbFondamentalHandlerB extends ResponseHandlerTemplate {
 			data = pf.find().replace( " ", "" );
 			addDoubleIfNonNull( data, Double::parseDouble, quotes, debug );
 		}
-		
+
 		if( quotes.size() > 0 ) {
-			
+
 			// take last value of the list, that's supposed to be the last quotation
-			
 			stock.lastQuote = quotes.get(quotes.size()-1);
 			//System.out.println( String.format( "stock <%s> lastQuote =%.2f", stock.name, stock.lastQuote ));
 			// return true;
 		}
 		else {
-			
+
 			System.out.println( String.format( "stock <%s> NO QUOTE", stock.name ));
 			return false;
-		}	
+		}
 		
 		// -------------------- EBIT ----------------
 		stock.histoEBIT = new ArrayList<Double>();
-		
 				
 		for( int i = 0 ; i <= 7 ; i++ ) {
 			

@@ -1,19 +1,14 @@
 package miouge;
 
-import java.io.FileWriter;
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 
 import org.apache.poi.hssf.util.HSSFColor;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.CreationHelper;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-
-import com.opencsv.CSVWriter;
 
 import miouge.beans.Context;
 import miouge.beans.GetApi;
@@ -60,18 +55,14 @@ public class ReportZB extends ReportGeneric {
 		});		
 */
 		
-		System.out.println( "	search ebit, VE ..." );		
+		System.out.println( "	search EBIT, VE, BNA, DIV  ..." );		
 		// https://www.zonebourse.com/cours/action/VICAT-5009/fondamentaux/
 		// retrieve Zone Bourse fondamentaux		
 		this.stocks.forEach( stock -> {
-			
-			if( stock.toIgnore == true ) {
-				
-				System.out.println( String.format( "IGNORED : [%s] zbSuffix=[%s] ignore=%s", stock.name, stock.zbSuffix, stock.toIgnore.toString() ) );
-				return;
-			}
-			//if( stock.withinPEA == false ) { return; }
+
+			if( stock.toIgnore == true ) { return; }			
 			if( stock.zbSuffix == null ) { return; }
+			
 			stock.zbUrl = String.format("https://www.zonebourse.com/cours/action/%s/fondamentaux/", stock.zbSuffix );
 			
 			GetApi api = new GetApi( this.context, theApi -> {
@@ -91,109 +82,40 @@ public class ReportZB extends ReportGeneric {
 	@Override
 	public void compute( Stock stock ) {
 		
-		System.out.println( String.format( "compute for stock <%s> ...", stock.name ));
-
-		if( stock.histoVE != null && stock.histoVE.size() > 0 ) {
-			
-			stock.lastVE = stock.histoVE.get( stock.histoVE.size() - 1 );
-		}
+		// System.out.println( String.format( "compute for stock <%s> ...", stock.name ));
 		
 		if( stock.lastVE != null && stock.histoEBIT != null && stock.histoEBIT.size() > 0 ) {
-			
+
 			stock.avgEBIT = stock.histoEBIT.stream().mapToDouble( i -> i ).average().getAsDouble();
-			
-			if( stock.avgEBIT >= 0 ) {				
+
+			if( stock.avgEBIT >= 0 ) {
 				stock.ratioVeOverEBIT = stock.lastVE / stock.avgEBIT;
 			}
 		}
-		
+
 		if( stock.histoBNA != null && stock.histoBNA.size() > 0 ) {
 			stock.avgBNA = stock.histoBNA.stream().mapToDouble( i -> i ).average().getAsDouble();
 		}
 		if( stock.histoDIV != null && stock.histoDIV.size() > 0 ) {
 			stock.avgDIV = stock.histoDIV.stream().mapToDouble( i -> i ).average().getAsDouble();
 		}
+
+		if( stock.lastQuote != null && stock.lastQuote > 0 && stock.avgDIV != null && stock.avgDIV > 0 ) {
 		
-		if( stock.lastQuote != null && stock.avgDIV != null && stock.avgDIV > 0 ) {
-		
-			stock.rdtPercent = ( stock.avgDIV / stock.lastQuote ) * 100.0;
+			stock.rdtPerc = ( stock.avgDIV / stock.lastQuote ) * 100.0;
 		}
 		if( stock.avgBNA != null && stock.avgBNA > 0 && stock.avgDIV != null && stock.avgDIV > 0 ) {
 			
-			stock.payout = ( stock.avgDIV / stock.avgBNA ) * 100.0;
-		}		
-		
-	}
-			
-	private void setCsvCell( String[] fieldsOfLine, int columnIdx, Object content ) {
-		
-		if( content == null ) {
-			
-			fieldsOfLine[ columnIdx ] = "";
-			
-		}
-		else {
-			
-			if( content instanceof Boolean ) {
-				
-				if( (Boolean)content == false ) {
-					fieldsOfLine[ columnIdx ] = ""; // output void for false boolean
-					return;
-				}
-			}
-			
-			fieldsOfLine[ columnIdx ] = content.toString();
+			stock.payoutPerc = ( stock.avgDIV / stock.avgBNA ) * 100.0;
 		}
 	}
-	
-	public void flushCsvData( String csvStockFile ) throws IOException {
-		
-		int COLUMN_NB = 9; 
-		
-		String stocksCSV  = context.rootFolder + "/data/" + csvStockFile;
-		
-		List<String[]> stringArray = new ArrayList<String[]>();
-		
-		String[] header = new String[COLUMN_NB];
-		stringArray.add(header);
-		int column = 0;
-		header[column] = "ISIN";column++;
-		
-		header[column] = "Name";column++;
-		header[column] = "Mnemo";column++;
-		header[column] = "zbSuffix";column++;
-		header[column] = "yahooSymbol";column++;
-		header[column] = "WithinPEA";column++;
-		header[column] = "ToIgnore";column++;
-
-		for( Stock stock : this.stocks ) {
-					
-			String[] array = new String[COLUMN_NB];
-			stringArray.add(array);
-			column = 0;			
-			setCsvCell( array, column++, stock.isin );			
-			setCsvCell( array, column++, stock.name );
-			setCsvCell( array, column++, stock.mnemo );
-			setCsvCell( array, column++, stock.zbSuffix );
-			setCsvCell( array, column++, stock.yahooSymbol );						
-			setCsvCell( array, column++, stock.withinPEA );
-			setCsvCell( array, column++, stock.toIgnore );
-		}
-		
-	     CSVWriter writer = new CSVWriter(new FileWriter(stocksCSV), ';', '\u0000', '\\', "\n" );
-	     
-	     writer.writeAll(stringArray);
-	     writer.close();
-	     
-	     System.out.println( String.format( "flush stock definitions Csv for %d stock(s) : OK", stocks.size()));
-	}	
 	
 	@Override
 	protected boolean excludeFromReport( Stock stock, boolean verbose ) {
 		
 		if( stock.lastVE != null && stock.lastVE < 50.0 ) {
-			// société trop petite
-			if( verbose ) { System.out.println( String.format( "exclude %s : too small lastVE", stock.name )); }			
+			// société trop petite			
+			System.out.println( String.format( "EXCLUDED : too small VE [%s] zbSuffix=[%s] ignore=%s", stock.name, stock.zbSuffix, stock.toIgnore.toString() ) );
 			return true;
 		}
 
@@ -207,6 +129,7 @@ public class ReportZB extends ReportGeneric {
 		
 	    // create an empty work sheet
 	    XSSFSheet reportSheet = wb.createSheet("report");
+	    
 	    // create an empty work sheet
 	    XSSFSheet sourcesSheet = wb.createSheet("sources");
 	    		    
@@ -224,33 +147,37 @@ public class ReportZB extends ReportGeneric {
 		System.out.println( String.format( "XSSFSheet row [ %d - %d ]", reportSheet.getFirstRowNum(),  reportSheet.getLastRowNum() ));
 	    
 	    // ********************* Compose Report Sheet ***********************
-	    
+
 	    XSSFSheet sheet = reportSheet;
-	    
+
 	    int column;
 	    int iMax = selection.size();
-	    
-	    // NAME 		    
+
+	    // NAME
 	    column = 0;
 	    sheet.getRow(0).createCell( column ).setCellValue( (String) "Name" );
 	    for( int i = 0 ; i < iMax ; i++ ) {
-	    	final Stock stock = selection.get(i);	    	
-	    	System.out.println( String.format( "stock <%s> <%s>", stock.isin, stock.name ));	    	    	
+	    	final Stock stock = selection.get(i);
 	    	createCell( sheet.getRow( i + 1 ), column, stock.name ).setCellStyle( createStyle( wb, stock, style -> {
-	    		if( stock.portfolio > 0 ) {
+	    		if( stock.inPortfolio ) {
 	    			setBackgroundColor( style, HSSFColor.HSSFColorPredefined.PALE_BLUE );
 	    		}
 	    }));}
-	    
+
 	    // ISIN
 	    column++;
 	    sheet.getRow(0).createCell( column ).setCellValue( (String) "ISIN" );
 	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).isin ); }
-	    
-	    // MNEMO		    
+	    	    
+	    // MNEMO
+	    // column++;
+	    // sheet.getRow(0).createCell( column ).setCellValue( (String) "Mnemo" );
+	    // for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).mnemo ); }
+
+	    // elligible PEA
 	    column++;
-	    sheet.getRow(0).createCell( column ).setCellValue( (String) "Mnemo" );
-	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).mnemo ); }
+	    sheet.getRow(0).createCell( column ).setCellValue( (String) "PEA" );
+	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).withinPEALabel ); }
 	    
 	    // VE / EBIT
 	    column++;
@@ -275,18 +202,20 @@ public class ReportZB extends ReportGeneric {
 	    column++;
 	    sheet.getRow(0).createCell( column ).setCellValue( (String) "VE (M€)" );
 	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).lastVE ).setCellStyle( precisionStyle.get(-1)); }
-	    
-	    
+	    	    
 	    // Rendement %
 	    column++;
-	    sheet.getRow(0).createCell( column ).setCellValue( (String) "Rendement %" );
-	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).rdtPercent ).setCellStyle( precisionStyle.get(-1)); }		    
+	    sheet.getRow(0).createCell( column ).setCellValue( (String) "RDT %" );
+	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).rdtPerc ).setCellStyle( precisionStyle.get(-1)); }		    
 
 	    // payout %
 	    column++;
-	    sheet.getRow(0).createCell( column ).setCellValue( (String) "Payout %" );
-	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).payout ).setCellStyle( precisionStyle.get(-1)); }		    
+	    sheet.getRow(0).createCell( column ).setCellValue( (String) "PAYOUT %" );
+	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).payoutPerc ).setCellStyle( precisionStyle.get(-1)); }		    
 
+	    
+	    
+	    
 	    
 	    // avg EBIT
 //	    column++;
@@ -306,5 +235,5 @@ public class ReportZB extends ReportGeneric {
 	    sheet.getRow(0).createCell( column ).setCellValue( (String) "Zone Bourse URL" );
 	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).zbUrl ); }
 				
-	}	
+	}
 }

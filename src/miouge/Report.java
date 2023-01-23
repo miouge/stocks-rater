@@ -2,7 +2,6 @@ package miouge;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.ZoneId;
@@ -16,6 +15,12 @@ import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.CreationHelper;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
+import com.opencsv.CSVParser;
+import com.opencsv.CSVParserBuilder;
+import com.opencsv.CSVReader;
+import com.opencsv.CSVReaderBuilder;
+import com.opencsv.exceptions.CsvException;
 
 import miouge.beans.Context;
 import miouge.beans.GetApi;
@@ -36,12 +41,6 @@ import miouge.handlers.YahooHistoQuoteHandler;
 import miouge.handlers.YahooSearchHandler;
 import miouge.handlers.ZbFondamentalHandler;
 import miouge.handlers.ZbSearchHandler;
-import com.opencsv.CSVParser;
-import com.opencsv.CSVParserBuilder;
-import com.opencsv.CSVReader;
-import com.opencsv.CSVReaderBuilder;
-import com.opencsv.CSVWriter;
-import com.opencsv.exceptions.CsvException;
 
 public class Report extends ReportGeneric {
 
@@ -101,115 +100,6 @@ public class Report extends ReportGeneric {
 				System.out.println( String.format( "%d stock definitions imported from %s", importedCount, fileToImport ));
 			}
 		}
-	}
-	
-	public void loadPortfolio( String csvPortfolioFile ) throws FileNotFoundException, IOException, CsvException {
-		
-		CSVParser csvParser = new CSVParserBuilder().withSeparator(';').build(); // custom separator
-		
-		String stocksCSV  = context.rootFolder + "/data/" + csvPortfolioFile;
-		
-		try( CSVReader reader = new CSVReaderBuilder( new FileReader(stocksCSV))
-				.withCSVParser(csvParser) // custom CSV
-				.withSkipLines(1) // skip the first line (header info)
-				.build()
-		) {
-
-			List<String[]> lines = reader.readAll();
-			lines.forEach( fields -> {
-
-				int idx = 0;
-				
-				String isin = fields[idx++];
-				if( isin.length() != 12 ) { return; } // IsinCode = 12 characters length
-
-				Integer nb = Integer.parseInt( fields[idx++]);
-				String comment = fields[idx++];
-
-				Stock stock = this.stocksByIsin.get( isin );
-				if( stock == null ) {
-					return;
-				}
-
-				stock.portfolio = nb;
-				System.out.println( String.format( "%s %s nb=%d", comment, isin, nb ));
-			});
-		}
-
-		System.out.println( String.format( "portfolio definitions loaded" ));
-	}
-
-	private void setCsvCell( String[] fieldsOfLine, int columnIdx, Object content ) {
-		
-		if( content == null ) {
-			
-			fieldsOfLine[ columnIdx ] = "";
-			
-		}
-		else {
-			
-			if( content instanceof Boolean ) {
-				
-				if( (Boolean)content == false ) {
-					fieldsOfLine[ columnIdx ] = ""; // output void for false boolean
-					return;
-				}
-			}
-			
-			fieldsOfLine[ columnIdx ] = content.toString();
-		}
-	}	
-	
-	public void flushCsvData( String csvStockFile ) throws IOException {
-		
-		int COLUMN_NB = 9; 
-		
-		String stocksCSV  = context.rootFolder + "/data/" + csvStockFile;
-		
-		List<String[]> stringArray = new ArrayList<String[]>();
-		
-		String[] header = new String[COLUMN_NB];
-		stringArray.add(header);
-		int column = 0;
-		header[column] = "ISIN";column++;
-		header[column] = "Country";column++;
-		
-		header[column] = "Mnemo";column++;
-		header[column] = "yahooSymbol";column++;
-		header[column] = "Name";column++;
-		
-		header[column] = "WithinPEA";column++;
-		header[column] = "ToIgnore";column++;
-
-
-		header[column] = "Comments";column++;
-		header[column] = "Activity";column++;
-
-		for( Stock stock : this.stocks ) {
-			
-			String[] array = new String[COLUMN_NB];
-			stringArray.add(array);
-			column = 0;			
-			setCsvCell( array, column++, stock.isin );
-			setCsvCell( array, column++, stock.countryCode );
-			
-			setCsvCell( array, column++, stock.mnemo );
-			setCsvCell( array, column++, stock.yahooSymbol );
-			setCsvCell( array, column++, stock.name );
-			
-			setCsvCell( array, column++, stock.withinPEA );
-			setCsvCell( array, column++, stock.toIgnore );
-			
-			setCsvCell( array, column++, stock.comment );
-			setCsvCell( array, column++, stock.activity );
-		}
-		
-	     CSVWriter writer = new CSVWriter(new FileWriter(stocksCSV), ';', '\u0000', '\\', "\n" );
-	     
-	     writer.writeAll(stringArray);
-	     writer.close();
-	     
-	     System.out.println( String.format( "flush stock definitions Csv for %d stock(s) : OK", stocks.size()));
 	}
 		
 	public void unused( Stock stock ) throws Exception {
@@ -971,7 +861,7 @@ let modules = [
 	    for( int i = 0 ; i < iMax ; i++ ) {    	
 	    	final Stock stock = selection.get(i);
 	    	createCell( sheet.getRow( i + 1 ), column, stock.name ).setCellStyle( createStyle( wb, stock, style -> {
-	    		if( stock.portfolio > 0 ) {
+	    		if( stock.inPortfolio ) {
 	    			setBackgroundColor( style, HSSFColor.HSSFColorPredefined.PALE_BLUE );
 	    		}
 	    }));}
@@ -1147,12 +1037,7 @@ let modules = [
 //		    column++;
 //		    sheet.getRow(0).createCell( column ).setCellValue( (String) "Yahoo Suffix" );
 //		    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).yahooSuffix ); }
-	    
-	    // elligible PEA
-	    column++;
-	    sheet.getRow(0).createCell( column ).setCellValue( (String) "PEA" );
-	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).withinPEALabel ); }
-	    
+	    	    
 
 	    // Nombre d'actions		    
 	    column++; sheet.getRow(0).createCell( column ).setCellValue( (String) "Share Count (ABC)" );

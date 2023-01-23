@@ -3,6 +3,7 @@ package miouge;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -28,6 +29,7 @@ import com.opencsv.CSVParser;
 import com.opencsv.CSVParserBuilder;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
+import com.opencsv.CSVWriter;
 import com.opencsv.exceptions.CsvException;
 
 public abstract class ReportGeneric {
@@ -53,7 +55,7 @@ public abstract class ReportGeneric {
 	
 		String stocksCSV  = context.rootFolder + "/data/" + csvStockFile;
 		
-		try( CSVReader reader = new CSVReaderBuilder( new FileReader(stocksCSV))
+		try( CSVReader reader = new CSVReaderBuilder( new FileReader(stocksCSV) )
 				.withCSVParser(csvParser) // custom CSV
 				.withSkipLines(1) // skip the first line (header info)
 				.build()
@@ -62,16 +64,18 @@ public abstract class ReportGeneric {
 			List<String[]> lines = reader.readAll();
 			lines.forEach( fields -> {
 
+				// for each line except the header
+				
 				int idx = 0;
 				
 				String isin = fields[idx++]; // reading of column ISIN
 				if( isin.length() != 12 ) { return; } // IsinCode = 12 characters length
 
 				Stock stock = new Stock();
-				stock.isin = isin;
-				
 				this.stocks.add( stock );
-				this.stocksByIsin.put(stock.isin, stock);
+				
+				stock.isin = isin;
+				this.stocksByIsin.put( stock.isin, stock );
 				
 				//stock.countryCode=fields[idx++];
 				//stock.countryCode = stock.isin.substring(0, 2);
@@ -81,21 +85,18 @@ public abstract class ReportGeneric {
 				stock.zbSuffix   = fields[idx++];
 				stock.yahooSymbol= fields[idx++];
 								
-				if( fields[idx].length() > 0 ) {stock.toIgnore=Boolean.parseBoolean( fields[idx]); }; idx++;
-				if( fields[idx].length() > 0 ) {stock.withinPEA=Boolean.parseBoolean( fields[idx] ); }; idx++;				
-				if( fields[idx].length() > 0 ) {
-					Boolean owned = Boolean.parseBoolean( fields[idx]);
-					if( owned ) { stock.portfolio = 1; }
-				}; idx++;
-				
+				if( fields[idx].length() > 0 ) {stock.toIgnore    = Boolean.parseBoolean( fields[idx] ); }; idx++;
+				if( fields[idx].length() > 0 ) {stock.withinPEA   = Boolean.parseBoolean( fields[idx] ); }; idx++;
+				if( fields[idx].length() > 0 ) {stock.inPortfolio = Boolean.parseBoolean( fields[idx] ); }; idx++;
+
 				// System.out.println( stock.mnemo + " PEA=" + stock.withinPEA + "/ Ignore=" + stock.toIgnore );
 			});
 		}
-		
+
 		System.out.println( String.format( "Stock definitions loaded : %d", this.stocks.size() ));
-		
+
 		List<Stock> overrided = new ArrayList<Stock>();
-		
+
 		this.stocks.forEach( stock -> {
 
 			if( stock.withinPEA == null ) {
@@ -111,7 +112,7 @@ public abstract class ReportGeneric {
 			if( stock.isin != null && stock.isin.length() > 0 && stock.mnemo != null && stock.mnemo.length() > 0 ) {
 
 				// check presence of overrides ...
-				String overrideFile = context.rootFolder + "/data/overrides/" + stock.mnemo + "-" + stock.isin + ".ini";				
+				String overrideFile = context.rootFolder + "/data/overrides/" + stock.mnemo + "-" + stock.isin + ".ini";
 				Path path = Paths.get( overrideFile );
 				
 				// file exists and it is not a directory
@@ -120,25 +121,83 @@ public abstract class ReportGeneric {
 					// System.out.println(String.format( "loading override for %s-%s ...", stock.mnemo, stock.isin ));
 					overrided.add( stock );
 					
-					String value = Tools.getIniSetting(overrideFile, "General", "SharesCount", "");
-
+					// check presence of override for the SharesCount ...
+					
+					String value = Tools.getIniSetting( overrideFile, "General", "SharesCount", "" );
 					if( value != null && value.length() > 0 ) {
 						stock.overrides.sharesCount = Long.parseLong(value);
 					}
-					/* TODO : move on specific file ini file override 
-					if( fields[idx].length() > 0 ) { stock.initShareCount=Long.parseLong(fields[idx]); }; idx++;
-					if( fields[idx].length() > 0 ) { stock.offsetRNPG=Long.parseLong(fields[idx]); }; idx++;
-					if( fields[idx].length() > 0 ) { stock.offsetFCFW=Long.parseLong(fields[idx]); }; idx++;
-					if( fields[idx].length() > 0 ) { stock.offsetDividends=Double.parseDouble(fields[idx]); }; idx++;
-					*/				
 				}
 			}
 		});
 
 		
 		System.out.println( String.format( "Overrides loaded : %d", overrided.size() ));
+	}
+
+	private void setCsvCell( String[] fieldsOfLine, int columnIdx, Object content ) {
 		
-		// this.importNewIsinCsv();
+		if( content == null ) {
+			
+			fieldsOfLine[ columnIdx ] = "";
+			
+		}
+		else {
+			
+			if( content instanceof Boolean ) {
+				
+				if( (Boolean)content == false ) {
+					fieldsOfLine[ columnIdx ] = ""; // output void for false boolean
+					return;
+				}
+			}
+			
+			fieldsOfLine[ columnIdx ] = content.toString();
+		}
+	}
+	
+	public void flushCsvData( String csvStockFile ) throws IOException {
+		
+		int COLUMN_NB = 9; 
+		
+		String stocksCSV  = context.rootFolder + "/data/" + csvStockFile;
+		
+		List<String[]> stringArray = new ArrayList<String[]>();
+		
+		String[] header = new String[COLUMN_NB];
+		stringArray.add(header);
+		int column = 0;
+		header[column] = "ISIN";column++;
+		
+		header[column] = "Name";column++;
+		header[column] = "Mnemo";column++;
+		header[column] = "zbSuffix";column++;
+		header[column] = "yahooSymbol";column++;
+		header[column] = "ToIgnore";column++;
+		header[column] = "WithinPEA";column++;
+		header[column] = "InPortfolio";column++;
+		
+		for( Stock stock : this.stocks ) {
+					
+			String[] array = new String[COLUMN_NB];
+			stringArray.add(array);
+			column = 0;			
+			setCsvCell( array, column++, stock.isin );			
+			setCsvCell( array, column++, stock.name );
+			setCsvCell( array, column++, stock.mnemo );
+			setCsvCell( array, column++, stock.zbSuffix );
+			setCsvCell( array, column++, stock.yahooSymbol );						
+			setCsvCell( array, column++, stock.toIgnore );
+			setCsvCell( array, column++, stock.withinPEA );
+			setCsvCell( array, column++, stock.inPortfolio );			
+		}
+		
+	     CSVWriter writer = new CSVWriter(new FileWriter(stocksCSV), ';', '\u0000', '\\', "\n" );
+	     
+	     writer.writeAll(stringArray);
+	     writer.close();
+	     
+	     System.out.println( String.format( "flush stock definitions Csv for %d stock(s) : OK", stocks.size()));
 	}
 	
 	// computation
@@ -168,7 +227,7 @@ public abstract class ReportGeneric {
     		consumer.accept( style );
     	}
     	
-    	if( stock.portfolio > 0 ) {
+    	if( stock.inPortfolio ) {
 
     		final Font font = wb.createFont ();
     		font.setFontName( "Calibri" );
@@ -313,27 +372,25 @@ public abstract class ReportGeneric {
 	        
 		    // and compose the selection (only withinPEA and not to be ignored)
 
-		    ArrayList<Stock> selection = new ArrayList<Stock>(); 
-		    
+		    ArrayList<Stock> selection = new ArrayList<Stock>();
+
 		    for( int i = 0 ; i < this.stocks.size() ; i++ ) {
-		    	
-		    	if( this.stocks.get(i).withinPEA == null || this.stocks.get(i).withinPEA == false ) {
-		    		continue;
-		    	}
+
 		    	if( this.stocks.get(i).toIgnore != null && this.stocks.get(i).toIgnore == true ) {
 		    		continue;
 		    	}
+
 		    	if( this.excludeFromReport( this.stocks.get(i), false ) == true ) {
 		    		continue;
 		    	}
 		    	selection.add( this.stocks.get(i) );
 		    }
-		    
+
 		    System.out.println( String.format( "selection is about %d stock(s)", selection.size()));		    
 	        
 	        this.composeReport( wb, precisionStyle, selection );
 		    
-		    // write file
+		    // write out file
 		    
 			String reportXLS = this.context.rootFolder + "/" + "output/" + reportPrefixName;
 		    

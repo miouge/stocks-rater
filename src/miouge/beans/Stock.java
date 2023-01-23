@@ -10,11 +10,10 @@ public class Stock {
 	public String mnemo;
 	public Boolean withinPEA;
 	public Boolean toIgnore;
+	public Boolean inPortfolio;
 	public String name;
 	public String activity;	
 	public String comment;
-	public Integer portfolio = 0; // current nb of stock in portfolio
-
 	public String withinPEALabel; // "PEA" ou null
 
 	public Long effectif;
@@ -82,8 +81,8 @@ public class Stock {
 	public ArrayList<Double> histoDIV;
 	public Double avgDIV;
 	
-	public Double rdtPercent; // rendement en %
-	public Double payout;     // payout %
+	public Double rdtPerc; // rendement en %
+	public Double payoutPerc;     // payout %
 	
 	public ArrayList<Double> histoDebtRatio; // ratio d'endettement en %
 	public Double debtRatio;                 // en %	

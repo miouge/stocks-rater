@@ -14,7 +14,7 @@ public class StocksRaterMain
 		report.loadCsvData( "stocks-input.csv" );
 		
 		// load the portfolio CSV file
-		report.loadPortfolio( "portfolio.csv" );
+		// report.loadPortfolio( "portfolio.csv" );
 
 		// retrieve needed data asking some websites
 		report.fetchData();
@@ -23,14 +23,14 @@ public class StocksRaterMain
 		report.computeAll();
 
 		// generate CSV
-		report.flushCsvData( "stocks-output.csv" );
+		// report.flushCsvData( "stocks-output.csv" );
 		
 		// generate report
 		report.outputReport( "reportA.xlsx" );
 	}
 	
 	@SuppressWarnings("unused")
-	private static void generateReportB( Context context ) throws Exception {
+	private static void generateReportZB( Context context ) throws Exception {
 		
 		ReportZB reportZB = new ReportZB( context );
 		
@@ -62,7 +62,7 @@ public class StocksRaterMain
 			
 			//testHandlers( context );
 			//generateReportA( context );
-			generateReportB( context );
+			generateReportZB( context );
 			
 		} catch (Exception e) {
 			
