@@ -101,7 +101,7 @@ public class Stock {
 	
 	// computed ratio
 	
-	public Double avg5yPER;
+	public Double avgPER;
 	public Double ratioQuoteBV;    // ratio Cours / capitaux propres part du groupe par action (eg 0.8)
 	public Double ratioVeOverEBIT; // ratio  VE / EBIT	( eg 8.5 )
 	//public Double rating;          // Personal based rating (from 0 to 100+)

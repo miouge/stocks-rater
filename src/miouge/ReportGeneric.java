@@ -88,6 +88,10 @@ public abstract class ReportGeneric {
 				if( fields[idx].length() > 0 ) {stock.toIgnore    = Boolean.parseBoolean( fields[idx] ); }; idx++;
 				if( fields[idx].length() > 0 ) {stock.withinPEA   = Boolean.parseBoolean( fields[idx] ); }; idx++;
 				if( fields[idx].length() > 0 ) {stock.inPortfolio = Boolean.parseBoolean( fields[idx] ); }; idx++;
+				
+				if( stock.withinPEA   == null ) { stock.withinPEA   = false; }
+				if( stock.toIgnore    == null ) { stock.toIgnore    = false; }
+				if( stock.inPortfolio == null ) { stock.inPortfolio = false; }
 
 				// System.out.println( stock.mnemo + " PEA=" + stock.withinPEA + "/ Ignore=" + stock.toIgnore );
 			});
@@ -99,12 +103,6 @@ public abstract class ReportGeneric {
 
 		this.stocks.forEach( stock -> {
 
-			if( stock.withinPEA == null ) {
-				stock.withinPEA = false;
-			}
-			if( stock.toIgnore == null ) {
-				stock.toIgnore = false;
-			}
 			if( stock.withinPEA ) {
 				stock.withinPEALabel = "PEA";
 			}

@@ -731,7 +731,7 @@ let modules = [
 
 			Double avgEarningPerShare = ( stock.avgRNPG * 1000.0 ) / stock.sharesCount;
 			if( avgEarningPerShare > 0 && stock.lastQuote > 0 ) {
-				stock.avg5yPER = stock.lastQuote / avgEarningPerShare;
+				stock.avgPER = stock.lastQuote / avgEarningPerShare;
 				
 				// 0-100 
 				// 100 ; resultat de 11% (PE de 9)
@@ -799,7 +799,7 @@ let modules = [
 			return true;
 		}
 		
-		if( stock.avg5yPER != null && stock.avg5yPER > 20.0 ) {
+		if( stock.avgPER != null && stock.avgPER > 20.0 ) {
 			if( verbose ) { System.out.println( String.format( "exclude %s : see avg5yPER", stock.name )); }
 			return true;
 		}
@@ -930,14 +930,14 @@ let modules = [
 	    sheet.getRow(0).createCell( column ).setCellValue( (String) "5y-Avg PER" );
 	    for( int i = 0 ; i < iMax ; i++ ) {
 	    	final Stock stock = selection.get(i);
-	    	createCell( sheet.getRow( i + 1 ), column, stock.avg5yPER ).setCellStyle( createStyle( wb, stock, style -> {
+	    	createCell( sheet.getRow( i + 1 ), column, stock.avgPER ).setCellStyle( createStyle( wb, stock, style -> {
 	    					
 	    					style.setDataFormat( ch.createDataFormat().getFormat("#0.0"));
-	    					if( stock.avg5yPER != null ) {
-	    						if( stock.avg5yPER < 10.0 ) {
+	    					if( stock.avgPER != null ) {
+	    						if( stock.avgPER < 10.0 ) {
 	    							setBackgroundColor( style, HSSFColor.HSSFColorPredefined.LIGHT_GREEN );
 	    						}
-	    						if( stock.avg5yPER > 15.0 ) {
+	    						if( stock.avgPER > 15.0 ) {
 	    							setBackgroundColor( style, HSSFColor.HSSFColorPredefined.LIGHT_ORANGE );
 	    						}
 	    					}
