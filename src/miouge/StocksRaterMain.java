@@ -36,6 +36,7 @@ public class StocksRaterMain
 		
 		// load the stocks reference CSV file
 		reportZB.loadCsvData( "stocks-input-ZB.csv" );
+		// reportZB.loadCsvData( "stocks-input-ZB-onlyVCT.csv" );
 		
 		// load the portfolio CSV file
 		// report.loadPortfolio( "portfolio.csv" );

@@ -20,34 +20,72 @@ public class ZbFondamentalHandler extends ResponseHandlerTemplate {
 		PatternFinder pf;
 		String data;
 		StringBuilder tag = new StringBuilder();
+		
+		// boolean debug = true;
 	
 		// -------------------- Valeur Entreprise ----------------
-		stock.histoVE = new ArrayList<Double>();
 		
-		pf = new PatternFinder( response, thePf -> {
-
-			thePf.contextPatterns.add( ">Valeur Entreprise</a>" );
-			thePf.contextPatterns.add( "bc2V tableCol0" );			
-			thePf.outOfContextPattern = ">PER</a>";			
-			thePf.leftPattern = "style=\"background-color:#DEFEFE;\">";
-			thePf.rightPattern = "</td>";
-		});
-		data = pf.find().replace( " ", "" );
-		addDoubleIfNonNull( data, Double::parseDouble, stock.histoVE, debug );
+		stock.histoVE = new ArrayList<Double>(); // will content only 1 value
+		
+		for( int i = 0 ; i <= 7 ; i++ ) {
+						
+			tag.setLength( 0 );
+			tag.append( "bc2V tableCol" + i  );
+		
+			pf = new PatternFinder( response, thePf -> {
+	
+				thePf.contextPatterns.add( ">Valeur Entreprise</a>" );
+				thePf.contextPatterns.add( tag.toString() );
+				thePf.outOfContextPattern = ">PER</a>";			
+				thePf.leftPattern = "style=\"background-color:#DEFEFE;\">"; // estimate coloring
+				thePf.rightPattern = "</td>";
+			});
+			data = pf.find().replace( " ", "" );
+			addDoubleIfNonNull( data, Double::parseDouble, stock.histoVE, debug );
+			
+			if( stock.histoVE.size() > 0 ) {
+				// stop when getting the first estimate value
+				break;
+			}
+		}
 		
 		if( stock.histoVE.size() > 0 ) {
 			
-			stock.histoVE.forEach( ebit -> {
-
-				if( debug ) {
-					System.out.println( String.format( "stock <%s> histoVE size = %d", stock.name, stock.histoVE.size() ));
-					System.out.println( String.format( "stock <%s> ve =%.2f", stock.name, ebit ));
-				}
-			});
-			
-			// take last element of the list to be the current VE
+			// take last (only one) element of the list to be the current VE
 			stock.lastVE = stock.histoVE.get( stock.histoVE.size() - 1 );
+			if( debug ) {
+				System.out.println( String.format( "stock <%s> VE =%.2f", stock.name, stock.lastVE ));
+			}
 		}
+		
+		// -------------------- Nbr de Titres (en Milliers)  ----------------		
+		ArrayList<Long> shareCounts = new ArrayList<Long>();
+				
+		for( int i = 0 ; i <= 7 ; i++ ) {
+			
+			tag.setLength( 0 );
+			tag.append( "bc2V tableCol" + i  );
+			
+			pf = new PatternFinder( response, thePf -> {
+	
+				thePf.contextPatterns.add( ">Nbr de Titres (en Milliers)</td>" );
+				thePf.contextPatterns.add( tag.toString() ); // [ bc2V tableCol0 -> bc2V tableCol7 ]
+				thePf.outOfContextPattern = ">Cours de référence (";			
+				thePf.leftPattern = ">";
+				thePf.rightPattern = "</td>";
+			});
+			data = pf.find().replace( " ", "" );
+			addLongIfNonNull( data, Long::parseLong, shareCounts, debug );
+		}
+
+		if( shareCounts.size() > 0 ) {
+
+			// take last value of the list, that's supposed to be the last known quotation
+			stock.sharesCount = ( shareCounts.get(shareCounts.size()-1) * 1000 );
+			if( debug ) {
+				System.out.println( String.format( "stock <%s> shareCount =%d K (list size=%d)", stock.name, stock.sharesCount, shareCounts.size() ));
+			}
+		}		
 		
 		// -------------------- Cours de référence  ----------------		
 		ArrayList<Double> quotes = new ArrayList<Double>();
@@ -72,15 +110,46 @@ public class ZbFondamentalHandler extends ResponseHandlerTemplate {
 
 		if( quotes.size() > 0 ) {
 
-			// take last value of the list, that's supposed to be the last quotation
+			// take last value of the list, that's supposed to be the last known quotation
 			stock.lastQuote = quotes.get(quotes.size()-1);
-			//System.out.println( String.format( "stock <%s> lastQuote =%.2f", stock.name, stock.lastQuote ));
-			// return true;
+			if( debug ) {
+				System.out.println( String.format( "stock <%s> lastQuote =%.2f (list size=%d)", stock.name, stock.lastQuote, quotes.size() ));
+			}
 		}
 		else {
 
 			System.out.println( String.format( "stock <%s> NO QUOTE", stock.name ));
-			return false;
+		}
+		
+		// -------------------- EBITDA ----------------
+		stock.histoEBITDA = new ArrayList<Double>();
+				
+		for( int i = 0 ; i <= 7 ; i++ ) {
+			
+			tag.setLength( 0 );
+			tag.append( "bc2V tableCol" + i  );
+			
+			pf = new PatternFinder( response, thePf -> {
+	
+				thePf.contextPatterns.add( ">EBITDA</a>" );
+				thePf.contextPatterns.add( tag.toString() ); // [ bc2V tableCol0 -> bc2V tableCol7 ]
+				thePf.outOfContextPattern = ">Résultat d'exploitation (EBIT)</a>";			
+				thePf.leftPattern = ">";
+				thePf.rightPattern = "</td>";
+			});
+			data = pf.find().replace( " ", "" );
+			addDoubleIfNonNull( data, Double::parseDouble, stock.histoEBITDA, debug );
+		}
+		
+		if( stock.histoEBITDA.size() > 0 ) {
+			if( debug ) {
+				System.out.println( String.format( "stock <%s> histoEBITDA size = %d", stock.name, stock.histoEBITDA.size() ));
+			}
+			stock.histoEBITDA.forEach( value -> {
+				if( debug ) {
+					System.out.println( String.format( "stock <%s> ebitda = %.2f", stock.name, value ));
+				}
+			});
 		}
 		
 		// -------------------- EBIT ----------------
@@ -104,16 +173,19 @@ public class ZbFondamentalHandler extends ResponseHandlerTemplate {
 		}
 		
 		if( stock.histoEBIT.size() > 0 ) {
-			stock.histoEBIT.forEach( ebit -> {
+			if( debug ) {
+				System.out.println( String.format( "stock <%s> histoEBIT size = %d", stock.name, stock.histoEBIT.size() ));
+			}
+			
+			stock.histoEBIT.forEach( value -> {
 				if( debug ) {
-					System.out.println( String.format( "stock <%s> histoEBIT size = %d", stock.name, stock.histoEBIT.size() ));
-					System.out.println( String.format( "stock <%s> ebit =%.2f", stock.name, ebit ));
+					System.out.println( String.format( "stock <%s> ebit = %.2f", stock.name, value ));
 				}
 			});
 		}
 		
-		// -------------------- BNA ----------------
-		stock.histoBNA = new ArrayList<Double>();
+		// -------------------- RN ----------------
+		stock.histoRN = new ArrayList<Double>();
 		
 		for( int i = 0 ; i <= 7 ; i++ ) {
 			
@@ -122,37 +194,62 @@ public class ZbFondamentalHandler extends ResponseHandlerTemplate {
 			
 			pf = new PatternFinder( response, thePf -> {
 	
-				thePf.contextPatterns.add( ">BNA</a>" );
+				thePf.contextPatterns.add( ">Résultat net</a>" );
 				thePf.contextPatterns.add( tag.toString() ); // [ bc2V tableCol0 -> bc2V tableCol7 ]
-				thePf.outOfContextPattern = ">Free Cash Flow</a>";			
+				thePf.outOfContextPattern = "><i>Marge nette</i></a>";			
 				thePf.leftPattern = ">";
 				thePf.rightPattern = "</td>";
 			});
 			data = pf.find().replace( " ", "" );
-			addDoubleIfNonNull( data, Double::parseDouble, stock.histoBNA, debug );
+			addDoubleIfNonNull( data, Double::parseDouble, stock.histoRN, debug );
 		}
-				
+
+		if( stock.histoRN.size() > 0 ) {
+			if( debug ) {
+				System.out.println( String.format( "stock <%s> histoRN size = %d", stock.name, stock.histoRN.size() ));
+			}
+			
+			stock.histoRN.forEach( value -> {
+				if( debug ) {
+					System.out.println( String.format( "stock <%s> RN = %.2f", stock.name, value ));
+				}
+			});
+		}		
+		
 		// -------------------- Dividendes ----------------
 		stock.histoDIV = new ArrayList<Double>();
-		
+
 		for( int i = 0 ; i <= 7 ; i++ ) {
-			
+
 			tag.setLength( 0 );
 			tag.append( "bc2V tableCol" + i  );
-			
+
 			pf = new PatternFinder( response, thePf -> {
-	
+
 				thePf.contextPatterns.add( ">Dividende / Action</a>" );
 				thePf.contextPatterns.add( tag.toString() ); // [ bc2V tableCol0 -> bc2V tableCol7 ]
-				thePf.outOfContextPattern = "Evolution du Compte de Résultat";			
-				thePf.leftPattern = ">";
+				//thePf.outOfContextPattern = "Evolution du Compte de Résultat";
+				thePf.outOfContextPattern = "navigateTable('Tableau_Histo_ECR_a','next')";
+				thePf.leftPattern = "style=\"background-color:#DEFEFE;\">"; // estimate coloring
 				thePf.rightPattern = "</td>";
+
 			});
 			data = pf.find().replace( " ", "" );
 			addDoubleIfNonNull( data, Double::parseDouble, stock.histoDIV, debug );
 		}
-		
-		return true;
 
+		if( stock.histoDIV.size() > 0 ) {
+			if( debug ) {
+				System.out.println( String.format( "stock <%s> histoDIV size = %d", stock.name, stock.histoDIV.size() ));
+			}
+
+			stock.histoDIV.forEach( value -> {
+				if( debug ) {
+					System.out.println( String.format( "stock <%s> DIV = %.2f", stock.name, value ));
+				}
+			});
+		}
+
+		return true;
 	}
 }

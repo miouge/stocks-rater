@@ -84,8 +84,14 @@ public class ReportZB extends ReportGeneric {
 		
 		// System.out.println( String.format( "compute for stock <%s> ...", stock.name ));
 
-		if( stock.histoBNA != null && stock.histoBNA.size() > 0 ) {
-			stock.avgBNA = stock.histoBNA.stream().mapToDouble( i -> i ).average().getAsDouble();
+		if( stock.histoEBITDA != null && stock.histoEBITDA.size() > 0 ) {
+			stock.avgEBITDA = stock.histoEBITDA.stream().mapToDouble( i -> i ).average().getAsDouble();
+		}
+		if( stock.histoEBIT != null && stock.histoEBIT.size() > 0 ) {
+			stock.avgEBIT = stock.histoEBIT.stream().mapToDouble( i -> i ).average().getAsDouble();
+		}
+		if( stock.histoRN != null && stock.histoRN.size() > 0 ) {
+			stock.avgRN = stock.histoRN.stream().mapToDouble( i -> i ).average().getAsDouble();			
 		}
 		if( stock.histoDIV != null && stock.histoDIV.size() > 0 ) {
 			stock.avgDIV = stock.histoDIV.stream().mapToDouble( i -> i ).average().getAsDouble();
@@ -93,19 +99,20 @@ public class ReportZB extends ReportGeneric {
 		
 		
 		// ration EBIT/VE
-		if( stock.lastVE != null && stock.histoEBIT != null && stock.histoEBIT.size() > 0 ) {
-
-			stock.avgEBIT = stock.histoEBIT.stream().mapToDouble( i -> i ).average().getAsDouble();
-
-			if( stock.avgEBIT >= 0 ) {
-				stock.ratioVeOverEBIT = stock.lastVE / stock.avgEBIT;
-			}
+		if( stock.lastVE != null && stock.avgEBIT != null && stock.avgEBIT > 0 ) {
+			stock.ratioVeOverEBIT = stock.lastVE / stock.avgEBIT;
 		}
 
 		// Rendement %
 		if( stock.lastQuote != null && stock.lastQuote > 0 && stock.avgDIV != null && stock.avgDIV > 0 ) {
 		
 			stock.rdtPerc = ( stock.avgDIV / stock.lastQuote ) * 100.0;
+		}
+		
+		// avg BNA
+		if( stock.avgRN != null && stock.avgRN > 0 && stock.sharesCount != null ) {
+			
+			stock.avgBNA = ( stock.avgRN * 1000000.0 ) / stock.sharesCount;
 		}
 		
 		// payout %
@@ -120,26 +127,60 @@ public class ReportZB extends ReportGeneric {
 			stock.avgPER = stock.lastQuote / stock.avgBNA;
 		}
 		
+		// DFN
+		if( stock.lastVE != null && stock.lastQuote != null && stock.sharesCount != null ) {
+			
+			stock.dfn = stock.lastVE - (stock.lastQuote * stock.sharesCount)/1000000.0; // DFN = VE - Capitalization
+		}
+		
+		// ratio DFN / EBITDA
+		if( stock.avgEBITDA != null && stock.avgEBITDA > 0 && stock.dfn != null && stock.dfn > 0 ) {
+			
+			stock.ratioDfnOverEBITDA = stock.dfn / stock.avgEBITDA;
+		}
+		
 		// put dummy value to ease EXCEL filter use
 		
-		if( stock.avgPER != null && stock.avgPER > 0 ) {
-			if( stock.ratioVeOverEBIT == null ) {
-				stock.ratioVeOverEBIT = 0.0;
-			}
-		}
-		if( stock.ratioVeOverEBIT != null && stock.ratioVeOverEBIT > 0 ) {
-			if( stock.avgPER == null ) {
-				stock.avgPER = 0.0;
-			}
-		}
+//		if( stock.avgPER != null && stock.avgPER > 0 ) {
+//			if( stock.ratioVeOverEBIT == null ) {
+//				stock.ratioVeOverEBIT = 0.0;
+//			}
+//		}
+//		if( stock.ratioVeOverEBIT != null && stock.ratioVeOverEBIT > 0 ) {
+//			if( stock.avgPER == null ) {
+//				stock.avgPER = 0.0;
+//			}
+//		}
 	}
 	
 	@Override
 	protected boolean excludeFromReport( Stock stock, boolean verbose ) {
 		
+		if( stock.name.equals( "1000Mercis" )) {
+			
+			int i=0;
+			i++;
+		}
+		
 		if( stock.lastVE != null && stock.lastVE < 50.0 ) {
 			// société trop petite			
 			System.out.println( String.format( "EXCLUDED : too small VE [%s] zbSuffix=[%s] ignore=%s", stock.name, stock.zbSuffix, stock.toIgnore.toString() ) );
+			return true;
+		}
+		
+		// il faut que soit le ratio VE/EBIT < 14 soit le PE < 12
+		
+		if( stock.avgPER == null && stock.ratioVeOverEBIT == null ) { return true; }
+		
+		boolean ratioOK = false;
+		
+		if( stock.avgPER != null && (stock.avgPER <= 14.0) ) {
+			ratioOK = true;
+		}
+		if( stock.ratioVeOverEBIT != null && (stock.ratioVeOverEBIT <= 12.0) ) {
+			ratioOK = true;
+		}
+		if( ratioOK == false ) { 
 			return true;
 		}
 
@@ -253,8 +294,7 @@ public class ReportZB extends ReportGeneric {
 					}
 				}
 	    }));}
-	    
-	    
+	    	    
 	    // Rendement %
 	    column++;
 	    sheet.getRow(0).createCell( column ).setCellValue( (String) "RDT %" );
@@ -265,6 +305,11 @@ public class ReportZB extends ReportGeneric {
 	    sheet.getRow(0).createCell( column ).setCellValue( (String) "PAYOUT %" );
 	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).payoutPerc ).setCellStyle( precisionStyle.get(-1)); }		    
 
+	    // DFN / EBITDA
+	    column++;
+	    sheet.getRow(0).createCell( column ).setCellValue( (String) "DFN / EBITDA" );
+	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).ratioDfnOverEBITDA ).setCellStyle( precisionStyle.get(-2)); }
+	    
 	    // cours de référence %
 	    column++;
 	    sheet.getRow(0).createCell( column ).setCellValue( (String) "REF QUOTE" );

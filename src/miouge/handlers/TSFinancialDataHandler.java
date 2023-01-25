@@ -34,19 +34,19 @@ public class TSFinancialDataHandler extends ResponseHandlerTemplate {
 		}
 				
 		data = pf.find().replace( "&nbsp;", "" ); // N-5
-		addIfNonNull( data, Long::parseLong, stock.histoRNPG, debug );
+		addLongIfNonNull( data, Long::parseLong, stock.histoRNPG, debug );
 
 		data = pf.find().replace( "&nbsp;", "" ); // N-4
-		addIfNonNull( data, Long::parseLong, stock.histoRNPG, debug );
+		addLongIfNonNull( data, Long::parseLong, stock.histoRNPG, debug );
 
 		data = pf.find().replace( "&nbsp;", "" ); // N-3
-		addIfNonNull( data, Long::parseLong, stock.histoRNPG, debug );
+		addLongIfNonNull( data, Long::parseLong, stock.histoRNPG, debug );
 
 		data = pf.find().replace( "&nbsp;", "" ); // N-2
-		addIfNonNull( data, Long::parseLong, stock.histoRNPG, debug );
+		addLongIfNonNull( data, Long::parseLong, stock.histoRNPG, debug );
 
 		data = pf.find().replace( "&nbsp;", "" ); // N-1
-		addIfNonNull( data, Long::parseLong, stock.histoRNPG, debug );
+		addLongIfNonNull( data, Long::parseLong, stock.histoRNPG, debug );
 
 		// last 5 years CP (K€), le dernier etant le plus récent
 		
@@ -62,19 +62,19 @@ public class TSFinancialDataHandler extends ResponseHandlerTemplate {
 		stock.histoCP = new ArrayList<Long>();	
 		
 		data = pf.find().replace( "&nbsp;", "" ); // N-5
-		addIfNonNull( data, Long::parseLong, stock.histoCP, debug );
+		addLongIfNonNull( data, Long::parseLong, stock.histoCP, debug );
 
 		data = pf.find().replace( "&nbsp;", "" ); // N-4
-		addIfNonNull( data, Long::parseLong, stock.histoCP, debug );
+		addLongIfNonNull( data, Long::parseLong, stock.histoCP, debug );
 
 		data = pf.find().replace( "&nbsp;", "" ); // N-3
-		addIfNonNull( data, Long::parseLong, stock.histoCP, debug );
+		addLongIfNonNull( data, Long::parseLong, stock.histoCP, debug );
 
 		data = pf.find().replace( "&nbsp;", "" ); // N-2
-		addIfNonNull( data, Long::parseLong, stock.histoCP, debug );
+		addLongIfNonNull( data, Long::parseLong, stock.histoCP, debug );
 
 		data = pf.find().replace( "&nbsp;", "" ); // N-1
-		addIfNonNull( data, Long::parseLong, stock.histoCP, debug );
+		addLongIfNonNull( data, Long::parseLong, stock.histoCP, debug );
 		
 		
 		return true;

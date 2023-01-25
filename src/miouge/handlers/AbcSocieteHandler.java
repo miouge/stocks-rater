@@ -95,19 +95,19 @@ public class AbcSocieteHandler extends ResponseHandlerTemplate {
 		stock.histoCA = new ArrayList<Long>();
 				
 		data = pf.find().replaceAll("\u00a0",""); // N-5
-		addIfNonNull( data, Long::parseLong, stock.histoCA, debug );
+		addLongIfNonNull( data, Long::parseLong, stock.histoCA, debug );
 
 		data = pf.find().replaceAll("\u00a0",""); // N-4
-		addIfNonNull( data, Long::parseLong, stock.histoCA, debug );
+		addLongIfNonNull( data, Long::parseLong, stock.histoCA, debug );
 
 		data = pf.find().replaceAll("\u00a0",""); // N-3
-		addIfNonNull( data, Long::parseLong, stock.histoCA, debug );
+		addLongIfNonNull( data, Long::parseLong, stock.histoCA, debug );
 
 		data = pf.find().replaceAll("\u00a0",""); // N-2
-		addIfNonNull( data, Long::parseLong, stock.histoCA, debug );
+		addLongIfNonNull( data, Long::parseLong, stock.histoCA, debug );
 
 		data = pf.find().replaceAll("\u00a0",""); // N-1
-		addIfNonNull( data, Long::parseLong, stock.histoCA, debug );
+		addLongIfNonNull( data, Long::parseLong, stock.histoCA, debug );
 		
 		// RNPG
 
@@ -124,19 +124,19 @@ public class AbcSocieteHandler extends ResponseHandlerTemplate {
 		}
 		
 		data = pf.find().replaceAll("\u00a0",""); // N-5
-		addIfNonNull( data, Long::parseLong, stock.histoRNPG, debug );
+		addLongIfNonNull( data, Long::parseLong, stock.histoRNPG, debug );
 
 		data = pf.find().replaceAll("\u00a0",""); // N-4
-		addIfNonNull( data, Long::parseLong, stock.histoRNPG, debug );
+		addLongIfNonNull( data, Long::parseLong, stock.histoRNPG, debug );
 
 		data = pf.find().replaceAll("\u00a0",""); // N-3
-		addIfNonNull( data, Long::parseLong, stock.histoRNPG, debug );
+		addLongIfNonNull( data, Long::parseLong, stock.histoRNPG, debug );
 
 		data = pf.find().replaceAll("\u00a0",""); // N-2
-		addIfNonNull( data, Long::parseLong, stock.histoRNPG, debug );
+		addLongIfNonNull( data, Long::parseLong, stock.histoRNPG, debug );
 
 		data = pf.find().replaceAll("\u00a0",""); // N-1
-		addIfNonNull( data, Long::parseLong, stock.histoRNPG, debug );
+		addLongIfNonNull( data, Long::parseLong, stock.histoRNPG, debug );
 		
 		return true;
 	}

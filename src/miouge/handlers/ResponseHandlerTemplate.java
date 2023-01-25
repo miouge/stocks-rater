@@ -28,7 +28,7 @@ public abstract class ResponseHandlerTemplate {
 	
 	public String getDumpFilename( Stock stock ) { return null;	}
 	
-	protected void addIfNonNull( String data, Function<String, Object> converter, List<Long> list, boolean debug ) {
+	protected void addLongIfNonNull( String data, Function<String, Object> converter, List<Long> list, boolean debug ) {
 		
 		if( data == null ) {
 			return;

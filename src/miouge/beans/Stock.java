@@ -62,14 +62,19 @@ public class Stock {
 	public ArrayList<Long> histoCA; // K€
 	
 	public ArrayList<Long> histoRNPG; // K€
-	public ArrayList<Double> histoRN; // K€
 	public Double avgRNPG;
 	
 	public ArrayList<Long> histoCP; // K€
+
+	public ArrayList<Double> histoEBITDA; // M€
+	public Double avgEBITDA;
 	
-	public ArrayList<Double> histoEBIT;
+	public ArrayList<Double> histoEBIT;  // M€
 	public Double avgEBIT;
 
+	public ArrayList<Double> histoRN; // M€
+	public Double avgRN;
+	
 	public ArrayList<Double> histoBNA;
 	public Double avgBNA;
 
@@ -96,6 +101,7 @@ public class Stock {
 	public Double avgPER;
 	public Double ratioQuoteBV;    // ratio Cours / capitaux propres part du groupe par action (eg 0.8)
 	public Double ratioVeOverEBIT; // ratio  VE / EBIT	( eg 8.5 )
-		
+	public Double ratioDfnOverEBITDA; // ration DFN / EBITDA
+
 	public Overrides overrides = new Overrides();
 }
