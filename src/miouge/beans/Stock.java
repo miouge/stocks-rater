@@ -9,17 +9,14 @@ public class Stock {
 	public String isin;
 	public String mnemo;
 	public Boolean withinPEA;
+	public String withinPEALabel; // "PEA" ou null
 	public Boolean toIgnore;
 	public Boolean inPortfolio;
 	public String name;
-	public String activity;	
-	public String comment;
-	public String withinPEALabel; // "PEA" ou null
-
+	
 	public Long effectif;
-	public Overrides overrides = new Overrides();
-		
-	// abc bourse suffix
+			
+	// abc bourse
 	public String abcSuffix; // "ALLECp""
 	public Long   abcSharesCount;
 	
@@ -31,7 +28,6 @@ public class Stock {
 	// zonebourse
 	public String zbUrl;
 	public String zbSuffix; // TELEPERFORMANCE-SE-4709
-	//public Long   zbSharesCount; // TODO
 	
 	// boursorama
 	public String bmaSuffix; // "1rPMALT"
@@ -50,7 +46,7 @@ public class Stock {
 	public ArrayList<Long> shareCounts = new ArrayList<Long>(); // différentes récupération sur les websites
 	public Long sharesCount; 	      // nombre de titres (max)
 	
-	public Double lastQuote; 	      // last quotation (from AbcEventsAndQuoteHandler)
+	public Double lastQuote; 	      // last quotation
 	public Double capitalization;     // en M€ (Nb de titres * last quotation) 
 
 	public Double previousQuote1; 	  // previous quotation point	
@@ -64,7 +60,6 @@ public class Stock {
 	
 	// Compte de resultat
 	public ArrayList<Long> histoCA; // K€
-	public Double avgCA;
 	
 	public ArrayList<Long> histoRNPG; // K€
 	public ArrayList<Double> histoRN; // K€
@@ -87,9 +82,6 @@ public class Stock {
 	public ArrayList<Double> histoDebtRatio; // ratio d'endettement en %
 	public Double debtRatio;                 // en %	
 	
-	public ArrayList<Double> histoNetDebt; // Dette nette // difficile de connaitre le calage ?
-	public ArrayList<Double> histoNetTres; // Trésorerie Nette
-	
 	public ArrayList<Double> histoVE; // Valeur d'entreprise (Capitalization + Dette financiere nette) en M€ (from Zb)
 	public Double lastVE;                    // last Valeur d'entreprise si histoVE > 0;
 	public Double soulteVE; // en M€ uantité à ajouter a la capitalization pour avoir la valeur d'entreprise
@@ -104,5 +96,6 @@ public class Stock {
 	public Double avgPER;
 	public Double ratioQuoteBV;    // ratio Cours / capitaux propres part du groupe par action (eg 0.8)
 	public Double ratioVeOverEBIT; // ratio  VE / EBIT	( eg 8.5 )
-	//public Double rating;          // Personal based rating (from 0 to 100+)
+		
+	public Overrides overrides = new Overrides();
 }

@@ -14,7 +14,7 @@ import miouge.beans.Context;
 import miouge.beans.GetApi;
 import miouge.beans.Stock;
 import miouge.beans.TargetServer;
-import miouge.handlers.ZbFondamentalHandlerB;
+import miouge.handlers.ZbFondamentalHandler;
 
 public class ReportZB extends ReportGeneric {
 
@@ -69,7 +69,7 @@ public class ReportZB extends ReportGeneric {
 				
 				theApi.urlSuffix = String.format( "/cours/action/%s/fondamentaux/", stock.zbSuffix );
 				theApi.stock = stock;				
-				theApi.handler = new ZbFondamentalHandlerB();
+				theApi.handler = new ZbFondamentalHandler();
 				theApi.handler.cacheSubFolder = "/cache/zb-fondamentaux";
 				theApi.charset = StandardCharsets.ISO_8859_1;
 			});			

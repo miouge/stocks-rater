@@ -15,74 +15,12 @@ public class ZbFondamentalHandler extends ResponseHandlerTemplate {
 	@Override
 	public boolean customProcess(Stock stock, StringBuilder response, boolean debug ) throws Exception {
 
-		// System.out.println( String.format( "processing %s ...", this.getDumpFilename(stock)));
+		// System.out.println( String.format( "ZbFondamentalHandlerB : processing %s ...", this.getDumpFilename(stock)));
 
 		PatternFinder pf;
 		String data;
-
-		// Nombre d'employés		
-
-		if( stock.effectif == null ) {
-			
-			pf = new PatternFinder( response, thePf -> {
+		StringBuilder tag = new StringBuilder();
 	
-				thePf.contextPatterns.add( "<td>Nombre d'employés</td>" );		
-				thePf.outOfContextPattern = "<td>CA / Employé (EUR)</td>";			
-				thePf.leftPattern = "<td style=\"text-align:right\">";
-				thePf.rightPattern = "</td>";
-			});
-			data = pf.find().replace(" ", "").trim();
-	
-			if( data.equals("-") == false ) {
-				Long effectif = Long.parseLong(data);			
-				if( effectif != null && effectif > 0 ) {				
-					stock.effectif = effectif;
-				}
-			}
-		}
-		
-		// -------------------- EBIT ----------------
-		stock.histoEBIT = new ArrayList<Double>();
-		
-		pf = new PatternFinder( response, thePf -> {
-
-			thePf.contextPatterns.add( ">Résultat d'exploitation (EBIT)</a>" );
-			thePf.contextPatterns.add( "bc2V tableCol0" );			
-			thePf.outOfContextPattern = "<i>Marge d'exploitation</i>";			
-			thePf.leftPattern = "style=\"\">";
-			thePf.rightPattern = "</td>";
-		});
-		data = pf.find().replace( " ", "" );
-		addDoubleIfNonNull( data, Double::parseDouble, stock.histoEBIT, debug );
-
-		pf = new PatternFinder( response, thePf -> {
-
-			thePf.contextPatterns.add( ">Résultat d'exploitation (EBIT)</a>" );
-			thePf.contextPatterns.add( "bc2V tableCol1" );
-			thePf.outOfContextPattern = "<i>Marge d'exploitation</i>";
-			thePf.leftPattern = "style=\"\">";
-			thePf.rightPattern = "</td>";
-		});
-		data = pf.find().replace( " ", "" );
-		addDoubleIfNonNull( data, Double::parseDouble, stock.histoEBIT, debug );
-
-		pf = new PatternFinder( response, thePf -> {
-
-			thePf.contextPatterns.add( ">Résultat d'exploitation (EBIT)</a>" );
-			thePf.contextPatterns.add( "bc2V tableCol2" );	
-			thePf.outOfContextPattern = "<i>Marge d'exploitation</i>";
-			thePf.leftPattern = "style=\"\">";
-			thePf.rightPattern = "</td>";
-		});
-		data = pf.find().replace( " ", "" ); // N-3
-   		addDoubleIfNonNull( data, Double::parseDouble, stock.histoEBIT, debug );		
-		
-		if( stock.histoEBIT.size() > 0 ) {			
-			stock.histoEBIT.forEach( ebit -> {				
-				// System.out.println( String.format( "stock <%s> ebit =%.2f", stock.name, ebit ));				
-			});
-		}
-		
 		// -------------------- Valeur Entreprise ----------------
 		stock.histoVE = new ArrayList<Double>();
 		
@@ -91,130 +29,130 @@ public class ZbFondamentalHandler extends ResponseHandlerTemplate {
 			thePf.contextPatterns.add( ">Valeur Entreprise</a>" );
 			thePf.contextPatterns.add( "bc2V tableCol0" );			
 			thePf.outOfContextPattern = ">PER</a>";			
-			thePf.leftPattern = "style=\"\">";
+			thePf.leftPattern = "style=\"background-color:#DEFEFE;\">";
 			thePf.rightPattern = "</td>";
 		});
 		data = pf.find().replace( " ", "" );
 		addDoubleIfNonNull( data, Double::parseDouble, stock.histoVE, debug );
-
-		pf = new PatternFinder( response, thePf -> {
-
-			thePf.contextPatterns.add( ">Valeur Entreprise</a>" );
-			thePf.contextPatterns.add( "bc2V tableCol1" );
-			thePf.outOfContextPattern = ">PER</a>";
-			thePf.leftPattern = "style=\"\">";
-			thePf.rightPattern = "</td>";
-		});
-		data = pf.find().replace( " ", "" );
-		addDoubleIfNonNull( data, Double::parseDouble, stock.histoVE, debug );
-
-		pf = new PatternFinder( response, thePf -> {
-
-			thePf.contextPatterns.add( ">Valeur Entreprise</a>" );
-			thePf.contextPatterns.add( "bc2V tableCol2" );	
-			thePf.outOfContextPattern = ">PER</a>";
-			thePf.leftPattern = "style=\"\">";
-			thePf.rightPattern = "</td>";
-		});
-		data = pf.find().replace( " ", "" ); // N-3
-   		addDoubleIfNonNull( data, Double::parseDouble, stock.histoVE, debug );		
 		
 		if( stock.histoVE.size() > 0 ) {
 			
 			stock.histoVE.forEach( ebit -> {
 
-				// System.out.println( String.format( "stock <%s> ve =%.2f", stock.name, ebit ));
+				if( debug ) {
+					System.out.println( String.format( "stock <%s> histoVE size = %d", stock.name, stock.histoVE.size() ));
+					System.out.println( String.format( "stock <%s> ve =%.2f", stock.name, ebit ));
+				}
 			});
-		}		
-
-		/*
-		// -------------------- Dette nette ----------------
-		
-		stock.histoNetDebt = new ArrayList<Double>();
-		
-		pf = new PatternFinder( response, thePf -> {
-
-			thePf.contextPatterns.add( ">Dette Nette</a>" );
-			thePf.contextPatterns.add( "bc2V tableCol0" );			
-			thePf.leftPattern = "style=\"\">";
-			thePf.rightPattern = "</td>";
-		});
-		data = pf.find().replace( " ", "" );
-		addDoubleIfNonNull( data, Double::parseDouble, stock.histoNetDebt );
-
-		pf = new PatternFinder( response, thePf -> {
-
-			thePf.contextPatterns.add( ">Dette Nette</a>" );
-			thePf.contextPatterns.add( "bc2V tableCol1" );			
-			thePf.leftPattern = "style=\"\">";
-			thePf.rightPattern = "</td>";
-		});
-		data = pf.find().replace( " ", "" );
-		addDoubleIfNonNull( data, Double::parseDouble, stock.histoNetDebt );
-
-		pf = new PatternFinder( response, thePf -> {
-
-			thePf.contextPatterns.add( ">Dette Nette</a>" );
-			thePf.contextPatterns.add( "bc2V tableCol2" );			
-			thePf.leftPattern = "style=\"\">";
-			thePf.rightPattern = "</td>";
-		});
-		data = pf.find().replace( " ", "" ); // N-3
-		addDoubleIfNonNull( data, Double::parseDouble, stock.histoNetDebt );		
-		
-		if( stock.histoNetDebt.size() > 0 ) {
 			
-			stock.histoNetDebt.forEach( histoNetDebt -> {
-				
-				System.out.println( String.format( "stock <%s> debt =%.2f", stock.name, histoNetDebt ));
-				
-			});
+			// take last element of the list to be the current VE
+			stock.lastVE = stock.histoVE.get( stock.histoVE.size() - 1 );
 		}
-
-		// -------------------- Trésorerie Nette ----------------
 		
-		stock.histoNetTres = new ArrayList<Double>();
-		
-		pf = new PatternFinder( response, thePf -> {
-
-			thePf.contextPatterns.add( ">Trésorerie Nette</a>" );
-			thePf.contextPatterns.add( "bc2V tableCol0" );			
-			thePf.leftPattern = "style=\"\">";
-			thePf.rightPattern = "</td>";
-		});
-		data = pf.find().replace( " ", "" );
-		addDoubleIfNonNull( data, Double::parseDouble, stock.histoNetTres );
-
-		pf = new PatternFinder( response, thePf -> {
-
-			thePf.contextPatterns.add( ">Trésorerie Nette</a>" );
-			thePf.contextPatterns.add( "bc2V tableCol1" );			
-			thePf.leftPattern = "style=\"\">";
-			thePf.rightPattern = "</td>";
-		});
-		data = pf.find().replace( " ", "" );
-		addDoubleIfNonNull( data, Double::parseDouble, stock.histoNetTres );
-
-		pf = new PatternFinder( response, thePf -> {
-
-			thePf.contextPatterns.add( ">Trésorerie Nette</a>" );
-			thePf.contextPatterns.add( "bc2V tableCol2" );			
-			thePf.leftPattern = "style=\"\">";
-			thePf.rightPattern = "</td>";
-		});
-		data = pf.find().replace( " ", "" ); // N-3
-		addDoubleIfNonNull( data, Double::parseDouble, stock.histoNetTres );		
-		
-		if( stock.histoNetTres.size() > 0 ) {
+		// -------------------- Cours de référence  ----------------		
+		ArrayList<Double> quotes = new ArrayList<Double>();
+				
+		for( int i = 0 ; i <= 7 ; i++ ) {
 			
-			stock.histoNetTres.forEach( histoNetTres -> {
-				
-				System.out.println( String.format( "stock <%s> tres =%.2f", stock.name, histoNetTres ));
-				
-			});
-		}
-		*/
+			tag.setLength( 0 );
+			tag.append( "bc2V tableCol" + i  );
+			
+			pf = new PatternFinder( response, thePf -> {
 	
+				//thePf.contextPatterns.add( ">Cours de référence (EUR)</td>" );
+				thePf.contextPatterns.add( ">Cours de référence (" );
+				thePf.contextPatterns.add( tag.toString() ); // [ bc2V tableCol0 -> bc2V tableCol7 ]
+				thePf.outOfContextPattern = ">Date de publication</td>";			
+				thePf.leftPattern = ">";
+				thePf.rightPattern = "</td>";
+			});
+			data = pf.find().replace( " ", "" );
+			addDoubleIfNonNull( data, Double::parseDouble, quotes, debug );
+		}
+
+		if( quotes.size() > 0 ) {
+
+			// take last value of the list, that's supposed to be the last quotation
+			stock.lastQuote = quotes.get(quotes.size()-1);
+			//System.out.println( String.format( "stock <%s> lastQuote =%.2f", stock.name, stock.lastQuote ));
+			// return true;
+		}
+		else {
+
+			System.out.println( String.format( "stock <%s> NO QUOTE", stock.name ));
+			return false;
+		}
+		
+		// -------------------- EBIT ----------------
+		stock.histoEBIT = new ArrayList<Double>();
+				
+		for( int i = 0 ; i <= 7 ; i++ ) {
+			
+			tag.setLength( 0 );
+			tag.append( "bc2V tableCol" + i  );
+			
+			pf = new PatternFinder( response, thePf -> {
+	
+				thePf.contextPatterns.add( ">Résultat d'exploitation (EBIT)</a>" );
+				thePf.contextPatterns.add( tag.toString() ); // [ bc2V tableCol0 -> bc2V tableCol7 ]
+				thePf.outOfContextPattern = "<i>Marge d'exploitation</i>";			
+				thePf.leftPattern = ">";
+				thePf.rightPattern = "</td>";
+			});
+			data = pf.find().replace( " ", "" );
+			addDoubleIfNonNull( data, Double::parseDouble, stock.histoEBIT, debug );
+		}
+		
+		if( stock.histoEBIT.size() > 0 ) {
+			stock.histoEBIT.forEach( ebit -> {
+				if( debug ) {
+					System.out.println( String.format( "stock <%s> histoEBIT size = %d", stock.name, stock.histoEBIT.size() ));
+					System.out.println( String.format( "stock <%s> ebit =%.2f", stock.name, ebit ));
+				}
+			});
+		}
+		
+		// -------------------- BNA ----------------
+		stock.histoBNA = new ArrayList<Double>();
+		
+		for( int i = 0 ; i <= 7 ; i++ ) {
+			
+			tag.setLength( 0 );
+			tag.append( "bc2V tableCol" + i  );
+			
+			pf = new PatternFinder( response, thePf -> {
+	
+				thePf.contextPatterns.add( ">BNA</a>" );
+				thePf.contextPatterns.add( tag.toString() ); // [ bc2V tableCol0 -> bc2V tableCol7 ]
+				thePf.outOfContextPattern = ">Free Cash Flow</a>";			
+				thePf.leftPattern = ">";
+				thePf.rightPattern = "</td>";
+			});
+			data = pf.find().replace( " ", "" );
+			addDoubleIfNonNull( data, Double::parseDouble, stock.histoBNA, debug );
+		}
+				
+		// -------------------- Dividendes ----------------
+		stock.histoDIV = new ArrayList<Double>();
+		
+		for( int i = 0 ; i <= 7 ; i++ ) {
+			
+			tag.setLength( 0 );
+			tag.append( "bc2V tableCol" + i  );
+			
+			pf = new PatternFinder( response, thePf -> {
+	
+				thePf.contextPatterns.add( ">Dividende / Action</a>" );
+				thePf.contextPatterns.add( tag.toString() ); // [ bc2V tableCol0 -> bc2V tableCol7 ]
+				thePf.outOfContextPattern = "Evolution du Compte de Résultat";			
+				thePf.leftPattern = ">";
+				thePf.rightPattern = "</td>";
+			});
+			data = pf.find().replace( " ", "" );
+			addDoubleIfNonNull( data, Double::parseDouble, stock.histoDIV, debug );
+		}
+		
 		return true;
+
 	}
 }

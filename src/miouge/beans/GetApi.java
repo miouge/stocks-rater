@@ -107,7 +107,7 @@ public class GetApi  {
 					if( debug )
 					{
 						//System.out.println("response is already present in cache folder");
-						System.out.println("reusing " + lookupPath );
+						System.out.println("   reusing " + lookupPath );
 					}
 	
 					// load the file then call the handler directly

@@ -91,7 +91,7 @@ public abstract class ResponseHandlerTemplate {
 		
 		// output to file
 		String destination = this.context.rootFolder + '/' + cacheSubFolder + "/" + dumpFilename;		
-        System.out.println( String.format( "response dumped into %s", (cacheSubFolder + "/" + dumpFilename)));
+        System.out.println( String.format( "   response dumped into %s", (cacheSubFolder + "/" + dumpFilename)));
         FileUtils.writeStringToFile( new File( destination ), answer.toString(), charset ); // "ISO-8859-1" );
         
         /*

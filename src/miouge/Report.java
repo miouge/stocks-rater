@@ -769,11 +769,7 @@ let modules = [
 			stock.progressionVsQuote1 = ((stock.lastQuote - stock.previousQuote1)/stock.previousQuote1)*100.0;
 		}
 		
-		if( stock.dfnZb != null ) {
-			
-			stock.dfn = stock.dfnZb;
-		}
-		else if( stock.dfnBma != null ) {
+		if( stock.dfnBma != null ) {
 			
 			stock.dfn = stock.dfnBma;
 		}
