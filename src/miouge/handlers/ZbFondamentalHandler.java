@@ -13,15 +13,19 @@ public class ZbFondamentalHandler extends ResponseHandlerTemplate {
 	}
 
 	@Override
-	public boolean customProcess(Stock stock, StringBuilder response, boolean debug ) throws Exception {
+	public boolean customProcess(Stock stock, StringBuilder response ) throws Exception {
 
 		// System.out.println( String.format( "ZbFondamentalHandlerB : processing %s ...", this.getDumpFilename(stock)));
 
+//		if( stock.name.equals( "Burelle") == false ) {
+//			return true;
+//		}
+		
 		PatternFinder pf;
 		String data;
 		StringBuilder tag = new StringBuilder();
 		
-		// boolean debug = true;
+		boolean debug = false;	
 	
 		// -------------------- Valeur Entreprise ----------------
 		

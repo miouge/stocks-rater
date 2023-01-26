@@ -103,7 +103,7 @@ public abstract class ResponseHandlerTemplate {
         
 	}	
 	
-	public boolean customProcess( Stock stock, StringBuilder response, boolean debug ) throws Exception { return false; }
+	public boolean customProcess( Stock stock, StringBuilder response ) throws Exception { return false; }
 	
 	public void process( Context context, Stock stock, StringBuilder response, boolean cacheLoaded, String charset, boolean debug ) throws Exception {
 		
@@ -119,7 +119,7 @@ public abstract class ResponseHandlerTemplate {
 		
 		try {
 			
-			this.success = this.customProcess( stock, response, debug );			
+			this.success = this.customProcess( stock, response );			
 			
 		} catch ( Exception e ) {
 		

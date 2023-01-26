@@ -99,9 +99,10 @@ public class Stock {
 	// computed ratio
 	
 	public Double avgPER;
-	public Double ratioQuoteBV;    // ratio Cours / capitaux propres part du groupe par action (eg 0.8)
-	public Double ratioVeOverEBIT; // ratio  VE / EBIT	( eg 8.5 )
-	public Double ratioDfnOverEBITDA; // ration DFN / EBITDA
+	public Double ratioQuoteBV;       // ratio Cours / capitaux propres part du groupe par action (eg 0.8)
+	public Double ratioVeOverEBIT;    // ratio  VE / EBIT	( eg 8.5 )
+	public Double ratioDfnOverEBITDA; // ratio DFN / EBITDA
+	public Double netCashPS;          // ratio net cash per share
 
 	public Overrides overrides = new Overrides();
 }

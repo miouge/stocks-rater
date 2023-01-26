@@ -82,7 +82,22 @@ public class ReportZB extends ReportGeneric {
 	@Override
 	public void compute( Stock stock ) {
 		
+		// données disponibles
+		// stock.lastVE
+		// stock.lastQuote
+		// stock.shareCount
+		// stock.histoEBITDA -> avgEBITDA
+		// stock.histoEBIT   -> avgEBIT
+		// stock.histoRN     -> avgRN
+		// stock.histoDIV	 -> avgDIV (pb des divisions)
+				
 		// System.out.println( String.format( "compute for stock <%s> ...", stock.name ));
+		
+//		if( stock.name.equals( "1000Mercis" )) {
+//		
+//		int i=0;
+//		i++;
+//	}		
 
 		if( stock.histoEBITDA != null && stock.histoEBITDA.size() > 0 ) {
 			stock.avgEBITDA = stock.histoEBITDA.stream().mapToDouble( i -> i ).average().getAsDouble();
@@ -95,11 +110,11 @@ public class ReportZB extends ReportGeneric {
 		}
 		if( stock.histoDIV != null && stock.histoDIV.size() > 0 ) {
 			stock.avgDIV = stock.histoDIV.stream().mapToDouble( i -> i ).average().getAsDouble();
-		}
+		}		
 		
-		
-		// ration EBIT/VE
+		// ratio EBIT/VE
 		if( stock.lastVE != null && stock.avgEBIT != null && stock.avgEBIT > 0 ) {
+			
 			stock.ratioVeOverEBIT = stock.lastVE / stock.avgEBIT;
 		}
 
@@ -131,6 +146,7 @@ public class ReportZB extends ReportGeneric {
 		if( stock.lastVE != null && stock.lastQuote != null && stock.sharesCount != null ) {
 			
 			stock.dfn = stock.lastVE - (stock.lastQuote * stock.sharesCount)/1000000.0; // DFN = VE - Capitalization
+			// stock.dfn peut etre négatif -> trésorerie nette
 		}
 		
 		// ratio DFN / EBITDA
@@ -139,28 +155,22 @@ public class ReportZB extends ReportGeneric {
 			stock.ratioDfnOverEBITDA = stock.dfn / stock.avgEBITDA;
 		}
 		
-		// put dummy value to ease EXCEL filter use
-		
-//		if( stock.avgPER != null && stock.avgPER > 0 ) {
-//			if( stock.ratioVeOverEBIT == null ) {
-//				stock.ratioVeOverEBIT = 0.0;
-//			}
-//		}
-//		if( stock.ratioVeOverEBIT != null && stock.ratioVeOverEBIT > 0 ) {
-//			if( stock.avgPER == null ) {
-//				stock.avgPER = 0.0;
-//			}
-//		}
+		// ratio trésorerie per share
+		if( stock.sharesCount != null && stock.sharesCount > 0 && stock.dfn != null && stock.dfn < 0 ) {
+			
+			stock.netCashPS = -1.0 * (stock.dfn / stock.sharesCount);
+		}
 	}
 	
 	@Override
 	protected boolean excludeFromReport( Stock stock, boolean verbose ) {
 		
-		if( stock.name.equals( "1000Mercis" )) {
-			
-			int i=0;
-			i++;
-		}
+//		if( stock.name.equals( "1000Mercis" )) {
+//			
+//			int i=0;
+//			i++;
+//		}
+				
 		
 		if( stock.lastVE != null && stock.lastVE < 50.0 ) {
 			// société trop petite			
@@ -309,6 +319,11 @@ public class ReportZB extends ReportGeneric {
 	    column++;
 	    sheet.getRow(0).createCell( column ).setCellValue( (String) "DFN / EBITDA" );
 	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).ratioDfnOverEBITDA ).setCellStyle( precisionStyle.get(-2)); }
+
+	    // Net Cash per Share
+	    column++;
+	    sheet.getRow(0).createCell( column ).setCellValue( (String) "Cash PS" );
+	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).netCashPS ).setCellStyle( precisionStyle.get(-2)); }
 	    
 	    // cours de référence %
 	    column++;

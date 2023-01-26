@@ -11,7 +11,7 @@ public class ZbSearchHandler extends ResponseHandlerTemplate {
 	}
 
 	@Override
-	public boolean customProcess(Stock stock, StringBuilder response, boolean debug ) throws Exception {
+	public boolean customProcess(Stock stock, StringBuilder response ) throws Exception {
 
 		PatternFinder pf;
 		String data;
