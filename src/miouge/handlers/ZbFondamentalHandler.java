@@ -17,15 +17,15 @@ public class ZbFondamentalHandler extends ResponseHandlerTemplate {
 
 		// System.out.println( String.format( "ZbFondamentalHandlerB : processing %s ...", this.getDumpFilename(stock)));
 
-//		if( stock.name.equals( "Burelle") == false ) {
-//			return true;
-//		}
+		if( stock.name.equals( "Verallia") == false ) {
+			return true;
+		}
 		
 		PatternFinder pf;
 		String data;
 		StringBuilder tag = new StringBuilder();
 		
-		boolean debug = false;	
+		boolean debug = true;	
 	
 		// -------------------- Valeur Entreprise ----------------
 		
@@ -104,7 +104,7 @@ public class ZbFondamentalHandler extends ResponseHandlerTemplate {
 				//thePf.contextPatterns.add( ">Cours de référence (EUR)</td>" );
 				thePf.contextPatterns.add( ">Cours de référence (" );
 				thePf.contextPatterns.add( tag.toString() ); // [ bc2V tableCol0 -> bc2V tableCol7 ]
-				thePf.outOfContextPattern = ">Date de publication</td>";			
+				thePf.outOfContextPattern = "<td class=\"bc2T\">Date de publication</td>";			
 				thePf.leftPattern = ">";
 				thePf.rightPattern = "</td>";
 			});

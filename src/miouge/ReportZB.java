@@ -167,40 +167,40 @@ public class ReportZB extends ReportGeneric {
 		}
 	}
 	
-	@Override
-	protected boolean excludeFromReport( Stock stock, boolean verbose ) {
-		
-//		if( stock.name.equals( "1000Mercis" )) {
-//			
-//			int i=0;
-//			i++;
+//	@Override
+//	protected boolean excludeFromReport( Stock stock, boolean verbose ) {
+//		
+////		if( stock.name.equals( "1000Mercis" )) {
+////			
+////			int i=0;
+////			i++;
+////		}
+//				
+//		
+//		if( stock.lastVE != null && stock.lastVE < 50.0 ) {
+//			// société trop petite			
+//			System.out.println( String.format( "EXCLUDED : too small VE [%s] zbSuffix=[%s] ignore=%s", stock.name, stock.zbSuffix, stock.toIgnore.toString() ) );
+//			return true;
 //		}
-				
-		
-		if( stock.lastVE != null && stock.lastVE < 50.0 ) {
-			// société trop petite			
-			System.out.println( String.format( "EXCLUDED : too small VE [%s] zbSuffix=[%s] ignore=%s", stock.name, stock.zbSuffix, stock.toIgnore.toString() ) );
-			return true;
-		}
-		
-		// il faut que soit le ratio VE/EBIT < 14 soit le PE < 12
-		
-		if( stock.avgPER == null && stock.ratioVeOverEBIT == null ) { return true; }
-		
-		boolean ratioOK = false;
-		
-		if( stock.avgPER != null && (stock.avgPER <= 14.0) ) {
-			ratioOK = true;
-		}
-		if( stock.ratioVeOverEBIT != null && (stock.ratioVeOverEBIT <= 12.0) ) {
-			ratioOK = true;
-		}
-		if( ratioOK == false ) { 
-			return true;
-		}
-
-		return false;
-	}
+//		
+//		// il faut que soit le ratio VE/EBIT < 14 soit le PE < 12
+//		
+//		if( stock.avgPER == null && stock.ratioVeOverEBIT == null ) { return true; }
+//		
+//		boolean ratioOK = false;
+//		
+//		if( stock.avgPER != null && (stock.avgPER <= 14.0) ) {
+//			ratioOK = true;
+//		}
+//		if( stock.ratioVeOverEBIT != null && (stock.ratioVeOverEBIT <= 12.0) ) {
+//			ratioOK = true;
+//		}
+//		if( ratioOK == false ) { 
+//			return true;
+//		}
+//
+//		return false;
+//	}
 
 	@Override
 	void composeReport( XSSFWorkbook wb, HashMap<Integer,CellStyle> precisionStyle, ArrayList<Stock> selection ) throws Exception {

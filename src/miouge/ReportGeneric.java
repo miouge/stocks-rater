@@ -331,7 +331,7 @@ public abstract class ReportGeneric {
 		
 	abstract void composeReport( XSSFWorkbook wb, HashMap<Integer,CellStyle> precisionStyle, ArrayList<Stock> selection ) throws Exception;
 	
-	abstract boolean excludeFromReport( Stock stock, boolean verbose );
+	protected boolean excludeFromReport( Stock stock, boolean verbose ) { return false; }
 	
 	public void outputReport( String reportPrefixName ) throws Exception {
 		
