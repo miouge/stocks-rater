@@ -88,7 +88,7 @@ public class Report extends ReportGeneric {
 						
 						Stock stock = new Stock();
 						stock.isin = otherIsin; 
-						stock.countryCode = stock.isin.substring(0, 2);
+						//stock.countryCode = stock.isin.substring(0, 2);
 						this.stocks.add( stock );
 						this.stocksByIsin.put(stock.isin, stock);
 					}
@@ -663,11 +663,11 @@ let modules = [
 				
 		// figure out the correct (worse) share count
 		
-		if( stock.shareCounts.size() > 0 ) {
-		
-			// stock.sharesCount = (long) shareCounts.stream().mapToLong(Long::longValue).average().getAsDouble();
-			stock.sharesCount = stock.shareCounts.stream().mapToLong(Long::longValue).max().getAsLong();
-		}
+//		if( stock.shareCounts.size() > 0 ) {
+//		
+//			// stock.sharesCount = (long) shareCounts.stream().mapToLong(Long::longValue).average().getAsDouble();
+//			stock.sharesCount = stock.shareCounts.stream().mapToLong(Long::longValue).max().getAsLong();
+//		}
 		
 		if( stock.overrides.sharesCount != null ) {
 			stock.sharesCount = stock.overrides.sharesCount; 
@@ -675,47 +675,47 @@ let modules = [
 		
 		// Capitalization (K€)
 		
-		if( stock.lastQuote != null && stock.sharesCount != null ) {
-			
-			// en M€
-			stock.capitalization = ( stock.lastQuote * stock.sharesCount ) / 1000000.0;
-		}
+//		if( stock.lastQuote != null && stock.sharesCount != null ) {
+//			
+//			// en M€
+//			stock.capitalization = ( stock.lastQuote * stock.sharesCount ) / 1000000.0;
+//		}
 
-		// Capitaux propres
-		if( stock.histoCP != null ) {
-			stock.histoCP.forEach( cp -> {
-				if( cp != null ) {
-					stock.capitauxPropres = cp;	 // keep only the last one (the more recent)
-				}
-			});
-		}
-						
-		if( stock.capitalization != null && stock.capitauxPropres != null ) {
-
-			if( stock.capitauxPropres > 0 ) {
-				
-				//                            M€                         K€
-				stock.ratioQuoteBV = stock.capitalization / (double)stock.capitauxPropres;
-				stock.ratioQuoteBV *= 1000.0;
-
-				Double rating = 50.0 / stock.ratioQuoteBV;
-				// if ratioQuoteBV = 0.5 => rating = 100
-				// if ratioQuoteBV = 1   => rating =  50
-				// if ratioQuoteBV = 2   => rating =  25
-				// if ratioQuoteBV = 3   => rating =  16				
-				ratings.add( rating );
-			}
-		}
+//		// Capitaux propres
+//		if( stock.histoCP != null ) {
+//			stock.histoCP.forEach( cp -> {
+//				if( cp != null ) {
+//					stock.capitauxPropres = cp;	 // keep only the last one (the more recent)
+//				}
+//			});
+//		}
+//						
+//		if( stock.capitalization != null && stock.capitauxPropres != null ) {
+//
+//			if( stock.capitauxPropres > 0 ) {
+//				
+//				//                            M€                         K€
+//				stock.ratioQuoteBV = stock.capitalization / (double)stock.capitauxPropres;
+//				stock.ratioQuoteBV *= 1000.0;
+//
+//				Double rating = 50.0 / stock.ratioQuoteBV;
+//				// if ratioQuoteBV = 0.5 => rating = 100
+//				// if ratioQuoteBV = 1   => rating =  50
+//				// if ratioQuoteBV = 2   => rating =  25
+//				// if ratioQuoteBV = 3   => rating =  16				
+//				ratings.add( rating );
+//			}
+//		}
 		
-		if( stock.histoRNPG != null && stock.histoRNPG.size() > 0 ) {
-			
-			for( int i = 0 ; i < stock.histoRNPG.size() ; i++ ) {			
-				//System.out.println( String.format( "histoRNPG [%d] = %d K€ ", i, stock.histoRNPG.get(i) ));
-			}
-			
-			stock.avgRNPG = stock.histoRNPG.stream().mapToLong(Long::longValue).average().getAsDouble();
-			// System.out.println( String.format( "avg RNPDG = %.2f K€ (avg of %d values)", stock.avgRNPG, stock.histoRNPG.size()));
-		}
+//		if( stock.histoRNPG != null && stock.histoRNPG.size() > 0 ) {
+//			
+//			for( int i = 0 ; i < stock.histoRNPG.size() ; i++ ) {			
+//				//System.out.println( String.format( "histoRNPG [%d] = %d K€ ", i, stock.histoRNPG.get(i) ));
+//			}
+//			
+//			stock.avgRNPG = stock.histoRNPG.stream().mapToLong(Long::longValue).average().getAsDouble();
+//			// System.out.println( String.format( "avg RNPDG = %.2f K€ (avg of %d values)", stock.avgRNPG, stock.histoRNPG.size()));
+//		}
 		
 		if( stock.histoEBIT != null && stock.histoEBIT.size() > 0 ) {
 			
@@ -727,52 +727,52 @@ let modules = [
 			//System.out.println( String.format( "avg EBIT = %.2f M€ ", stock.avgEBIT ));
 		}		
 
-		if( stock.lastQuote != null && stock.sharesCount != null && stock.avgRNPG != null && stock.avgRNPG > 0 ) {
-
-			Double avgEarningPerShare = ( stock.avgRNPG * 1000.0 ) / stock.sharesCount;
-			if( avgEarningPerShare > 0 && stock.lastQuote > 0 ) {
-				stock.avgPER = stock.lastQuote / avgEarningPerShare;
-				
-				// 0-100 
-				// 100 ; resultat de 11% (PE de 9)
-				// 0   : resultat de  5%
-				Double a = 1666.0;
-				Double b = 83.30;
-				Double rating = ( avgEarningPerShare / stock.lastQuote ) * a + b;
-				ratings.add( rating );
-			}
-		}
+//		if( stock.lastQuote != null && stock.sharesCount != null && stock.avgRNPG != null && stock.avgRNPG > 0 ) {
+//
+//			Double avgEarningPerShare = ( stock.avgRNPG * 1000.0 ) / stock.sharesCount;
+//			if( avgEarningPerShare > 0 && stock.lastQuote > 0 ) {
+//				stock.avgPER = stock.lastQuote / avgEarningPerShare;
+//				
+//				// 0-100 
+//				// 100 ; resultat de 11% (PE de 9)
+//				// 0   : resultat de  5%
+//				Double a = 1666.0;
+//				Double b = 83.30;
+//				Double rating = ( avgEarningPerShare / stock.lastQuote ) * a + b;
+//				ratings.add( rating );
+//			}
+//		}
 		
-		if( stock.histoVE != null && stock.histoVE.size() > 0 && stock.avgEBIT != null ) {
-			
-			if( stock.avgEBIT >= 0 ) {
-				
-				Double lastVE = stock.histoVE.get(stock.histoVE.size()-1);
-				stock.ratioVeOverEBIT = lastVE / stock.avgEBIT;
-				
-				if( stock.capitalization != null ) {
-				
-					Double soulteVE = lastVE - stock.capitalization;
-					stock.soulteVE = soulteVE; 
-				}				
-			}
-		}
+//		if( stock.histoVE != null && stock.histoVE.size() > 0 && stock.avgEBIT != null ) {
+//			
+//			if( stock.avgEBIT >= 0 ) {
+//				
+//				Double lastVE = stock.histoVE.get(stock.histoVE.size()-1);
+//				stock.ratioVeOverEBIT = lastVE / stock.avgEBIT;
+//				
+//				if( stock.capitalization != null ) {
+//				
+//					Double soulteVE = lastVE - stock.capitalization;
+//					stock.soulteVE = soulteVE; 
+//				}				
+//			}
+//		}
 		
 		// ratio d'endettement % (vient de TS ou du dernier % historique d'ABC)
-		if( stock.debtRatio == null && stock.histoDebtRatio != null && stock.histoDebtRatio.size() > 0  ) {
-
-			stock.debtRatio = stock.histoDebtRatio.get(stock.histoDebtRatio.size()-1);
-		}
+//		if( stock.debtRatio == null && stock.histoDebtRatio != null && stock.histoDebtRatio.size() > 0  ) {
+//
+//			stock.debtRatio = stock.histoDebtRatio.get(stock.histoDebtRatio.size()-1);
+//		}
 				
-		if( stock.lastQuote != null && stock.previousQuote1 != null ) {
-			
-			stock.progressionVsQuote1 = ((stock.lastQuote - stock.previousQuote1)/stock.previousQuote1)*100.0;
-		}
+//		if( stock.lastQuote != null && stock.previousQuote1 != null ) {
+//			
+//			stock.progressionVsQuote1 = ((stock.lastQuote - stock.previousQuote1)/stock.previousQuote1)*100.0;
+//		}
 		
-		if( stock.dfnBma != null ) {
-			
-			stock.dfn = stock.dfnBma;
-		}
+//		if( stock.dfnBma != null ) {
+//			
+//			stock.dfn = stock.dfnBma;
+//		}
 		
 		stock.eventCount = stock.events.size();
 		
@@ -784,11 +784,11 @@ let modules = [
 	@Override
 	protected boolean excludeFromReport( Stock stock, boolean verbose ) {
 		
-		if( stock.capitalization != null && stock.capitalization < 50.0 ) {
-			// société trop petite
-			if( verbose ) { System.out.println( String.format( "exclude %s : see capitalization", stock.name )); }			
-			return true;
-		}
+//		if( stock.capitalization != null && stock.capitalization < 50.0 ) {
+//			// société trop petite
+//			if( verbose ) { System.out.println( String.format( "exclude %s : see capitalization", stock.name )); }			
+//			return true;
+//		}
 		
 		if( stock.ratioVeOverEBIT != null && stock.ratioVeOverEBIT > 20.0 ) {
 			if( verbose ) { System.out.println( String.format( "exclude %s : see ratioVeOverEBIT", stock.name )); }
@@ -800,25 +800,25 @@ let modules = [
 			return true;
 		}
 
-		if( stock.ratioQuoteBV != null && stock.ratioQuoteBV > 4.0 ) {
-			if( verbose ) { System.out.println( String.format( "exclude %s : see ratioQuoteBV", stock.name )); }
-			return true;
-		}
+//		if( stock.ratioQuoteBV != null && stock.ratioQuoteBV > 4.0 ) {
+//			if( verbose ) { System.out.println( String.format( "exclude %s : see ratioQuoteBV", stock.name )); }
+//			return true;
+//		}
 		
-		if( stock.progressionVsQuote1 == null ) {
-			if( verbose ) { System.out.println( String.format( "exclude %s : see progressionVsQuote1", stock.name )); }
-			return true;
-		}
+//		if( stock.progressionVsQuote1 == null ) {
+//			if( verbose ) { System.out.println( String.format( "exclude %s : see progressionVsQuote1", stock.name )); }
+//			return true;
+//		}
 		
 		if( stock.eventCount < 3 ) {
 			if( verbose ) { System.out.println( String.format( "exclude %s : see eventCount", stock.name )); }
 			return true;
 		}		
 
-		if( stock.ratioVeOverEBIT == null && stock.ratioVeOverEBIT == null && stock.ratioQuoteBV == null ) {
-			if( verbose ) { System.out.println( String.format( "exclude %s : see ratioVeOverEBIT", stock.name )); }
-			return true;
-		}
+//		if( stock.ratioVeOverEBIT == null && stock.ratioVeOverEBIT == null && stock.ratioQuoteBV == null ) {
+//			if( verbose ) { System.out.println( String.format( "exclude %s : see ratioVeOverEBIT", stock.name )); }
+//			return true;
+//		}
 
 		return false;
 	}
@@ -883,14 +883,14 @@ let modules = [
 	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).lastQuote ); }
 	    
 	    // capitalisation
-	    column++;
-	    sheet.getRow(0).createCell( column ).setCellValue( (String) "Capitalization (M€)" );
-	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).capitalization ).setCellStyle( precisionStyle.get(-1)); }
+//	    column++;
+//	    sheet.getRow(0).createCell( column ).setCellValue( (String) "Capitalization (M€)" );
+//	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).capitalization ).setCellStyle( precisionStyle.get(-1)); }
 
 	    // soulteVE
-	    column++;
-	    sheet.getRow(0).createCell( column ).setCellValue( (String) "SoulteVE (M€)" );
-	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).soulteVE ).setCellStyle( precisionStyle.get(-1)); }		    
+//	    column++;
+//	    sheet.getRow(0).createCell( column ).setCellValue( (String) "SoulteVE (M€)" );
+//	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).soulteVE ).setCellStyle( precisionStyle.get(-1)); }		    
 	    
 	    // Dette financiere nette		    
 	    column++;
@@ -899,27 +899,27 @@ let modules = [
 	    
 	    		    
 	    // Ratio d'endettement
-	    column++;
-	    sheet.getRow(0).createCell( column ).setCellValue( (String) "Endettement %" );
-	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).debtRatio ); }
+//	    column++;
+//	    sheet.getRow(0).createCell( column ).setCellValue( (String) "Endettement %" );
+//	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).debtRatio ); }
 	    
 	    // Ratio Book Value
-	    column++;
-	    sheet.getRow(0).createCell( column ).setCellValue( (String) "Book value ratio" );
-	    for( int i = 0 ; i < iMax ; i++ ) {    	
-	    	final Stock stock = selection.get(i);
-	    	createCell( sheet.getRow( i + 1 ), column, stock.ratioQuoteBV ).setCellStyle( createStyle( wb, stock, style -> {
-	    					
-	    					style.setDataFormat( ch.createDataFormat().getFormat("#0.0"));
-	    					if( stock.ratioQuoteBV != null ) {
-	    						if( stock.ratioQuoteBV < 1.0 ) {
-	    							setBackgroundColor( style, HSSFColor.HSSFColorPredefined.LIGHT_GREEN );
-	    						}
-	    						if( stock.ratioQuoteBV > 2.0 ) {
-	    							setBackgroundColor( style, HSSFColor.HSSFColorPredefined.LIGHT_ORANGE );
-	    						}
-	    					}
-	    }));}
+//	    column++;
+//	    sheet.getRow(0).createCell( column ).setCellValue( (String) "Book value ratio" );
+//	    for( int i = 0 ; i < iMax ; i++ ) {    	
+//	    	final Stock stock = selection.get(i);
+//	    	createCell( sheet.getRow( i + 1 ), column, stock.ratioQuoteBV ).setCellStyle( createStyle( wb, stock, style -> {
+//	    					
+//	    					style.setDataFormat( ch.createDataFormat().getFormat("#0.0"));
+//	    					if( stock.ratioQuoteBV != null ) {
+//	    						if( stock.ratioQuoteBV < 1.0 ) {
+//	    							setBackgroundColor( style, HSSFColor.HSSFColorPredefined.LIGHT_GREEN );
+//	    						}
+//	    						if( stock.ratioQuoteBV > 2.0 ) {
+//	    							setBackgroundColor( style, HSSFColor.HSSFColorPredefined.LIGHT_ORANGE );
+//	    						}
+//	    					}
+//	    }));}
 
 	    // 5 years avg PER
 	    column++;
@@ -959,17 +959,17 @@ let modules = [
 	    }));}
 
 	    // progression vs previous Quote 1
-	    column++;
-	    sheet.getRow(0).createCell( column ).setCellValue( (String) "progressionVsQuote1" );
-	    for( int i = 0 ; i < iMax ; i++ ) {
-	    	final Stock stock = selection.get(i);
-	    	createCell( sheet.getRow( i + 1 ), column, stock.progressionVsQuote1 ).setCellStyle( createStyle( wb, stock, style -> {
-	    					
-	    					style.setDataFormat( ch.createDataFormat().getFormat("#0.0"));
-	    					if( stock.progressionVsQuote1 != null && stock.progressionVsQuote1 < 0.0 ) {
-	    						setBackgroundColor( style, HSSFColor.HSSFColorPredefined.LIGHT_GREEN );
-	    					}
-	    }));}
+//	    column++;
+//	    sheet.getRow(0).createCell( column ).setCellValue( (String) "progressionVsQuote1" );
+//	    for( int i = 0 ; i < iMax ; i++ ) {
+//	    	final Stock stock = selection.get(i);
+//	    	createCell( sheet.getRow( i + 1 ), column, stock.progressionVsQuote1 ).setCellStyle( createStyle( wb, stock, style -> {
+//	    					
+//	    					style.setDataFormat( ch.createDataFormat().getFormat("#0.0"));
+//	    					if( stock.progressionVsQuote1 != null && stock.progressionVsQuote1 < 0.0 ) {
+//	    						setBackgroundColor( style, HSSFColor.HSSFColorPredefined.LIGHT_GREEN );
+//	    					}
+//	    }));}
 	    
 	    // Custom Rating
 //		    column++;
@@ -1053,13 +1053,13 @@ let modules = [
 	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).eventCount ); }
 	    
 	    // capitaux propres		    
-	    column++;
-	    sheet.getRow(0).createCell( column ).setCellValue( (String) "Capitaux propres (M€)" );
-	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).capitauxPropres ); }
+//	    column++;
+//	    sheet.getRow(0).createCell( column ).setCellValue( (String) "Capitaux propres (M€)" );
+//	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).capitauxPropres ); }
 	    
 	    // avgRNPG		    
-	    column++;
-	    sheet.getRow(0).createCell( column ).setCellValue( (String) "5y-Avg RNPG (K€)" );
-	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).avgRNPG ); }		        
+//	    column++;
+//	    sheet.getRow(0).createCell( column ).setCellValue( (String) "5y-Avg RNPG (K€)" );
+//	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).avgRNPG ); }		        
 	}
 }

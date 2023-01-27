@@ -49,7 +49,7 @@ public class BmaSocieteHandler extends ResponseHandlerTemplate {
 			Long sharesCount = Long.parseLong(data);
 			if( sharesCount != null && sharesCount > 0 ) {
 				stock.bmaSharesCount = sharesCount;
-				stock.shareCounts.add(stock.bmaSharesCount);
+				//stock.shareCounts.add(stock.bmaSharesCount);
 			}
 		}
 		

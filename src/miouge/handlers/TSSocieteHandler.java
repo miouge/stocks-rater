@@ -29,7 +29,7 @@ public class TSSocieteHandler extends ResponseHandlerTemplate {
 			Long sharesCount = Long.parseLong(data);
 			if( sharesCount != null && sharesCount > 0 ) {
 				stock.tsSharesCount = sharesCount; 
-				stock.shareCounts.add(stock.tsSharesCount);
+				//stock.shareCounts.add(stock.tsSharesCount);
 			}
 		}
 					
@@ -40,7 +40,7 @@ public class TSSocieteHandler extends ResponseHandlerTemplate {
 			thePf.rightPattern = "</div>";
 		}); 		
 		data = pf.find().replace( "%", "" ).replace( "&nbsp;", "" ).trim();
-		if( data.equals( "-" ) == false ) { stock.debtRatio = Double.parseDouble( data ); }
+//		if( data.equals( "-" ) == false ) { stock.debtRatio = Double.parseDouble( data ); }
 		
 //		pf = new PatternFinder( response, thePf -> {
 //

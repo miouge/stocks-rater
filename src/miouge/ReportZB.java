@@ -160,6 +160,11 @@ public class ReportZB extends ReportGeneric {
 			
 			stock.netCashPS = -1.0 * (stock.dfn / stock.sharesCount);
 		}
+		
+		// ratio last Quote / Book value
+		if( stock.lastQuote != null && stock.BVPS != null && stock.BVPS > 0) {			
+			stock.ratioQuoteBV = stock.lastQuote / stock.BVPS;
+		}
 	}
 	
 	@Override
@@ -320,10 +325,20 @@ public class ReportZB extends ReportGeneric {
 	    sheet.getRow(0).createCell( column ).setCellValue( (String) "DFN / EBITDA" );
 	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).ratioDfnOverEBITDA ).setCellStyle( precisionStyle.get(-2)); }
 
+	    // ratio cours / active Net
+	    column++;
+	    sheet.getRow(0).createCell( column ).setCellValue( (String) "QUOTE / BV" );
+	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).ratioQuoteBV ).setCellStyle( precisionStyle.get(-2)); }
+	    
 	    // Net Cash per Share
 	    column++;
 	    sheet.getRow(0).createCell( column ).setCellValue( (String) "Cash PS" );
 	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).netCashPS ).setCellStyle( precisionStyle.get(-2)); }
+
+	    // Book value per share
+	    column++;
+	    sheet.getRow(0).createCell( column ).setCellValue( (String) "BVPS" );
+	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).BVPS ).setCellStyle( precisionStyle.get(-1)); }
 	    
 	    // cours de référence %
 	    column++;

@@ -7,6 +7,7 @@ public class Stock {
 	
 	// loaded from liste.csv (in the same order)
 	public String isin;
+	//public String countryCode; 		  // FR	
 	public String mnemo;
 	public Boolean withinPEA;
 	public String withinPEALabel; // "PEA" ou null
@@ -39,70 +40,53 @@ public class Stock {
 	// AlphaVantage
 	public String aphaSymbol;
 
-	// aggregated data from all websites
+	// sources data from websites 
+		
+	public Long sharesCount; 	      // nombre de titres (source ZB)
+	public Double lastQuote; 	      // last quotation (source ZB)
+		
+	// CR
 	
-	public String countryCode; 		  // FR
-	
-	public ArrayList<Long> shareCounts = new ArrayList<Long>(); // différentes récupération sur les websites
-	public Long sharesCount; 	      // nombre de titres (max)
-	
-	public Double lastQuote; 	      // last quotation
-	public Double capitalization;     // en M€ (Nb de titres * last quotation) 
-
-	public Double previousQuote1; 	  // previous quotation point	
-	public Double progressionVsQuote1;
+	public ArrayList<Double> histoEBITDA; // M€ (source ZB)
+	public ArrayList<Double> histoEBIT;  // M€ (source ZB)
+	public ArrayList<Double> histoRN; // M€ (source ZB)
 	
 	// Bilan	
-	public Long capitauxPropres;
-	public Double dfnZb;  // dette financiere nette en M€ (si < 0 trésorie nette)
-	public Double dfnBma; // dette financiere nette en M€ (si < 0 trésorie nette
-	public Double dfn;    // dette financiere nette en M€ (si < 0 trésorie nette))
-	
-	// Compte de resultat
-	public ArrayList<Long> histoCA; // K€
-	
-	public ArrayList<Long> histoRNPG; // K€
-	public Double avgRNPG;
-	
-	public ArrayList<Long> histoCP; // K€
 
-	public ArrayList<Double> histoEBITDA; // M€
-	public Double avgEBITDA;
-	
-	public ArrayList<Double> histoEBIT;  // M€
-	public Double avgEBIT;
-
-	public ArrayList<Double> histoRN; // M€
-	public Double avgRN;
-	
-	public ArrayList<Double> histoBNA;
-	public Double avgBNA;
-
-	public ArrayList<Double> histoDIV;
-	public Double avgDIV;
-	
-	public Double rdtPerc; // rendement en %
-	public Double payoutPerc;     // payout %
-	
-	public ArrayList<Double> histoDebtRatio; // ratio d'endettement en %
-	public Double debtRatio;                 // en %	
-	
-	public ArrayList<Double> histoVE; // Valeur d'entreprise (Capitalization + Dette financiere nette) en M€ (from Zb)
-	public Double lastVE;                    // last Valeur d'entreprise si histoVE > 0;
-	public Double soulteVE; // en M€ uantité à ajouter a la capitalization pour avoir la valeur d'entreprise
-	
+	public Double lastVE;
+	public Double BVPS; // book value per share
+		
 	// Dividends
+
+	public ArrayList<Double> histoDIV; // € (source ZB)	
 	
 	public TreeMap<Long,Event> events = new TreeMap<Long,Event>(); // epoch event object
 	public Integer eventCount;
 	
 	// computed ratio
-	
+
+	public Double avgEBITDA;
+	public Double avgEBIT;
+	public Double avgRN;
+	public Double avgBNA;
+
+	public Double avgDIV;
+	public Double rdtPerc; 		// rendement en %
+	public Double payoutPerc;   // payout %
+
 	public Double avgPER;
-	public Double ratioQuoteBV;       // ratio Cours / capitaux propres part du groupe par action (eg 0.8)
+	public Double ratioQuoteBV;       // ratio Cours / BVPS
 	public Double ratioVeOverEBIT;    // ratio  VE / EBIT	( eg 8.5 )
+
+	public Double dfn;   	 	      // dette financiere nette en M€ (si < 0 trésorie nette))
 	public Double ratioDfnOverEBITDA; // ratio DFN / EBITDA
 	public Double netCashPS;          // ratio net cash per share
 
 	public Overrides overrides = new Overrides();
+
+//  public Double capitalization;     // en M€ (Nb de titres * last quotation)	
+//  public Double debtRatio; // ratio d'endettement en %		
+//	public Double previousQuote1; 	  // previous quotation point	
+//	public Double progressionVsQuote1;
+	
 }

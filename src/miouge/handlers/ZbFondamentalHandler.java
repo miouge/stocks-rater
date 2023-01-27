@@ -29,7 +29,7 @@ public class ZbFondamentalHandler extends ResponseHandlerTemplate {
 	
 		// -------------------- Valeur Entreprise ----------------
 		
-		stock.histoVE = new ArrayList<Double>(); // will content only 1 value
+		ArrayList<Double> histoVE = new ArrayList<Double>(); // will content only 1 value
 		
 		for( int i = 0 ; i <= 7 ; i++ ) {
 						
@@ -45,18 +45,18 @@ public class ZbFondamentalHandler extends ResponseHandlerTemplate {
 				thePf.rightPattern = "</td>";
 			});
 			data = pf.find().replace( " ", "" );
-			addDoubleIfNonNull( data, Double::parseDouble, stock.histoVE, debug );
+			addDoubleIfNonNull( data, Double::parseDouble, histoVE, debug );
 			
-			if( stock.histoVE.size() > 0 ) {
+			if( histoVE.size() > 0 ) {
 				// stop when getting the first estimate value
 				break;
 			}
 		}
 		
-		if( stock.histoVE.size() > 0 ) {
+		if( histoVE.size() > 0 ) {
 			
 			// take last (only one) element of the list to be the current VE
-			stock.lastVE = stock.histoVE.get( stock.histoVE.size() - 1 );
+			stock.lastVE = histoVE.get( histoVE.size() - 1 );
 			if( debug ) {
 				System.out.println( String.format( "stock <%s> VE =%.2f", stock.name, stock.lastVE ));
 			}
@@ -254,6 +254,42 @@ public class ZbFondamentalHandler extends ResponseHandlerTemplate {
 			});
 		}
 
+		// -------------------- Actif net par Action ----------------
+		
+		
+		ArrayList<Double> histoBVPS = new ArrayList<Double>(); // will content only 1 value
+		
+		for( int i = 0 ; i <= 7 ; i++ ) {
+						
+			tag.setLength( 0 );
+			tag.append( "bc2V tableCol" + i  );
+		
+			pf = new PatternFinder( response, thePf -> {
+	
+				thePf.contextPatterns.add( ">BVPS (Actif net par Action)</a>" );
+				thePf.contextPatterns.add( tag.toString() );
+				thePf.outOfContextPattern = ">CPS (Cash Flow Par Action)</a>";			
+				thePf.leftPattern = "style=\"background-color:#DEFEFE;\">"; // estimate coloring
+				thePf.rightPattern = "</td>";
+			});
+			data = pf.find().replace( " ", "" );
+			addDoubleIfNonNull( data, Double::parseDouble, histoBVPS, debug );
+			
+			if( histoBVPS.size() > 0 ) {
+				// stop when getting the first estimate value
+				break;
+			}
+		}
+		
+		if( histoBVPS.size() > 0 ) {
+			
+			// take last (only one) element of the list to be the current VE
+			stock.BVPS = histoBVPS.get( histoBVPS.size() - 1 );
+			if( debug ) {
+				System.out.println( String.format( "stock <%s> BVPS =%.2f", stock.name, stock.BVPS ));
+			}
+		}
+		
 		return true;
 	}
 }

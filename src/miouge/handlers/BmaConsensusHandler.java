@@ -27,6 +27,7 @@ public class BmaConsensusHandler extends ResponseHandlerTemplate {
 		}); 		
 		data = pf.find().replace(" ", "").trim();
 
+		/*
 		if( data.equals("-") == false ) {
 			stock.dfnBma = Double.parseDouble(data);
 		}
@@ -45,6 +46,7 @@ public class BmaConsensusHandler extends ResponseHandlerTemplate {
 				stock.dfnBma = Double.parseDouble(data);
 			}
 		}
+		*/
 		
 		return true;
 	}

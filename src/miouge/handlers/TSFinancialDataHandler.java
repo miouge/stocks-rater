@@ -31,24 +31,24 @@ public class TSFinancialDataHandler extends ResponseHandlerTemplate {
 			thePf.rightPattern = "</td>";
 		});
 		
-		if( stock.histoRNPG == null ) {
-			stock.histoRNPG = new ArrayList<Long>();
-		}
-				
-		data = pf.find().replace( "&nbsp;", "" ); // N-5
-		addLongIfNonNull( data, Long::parseLong, stock.histoRNPG, debug );
-
-		data = pf.find().replace( "&nbsp;", "" ); // N-4
-		addLongIfNonNull( data, Long::parseLong, stock.histoRNPG, debug );
-
-		data = pf.find().replace( "&nbsp;", "" ); // N-3
-		addLongIfNonNull( data, Long::parseLong, stock.histoRNPG, debug );
-
-		data = pf.find().replace( "&nbsp;", "" ); // N-2
-		addLongIfNonNull( data, Long::parseLong, stock.histoRNPG, debug );
-
-		data = pf.find().replace( "&nbsp;", "" ); // N-1
-		addLongIfNonNull( data, Long::parseLong, stock.histoRNPG, debug );
+//		if( stock.histoRNPG == null ) {
+//			stock.histoRNPG = new ArrayList<Long>();
+//		}
+//				
+//		data = pf.find().replace( "&nbsp;", "" ); // N-5
+//		addLongIfNonNull( data, Long::parseLong, stock.histoRNPG, debug );
+//
+//		data = pf.find().replace( "&nbsp;", "" ); // N-4
+//		addLongIfNonNull( data, Long::parseLong, stock.histoRNPG, debug );
+//
+//		data = pf.find().replace( "&nbsp;", "" ); // N-3
+//		addLongIfNonNull( data, Long::parseLong, stock.histoRNPG, debug );
+//
+//		data = pf.find().replace( "&nbsp;", "" ); // N-2
+//		addLongIfNonNull( data, Long::parseLong, stock.histoRNPG, debug );
+//
+//		data = pf.find().replace( "&nbsp;", "" ); // N-1
+//		addLongIfNonNull( data, Long::parseLong, stock.histoRNPG, debug );
 
 		// last 5 years CP (K€), le dernier etant le plus récent
 		
@@ -61,22 +61,22 @@ public class TSFinancialDataHandler extends ResponseHandlerTemplate {
 			thePf.rightPattern = "</td>";
 		});
 		
-		stock.histoCP = new ArrayList<Long>();	
-		
-		data = pf.find().replace( "&nbsp;", "" ); // N-5
-		addLongIfNonNull( data, Long::parseLong, stock.histoCP, debug );
-
-		data = pf.find().replace( "&nbsp;", "" ); // N-4
-		addLongIfNonNull( data, Long::parseLong, stock.histoCP, debug );
-
-		data = pf.find().replace( "&nbsp;", "" ); // N-3
-		addLongIfNonNull( data, Long::parseLong, stock.histoCP, debug );
-
-		data = pf.find().replace( "&nbsp;", "" ); // N-2
-		addLongIfNonNull( data, Long::parseLong, stock.histoCP, debug );
-
-		data = pf.find().replace( "&nbsp;", "" ); // N-1
-		addLongIfNonNull( data, Long::parseLong, stock.histoCP, debug );
+//		stock.histoCP = new ArrayList<Long>();	
+//		
+//		data = pf.find().replace( "&nbsp;", "" ); // N-5
+//		addLongIfNonNull( data, Long::parseLong, stock.histoCP, debug );
+//
+//		data = pf.find().replace( "&nbsp;", "" ); // N-4
+//		addLongIfNonNull( data, Long::parseLong, stock.histoCP, debug );
+//
+//		data = pf.find().replace( "&nbsp;", "" ); // N-3
+//		addLongIfNonNull( data, Long::parseLong, stock.histoCP, debug );
+//
+//		data = pf.find().replace( "&nbsp;", "" ); // N-2
+//		addLongIfNonNull( data, Long::parseLong, stock.histoCP, debug );
+//
+//		data = pf.find().replace( "&nbsp;", "" ); // N-1
+//		addLongIfNonNull( data, Long::parseLong, stock.histoCP, debug );
 		
 		
 		return true;

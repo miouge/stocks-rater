@@ -31,7 +31,7 @@ public class YahooHistoQuoteHandler extends ResponseHandlerTemplate {
 		
 		if( data.equals("-") == false ) {
 			
-			stock.previousQuote1 = Double.parseDouble( data );
+			//stock.previousQuote1 = Double.parseDouble( data );
 		}
 
 		return success;

@@ -53,7 +53,7 @@ public class AbcSocieteHandler extends ResponseHandlerTemplate {
 			Long sharesCount = Long.parseLong(data);
 			if( sharesCount != null && sharesCount > 0 ) {				
 				stock.abcSharesCount = sharesCount;
-				stock.shareCounts.add(stock.abcSharesCount);
+				//stock.shareCounts.add(stock.abcSharesCount);
 			}
 		}
 
@@ -67,22 +67,22 @@ public class AbcSocieteHandler extends ResponseHandlerTemplate {
 			thePf.rightPattern = "</td>";
 		});
 		
-		stock.histoDebtRatio = new ArrayList<Double>();	
-				
-		data = pf.find().replace( " ", "" ); // N-5
-		addDoubleIfNonNull( data, Double::parseDouble, stock.histoDebtRatio, debug );
-
-		data = pf.find().replace( " ", "" ); // N-4
-		addDoubleIfNonNull( data, Double::parseDouble, stock.histoDebtRatio, debug );
-
-		data = pf.find().replace( " ", "" ); // N-3
-		addDoubleIfNonNull( data, Double::parseDouble, stock.histoDebtRatio, debug );
-
-		data = pf.find().replace( " ", "" ); // N-2
-		addDoubleIfNonNull( data, Double::parseDouble, stock.histoDebtRatio, debug );
-
-		data = pf.find().replace( " ", "" ); // N-1
-		addDoubleIfNonNull( data, Double::parseDouble, stock.histoDebtRatio, debug );
+//		stock.histoDebtRatio = new ArrayList<Double>();	
+//				
+//		data = pf.find().replace( " ", "" ); // N-5
+//		addDoubleIfNonNull( data, Double::parseDouble, stock.histoDebtRatio, debug );
+//
+//		data = pf.find().replace( " ", "" ); // N-4
+//		addDoubleIfNonNull( data, Double::parseDouble, stock.histoDebtRatio, debug );
+//
+//		data = pf.find().replace( " ", "" ); // N-3
+//		addDoubleIfNonNull( data, Double::parseDouble, stock.histoDebtRatio, debug );
+//
+//		data = pf.find().replace( " ", "" ); // N-2
+//		addDoubleIfNonNull( data, Double::parseDouble, stock.histoDebtRatio, debug );
+//
+//		data = pf.find().replace( " ", "" ); // N-1
+//		addDoubleIfNonNull( data, Double::parseDouble, stock.histoDebtRatio, debug );
 
 		// Chiffre d'affaire
 		
@@ -94,22 +94,22 @@ public class AbcSocieteHandler extends ResponseHandlerTemplate {
 			thePf.rightPattern = "</td>";
 		});
 		
-		stock.histoCA = new ArrayList<Long>();
-				
-		data = pf.find().replaceAll("\u00a0",""); // N-5
-		addLongIfNonNull( data, Long::parseLong, stock.histoCA, debug );
-
-		data = pf.find().replaceAll("\u00a0",""); // N-4
-		addLongIfNonNull( data, Long::parseLong, stock.histoCA, debug );
-
-		data = pf.find().replaceAll("\u00a0",""); // N-3
-		addLongIfNonNull( data, Long::parseLong, stock.histoCA, debug );
-
-		data = pf.find().replaceAll("\u00a0",""); // N-2
-		addLongIfNonNull( data, Long::parseLong, stock.histoCA, debug );
-
-		data = pf.find().replaceAll("\u00a0",""); // N-1
-		addLongIfNonNull( data, Long::parseLong, stock.histoCA, debug );
+//		stock.histoCA = new ArrayList<Long>();
+//				
+//		data = pf.find().replaceAll("\u00a0",""); // N-5
+//		addLongIfNonNull( data, Long::parseLong, stock.histoCA, debug );
+//
+//		data = pf.find().replaceAll("\u00a0",""); // N-4
+//		addLongIfNonNull( data, Long::parseLong, stock.histoCA, debug );
+//
+//		data = pf.find().replaceAll("\u00a0",""); // N-3
+//		addLongIfNonNull( data, Long::parseLong, stock.histoCA, debug );
+//
+//		data = pf.find().replaceAll("\u00a0",""); // N-2
+//		addLongIfNonNull( data, Long::parseLong, stock.histoCA, debug );
+//
+//		data = pf.find().replaceAll("\u00a0",""); // N-1
+//		addLongIfNonNull( data, Long::parseLong, stock.histoCA, debug );
 		
 		// RNPG
 
@@ -121,24 +121,24 @@ public class AbcSocieteHandler extends ResponseHandlerTemplate {
 			thePf.rightPattern = "</td>";
 		});
 
-		if( stock.histoRNPG == null ) {
-			stock.histoRNPG = new ArrayList<Long>();
-		}
-		
-		data = pf.find().replaceAll("\u00a0",""); // N-5
-		addLongIfNonNull( data, Long::parseLong, stock.histoRNPG, debug );
-
-		data = pf.find().replaceAll("\u00a0",""); // N-4
-		addLongIfNonNull( data, Long::parseLong, stock.histoRNPG, debug );
-
-		data = pf.find().replaceAll("\u00a0",""); // N-3
-		addLongIfNonNull( data, Long::parseLong, stock.histoRNPG, debug );
-
-		data = pf.find().replaceAll("\u00a0",""); // N-2
-		addLongIfNonNull( data, Long::parseLong, stock.histoRNPG, debug );
-
-		data = pf.find().replaceAll("\u00a0",""); // N-1
-		addLongIfNonNull( data, Long::parseLong, stock.histoRNPG, debug );
+//		if( stock.histoRNPG == null ) {
+//			stock.histoRNPG = new ArrayList<Long>();
+//		}
+//		
+//		data = pf.find().replaceAll("\u00a0",""); // N-5
+//		addLongIfNonNull( data, Long::parseLong, stock.histoRNPG, debug );
+//
+//		data = pf.find().replaceAll("\u00a0",""); // N-4
+//		addLongIfNonNull( data, Long::parseLong, stock.histoRNPG, debug );
+//
+//		data = pf.find().replaceAll("\u00a0",""); // N-3
+//		addLongIfNonNull( data, Long::parseLong, stock.histoRNPG, debug );
+//
+//		data = pf.find().replaceAll("\u00a0",""); // N-2
+//		addLongIfNonNull( data, Long::parseLong, stock.histoRNPG, debug );
+//
+//		data = pf.find().replaceAll("\u00a0",""); // N-1
+//		addLongIfNonNull( data, Long::parseLong, stock.histoRNPG, debug );
 		
 		return true;
 	}
