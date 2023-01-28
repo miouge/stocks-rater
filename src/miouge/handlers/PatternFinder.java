@@ -10,14 +10,16 @@ public class PatternFinder {
 	ArrayList<String> contextPatterns = new ArrayList<String>();
 
 	String outOfContextPattern = "";
-	int outOfContextPos = -1;
+	int outOfContextDistance = -1;
+	
+	private int outOfContextPos = -1;	
 
 	String leftPattern = "";
 	String rightPattern = "";
 
-	int currentPos = 0;
+	private int currentPos = 0;
 
-	String raw;
+	private String raw;
 	
 	PatternFinder( StringBuilder sb, Consumer< PatternFinder> consumer ) {
 		
@@ -38,6 +40,8 @@ public class PatternFinder {
 			return result;
 		}
 		
+		int firstContextPatternPos = -1;
+		
 		if( contextPatterns.size() > 0 && this.located == false ) {
 						
 			for( String contextPattern : contextPatterns ) {
@@ -47,6 +51,11 @@ public class PatternFinder {
 					// not found
 					return result;
 				}
+				
+				if( firstContextPatternPos == -1 ) {
+					// save for further use
+					firstContextPatternPos = pos;
+				}
 
 				int len = contextPattern.length();
 				currentPos = pos + len;
@@ -54,7 +63,11 @@ public class PatternFinder {
 			}
 
 			if( outOfContextPattern.length() > 0 ) {
-				outOfContextPos = raw.indexOf( outOfContextPattern, currentPos );
+				outOfContextPos = raw.indexOf( outOfContextPattern, firstContextPatternPos );
+				if( outOfContextPos == -1 ) {
+					System.err.println( String.format( "outOfContextPattern <%s> not found", outOfContextPattern ));
+				}
+				//System.out.println( "outOfContextPos = " + outOfContextPos );
 			}
 									
 			if( currentPos <= 0 ) {
@@ -68,6 +81,21 @@ public class PatternFinder {
  		int posright = raw.indexOf( rightPattern, posleft + leftPattern.length()  );
 				
 		if( posleft > 0 && posright > 0 && posright > posleft ) {
+			
+			if( this.outOfContextDistance != -1 ) {
+			
+				// max distance from the starting context
+				int distance = posright - firstContextPatternPos;			
+				// System.out.println( "distance=" + distance );				
+				
+				if( distance > this.outOfContextDistance ) {
+					
+					// too far away from the last context pattern
+					// out of context
+					System.out.println( "found a match but too far away from the last context pattern : distance = " + distance );					
+					return result;					
+				}
+			}
 			// OK
 		}
 		else {
@@ -126,6 +154,4 @@ public class PatternFinder {
 		data = pf.find(); 
 		System.out.println( "data=" + data );
 	}
-	
-	
 }

@@ -40,7 +40,7 @@ public abstract class ResponseHandlerTemplate {
 		
 		Object converted = converter.apply( data );
 		if( debug ) {
-			System.out.println( "addding :" + converted );
+			//System.out.println( "adding as Long :" + converted );
 		}
 		list.add( (Long) converted );
 	}	
@@ -64,7 +64,7 @@ public abstract class ResponseHandlerTemplate {
 			String tmp = data.replace(",", "." );			
 			Object converted = converter.apply( tmp  );
 			if( debug ) {
-				System.out.println( "adding <" + converted + ">" );
+				//System.out.println( "adding as Double <" + converted + ">" );
 			}			
 			list.add( (Double) converted );
 		} catch (Exception e) {

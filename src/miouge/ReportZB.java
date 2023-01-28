@@ -98,18 +98,23 @@ public class ReportZB extends ReportGeneric {
 //		int i=0;
 //		i++;
 //	}		
-
+		
 		if( stock.histoEBITDA != null && stock.histoEBITDA.size() > 0 ) {
 			stock.avgEBITDA = stock.histoEBITDA.stream().mapToDouble( i -> i ).average().getAsDouble();
+			stock.sizeEBITDA = stock.histoEBITDA.size();
 		}
 		if( stock.histoEBIT != null && stock.histoEBIT.size() > 0 ) {
 			stock.avgEBIT = stock.histoEBIT.stream().mapToDouble( i -> i ).average().getAsDouble();
+			stock.sizeEBIT = stock.histoEBIT.size();
 		}
 		if( stock.histoRN != null && stock.histoRN.size() > 0 ) {
-			stock.avgRN = stock.histoRN.stream().mapToDouble( i -> i ).average().getAsDouble();			
-		}
-		if( stock.histoDIV != null && stock.histoDIV.size() > 0 ) {
-			stock.avgDIV = stock.histoDIV.stream().mapToDouble( i -> i ).average().getAsDouble();
+			stock.avgRN = stock.histoRN.stream().mapToDouble( i -> i ).average().getAsDouble();
+			stock.sizeRN = stock.histoRN.size();
+			
+			if( stock.histoDIV != null && stock.histoDIV.size() > 0 ) {
+				stock.avgDIV = ( stock.histoDIV.stream().mapToDouble( i -> i ).sum() / stock.histoRN.size() ); // on prend le nb de RN et pas le nb de dividende
+				stock.sizeDIV = stock.histoDIV.size();
+			}			
 		}		
 		
 		// ratio EBIT/VE
@@ -158,7 +163,7 @@ public class ReportZB extends ReportGeneric {
 		// ratio trésorerie per share
 		if( stock.sharesCount != null && stock.sharesCount > 0 && stock.dfn != null && stock.dfn < 0 ) {
 			
-			stock.netCashPS = -1.0 * (stock.dfn / stock.sharesCount);
+			stock.netCashPS = -1.0 * (( stock.dfn * 1000000) / stock.sharesCount);
 		}
 		
 		// ratio last Quote / Book value
@@ -167,40 +172,45 @@ public class ReportZB extends ReportGeneric {
 		}
 	}
 	
-//	@Override
-//	protected boolean excludeFromReport( Stock stock, boolean verbose ) {
-//		
-////		if( stock.name.equals( "1000Mercis" )) {
-////			
-////			int i=0;
-////			i++;
-////		}
-//				
-//		
-//		if( stock.lastVE != null && stock.lastVE < 50.0 ) {
-//			// société trop petite			
-//			System.out.println( String.format( "EXCLUDED : too small VE [%s] zbSuffix=[%s] ignore=%s", stock.name, stock.zbSuffix, stock.toIgnore.toString() ) );
-//			return true;
+	@Override
+	protected boolean excludeFromReport( Stock stock, boolean verbose ) {
+		
+//		if( stock.name.equals( "1000Mercis" )) {
+//			
+//			int i=0;
+//			i++;
 //		}
-//		
-//		// il faut que soit le ratio VE/EBIT < 14 soit le PE < 12
-//		
-//		if( stock.avgPER == null && stock.ratioVeOverEBIT == null ) { return true; }
-//		
-//		boolean ratioOK = false;
-//		
-//		if( stock.avgPER != null && (stock.avgPER <= 14.0) ) {
-//			ratioOK = true;
-//		}
-//		if( stock.ratioVeOverEBIT != null && (stock.ratioVeOverEBIT <= 12.0) ) {
-//			ratioOK = true;
-//		}
-//		if( ratioOK == false ) { 
-//			return true;
-//		}
-//
-//		return false;
-//	}
+
+		if( stock.lastVE != null && stock.lastVE < 30.0 ) {
+			// société trop petite			
+			System.out.println( String.format( "EXCLUDED : too small VE [%s] zbSuffix=[%s]", stock.name, stock.zbSuffix ) );
+			return true;
+		}
+		
+		// il faut que 
+		// soit le ratio VE/EBIT < 14 
+		// soit le            PE < 13
+		
+		if( stock.avgPER == null && stock.ratioVeOverEBIT == null ) {
+			
+			System.out.println( String.format( "EXCLUDED : NO PER & EBIT [%s] zbSuffix=[%s]", stock.name, stock.zbSuffix ) );
+			return true;
+		}
+		
+		boolean ratioOK = false;
+		
+		if( stock.avgPER != null && (stock.avgPER <= 14.0) ) {
+			ratioOK = true;
+		}
+		if( stock.ratioVeOverEBIT != null && (stock.ratioVeOverEBIT <= 13.0) ) {
+			ratioOK = true;
+		}
+		if( ratioOK == false ) { 
+			return true;
+		}
+
+		return false;
+	}
 
 	@Override
 	void composeReport( XSSFWorkbook wb, HashMap<Integer,CellStyle> precisionStyle, ArrayList<Stock> selection ) throws Exception {
@@ -344,17 +354,41 @@ public class ReportZB extends ReportGeneric {
 	    column++;
 	    sheet.getRow(0).createCell( column ).setCellValue( (String) "REF QUOTE" );
 	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).lastQuote ).setCellStyle( precisionStyle.get(-1)); }		    
+
+	    // sortie de calculs 
 	    
-	    // avg EBIT
-//	    column++;
-//	    sheet.getRow(0).createCell( column ).setCellValue( (String) "avg EBIT (M€)" );
-//	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).avgEBIT ).setCellStyle( precisionStyle.get(-1)); }		    
-	    
-	    // nb EBIT
-//	    column++;
-//	    sheet.getRow(0).createCell( column ).setCellValue( (String) "EBIT Nb" );
-//	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).histoEBIT.size() ).setCellStyle( precisionStyle.get(0)); }		    
+	    // avg EBITDA - nb EBITDA
+	    column++;
+	    sheet.getRow(0).createCell( column ).setCellValue( (String) "avgEBITDA (M€)" );
+	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).avgEBITDA ).setCellStyle( precisionStyle.get(-1)); }	    
+	    column++;
+	    sheet.getRow(0).createCell( column ).setCellValue( (String) "EBITDA Nb" );
+	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).sizeEBITDA ); }		    
     
+	    // avg EBIT - nb EBIT
+	    column++;
+	    sheet.getRow(0).createCell( column ).setCellValue( (String) "avgEBIT (M€)" );
+	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).avgEBIT ).setCellStyle( precisionStyle.get(-1)); }
+	    column++;
+	    sheet.getRow(0).createCell( column ).setCellValue( (String) "EBIT Nb" );
+	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).sizeEBIT ); }		    
+
+	    // avg RN - nb RN
+	    column++;
+	    sheet.getRow(0).createCell( column ).setCellValue( (String) "avgRN (M€)" );
+	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).avgRN ).setCellStyle( precisionStyle.get(-1)); }
+	    column++;
+	    sheet.getRow(0).createCell( column ).setCellValue( (String) "RN Nb" );
+	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).sizeRN ); }		    
+
+	    // avg EBIT - nb EBIT
+	    column++;
+	    sheet.getRow(0).createCell( column ).setCellValue( (String) "avgDIV (€)" );
+	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).avgDIV ).setCellStyle( precisionStyle.get(-2)); }
+	    column++;
+	    sheet.getRow(0).createCell( column ).setCellValue( (String) "DIV Nb" );
+	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).sizeDIV ); }		    
+	    
 	    
 	    // ---------------- Web Sites URL ...		    
 	    

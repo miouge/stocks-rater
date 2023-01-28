@@ -17,15 +17,15 @@ public class ZbFondamentalHandler extends ResponseHandlerTemplate {
 
 		// System.out.println( String.format( "ZbFondamentalHandlerB : processing %s ...", this.getDumpFilename(stock)));
 
-		if( stock.name.equals( "Verallia") == false ) {
-			return true;
-		}
+//		if( stock.name.equals( "Engie") == false ) {
+//			return true;
+//		}
 		
 		PatternFinder pf;
 		String data;
 		StringBuilder tag = new StringBuilder();
 		
-		boolean debug = true;	
+		boolean debug = false;	
 	
 		// -------------------- Valeur Entreprise ----------------
 		
@@ -63,7 +63,7 @@ public class ZbFondamentalHandler extends ResponseHandlerTemplate {
 		}
 		
 		// -------------------- Nbr de Titres (en Milliers)  ----------------		
-		ArrayList<Long> shareCounts = new ArrayList<Long>();
+		ArrayList<Double> shareCounts = new ArrayList<Double>();
 				
 		for( int i = 0 ; i <= 7 ; i++ ) {
 			
@@ -79,7 +79,7 @@ public class ZbFondamentalHandler extends ResponseHandlerTemplate {
 				thePf.rightPattern = "</td>";
 			});
 			data = pf.find().replace( " ", "" );
-			addLongIfNonNull( data, Long::parseLong, shareCounts, debug );
+			addDoubleIfNonNull( data, Double::parseDouble, shareCounts, debug );
 		}
 
 		if( shareCounts.size() > 0 ) {
@@ -104,7 +104,7 @@ public class ZbFondamentalHandler extends ResponseHandlerTemplate {
 				//thePf.contextPatterns.add( ">Cours de référence (EUR)</td>" );
 				thePf.contextPatterns.add( ">Cours de référence (" );
 				thePf.contextPatterns.add( tag.toString() ); // [ bc2V tableCol0 -> bc2V tableCol7 ]
-				thePf.outOfContextPattern = "<td class=\"bc2T\">Date de publication</td>";			
+				thePf.outOfContextDistance = 500;
 				thePf.leftPattern = ">";
 				thePf.rightPattern = "</td>";
 			});
@@ -232,9 +232,8 @@ public class ZbFondamentalHandler extends ResponseHandlerTemplate {
 
 				thePf.contextPatterns.add( ">Dividende / Action</a>" );
 				thePf.contextPatterns.add( tag.toString() ); // [ bc2V tableCol0 -> bc2V tableCol7 ]
-				//thePf.outOfContextPattern = "Evolution du Compte de Résultat";
-				thePf.outOfContextPattern = "navigateTable('Tableau_Histo_ECR_a','next')";
-				thePf.leftPattern = "style=\"background-color:#DEFEFE;\">"; // estimate coloring
+				thePf.outOfContextDistance = 800;
+				thePf.leftPattern = ">";
 				thePf.rightPattern = "</td>";
 
 			});

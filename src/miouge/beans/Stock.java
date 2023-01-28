@@ -42,14 +42,17 @@ public class Stock {
 
 	// sources data from websites 
 		
-	public Long sharesCount; 	      // nombre de titres (source ZB)
+	public Double sharesCount; 	      // nombre de titres (source ZB)
 	public Double lastQuote; 	      // last quotation (source ZB)
 		
 	// CR
 	
 	public ArrayList<Double> histoEBITDA; // M€ (source ZB)
+	public Integer sizeEBITDA;
 	public ArrayList<Double> histoEBIT;  // M€ (source ZB)
+	public Integer sizeEBIT;
 	public ArrayList<Double> histoRN; // M€ (source ZB)
+	public Integer sizeRN;
 	
 	// Bilan	
 
@@ -58,7 +61,8 @@ public class Stock {
 		
 	// Dividends
 
-	public ArrayList<Double> histoDIV; // € (source ZB)	
+	public ArrayList<Double> histoDIV; // € (source ZB)
+	public Integer sizeDIV;
 	
 	public TreeMap<Long,Event> events = new TreeMap<Long,Event>(); // epoch event object
 	public Integer eventCount;

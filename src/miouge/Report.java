@@ -670,7 +670,7 @@ let modules = [
 //		}
 		
 		if( stock.overrides.sharesCount != null ) {
-			stock.sharesCount = stock.overrides.sharesCount; 
+			stock.sharesCount = stock.overrides.sharesCount * 1.0; 
 		}
 		
 		// Capitalization (K€)
