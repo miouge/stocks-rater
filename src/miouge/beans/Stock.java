@@ -48,7 +48,7 @@ public class Stock {
 	// CR
 	
 	public ArrayList<Double> histoEBITDA; // M€ (source ZB)
-	public Integer sizeEBITDA;
+	public Integer sizeEBITDA;	
 	public ArrayList<Double> histoEBIT;  // M€ (source ZB)
 	public Integer sizeEBIT;
 	public ArrayList<Double> histoRN; // M€ (source ZB)
@@ -70,11 +70,15 @@ public class Stock {
 	// computed ratio
 
 	public Double avgEBITDA;
+	public Double growthEBITDA; // en %
 	public Double avgEBIT;
+	public Double growthEBIT; // en %
 	public Double avgRN;
+	public Double growthRN; // en %
 	public Double avgBNA;
-
 	public Double avgDIV;
+	public Double growthDIV; // en %
+	
 	public Double rdtPerc; 		// rendement en %
 	public Double payoutPerc;   // payout %
 
@@ -87,6 +91,9 @@ public class Stock {
 	public Double netCashPS;          // ratio net cash per share
 
 	public Overrides overrides = new Overrides();
+	
+	public int rating = 0;
+	
 
 //  public Double capitalization;     // en M€ (Nb de titres * last quotation)	
 //  public Double debtRatio; // ratio d'endettement en %		

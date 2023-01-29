@@ -225,14 +225,14 @@ public abstract class ReportGeneric {
     		consumer.accept( style );
     	}
     	
-    	if( stock.inPortfolio ) {
-
-    		final Font font = wb.createFont ();
-    		font.setFontName( "Calibri" );
-    		font.setItalic( true );
-    		font.setBold( true );
-    		style.setFont(font);
-    	}
+//    	if( stock.inPortfolio ) {
+//
+//    		final Font font = wb.createFont ();
+//    		font.setFontName( "Calibri" );
+//    		font.setItalic( true );
+//    		font.setBold( true );
+//    		style.setFont(font);
+//    	}
 
 // cellStyle.setAlignment(HorizontalAlignment.LEFT);
 // cellStyle.setAlignment(HorizontalAlignment.CENTER);
@@ -366,6 +366,16 @@ public abstract class ReportGeneric {
 	        	CellStyle style = wb.createCellStyle();
 	        	style.setDataFormat( ch.createDataFormat().getFormat("#0.0"));
 	        	precisionStyle.put( -1, style );
+	        }
+	        {
+	        	CellStyle style = wb.createCellStyle();
+	        	style.setDataFormat( ch.createDataFormat().getFormat("0"));
+	        	precisionStyle.put( 0, style );
+	        }
+	        {
+	        	CellStyle style = wb.createCellStyle();
+	        	style.setDataFormat( ch.createDataFormat().getFormat("#,##0"));
+	        	precisionStyle.put( 1000, style );
 	        }
 	        
 		    // and compose the selection (only withinPEA and not to be ignored)
