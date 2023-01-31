@@ -92,9 +92,9 @@ public class Stock {
 
 	public Overrides overrides = new Overrides();
 	
-	public int rating = 0;
+	public Double rating = 0.0;
+	public String ratingTxt = "";
 	
-
 //  public Double capitalization;     // en M€ (Nb de titres * last quotation)	
 //  public Double debtRatio; // ratio d'endettement en %		
 //	public Double previousQuote1; 	  // previous quotation point	
