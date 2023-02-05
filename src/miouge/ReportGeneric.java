@@ -18,19 +18,21 @@ import org.apache.poi.hssf.util.HSSFColor.HSSFColorPredefined;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.CreationHelper;
 import org.apache.poi.ss.usermodel.FillPatternType;
-import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.HorizontalAlignment;
 import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
-import miouge.beans.Context;
-import miouge.beans.Stock;
 import com.opencsv.CSVParser;
 import com.opencsv.CSVParserBuilder;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
 import com.opencsv.CSVWriter;
 import com.opencsv.exceptions.CsvException;
+
+import miouge.beans.Context;
+import miouge.beans.ExclusionResume;
+import miouge.beans.Stock;
 
 public abstract class ReportGeneric {
 
@@ -84,8 +86,20 @@ public abstract class ReportGeneric {
 				stock.mnemo      = fields[idx++]; // also named "ticker"
 				stock.zbSuffix   = fields[idx++];
 				stock.yahooSymbol= fields[idx++];
-								
-				if( fields[idx].length() > 0 ) {stock.toIgnore    = Boolean.parseBoolean( fields[idx] ); }; idx++;
+				
+				String ignoreUntil = fields[idx++]; // dd/MM/YYYY
+				if( ignoreUntil.length() == 0 ) {
+					stock.toIgnore = false;					
+				}
+				else {
+					
+					ignoreUntil += " 00:00:00";					
+					long ignoreUntilEpoch = EpochTool.convertToEpoch( ignoreUntil, EpochTool.Format.STD_SLASH_FULL_FR, null );
+					if( EpochTool.getNowEpoch() < ignoreUntilEpoch ) {
+						stock.toIgnore = true;
+					}					
+				}
+				
 				if( fields[idx].length() > 0 ) {stock.withinPEA   = Boolean.parseBoolean( fields[idx] ); }; idx++;
 				if( fields[idx].length() > 0 ) {stock.inPortfolio = Boolean.parseBoolean( fields[idx] ); }; idx++;
 				
@@ -222,6 +236,8 @@ public abstract class ReportGeneric {
     	final CellStyle style = wb.createCellStyle();
 
     	if( consumer != null ) {
+    		
+    		style.setAlignment( HorizontalAlignment.CENTER ); // centré par défaut
     		consumer.accept( style );
     	}
     	
@@ -331,7 +347,7 @@ public abstract class ReportGeneric {
 		
 	abstract void composeReport( XSSFWorkbook wb, HashMap<Integer,CellStyle> precisionStyle, ArrayList<Stock> selection ) throws Exception;
 	
-	protected boolean excludeFromReport( Stock stock, boolean verbose ) { return false; }
+	protected boolean excludeFromReport( ExclusionResume resume, Stock stock, boolean verbose ) { return false; }
 	
 	public void outputReport( String reportPrefixName ) throws Exception {
 		
@@ -381,6 +397,7 @@ public abstract class ReportGeneric {
 		    // and compose the selection (only withinPEA and not to be ignored)
 
 		    ArrayList<Stock> selection = new ArrayList<Stock>();
+		    ExclusionResume resume = new ExclusionResume();
 
 		    for( int i = 0 ; i < this.stocks.size() ; i++ ) {
 
@@ -388,13 +405,29 @@ public abstract class ReportGeneric {
 		    		continue;
 		    	}
 
-		    	if( this.excludeFromReport( this.stocks.get(i), false ) == true ) {
+		    	if( this.excludeFromReport( resume, this.stocks.get(i), false ) == true ) {
 		    		continue;
 		    	}
 		    	selection.add( this.stocks.get(i) );
 		    }
 
-		    System.out.println( String.format( "selection is about %d stock(s)", selection.size()));		    
+		    if( resume.fundamentalsUnavailable > 0 ) {
+		    	System.out.println( String.format( "%d stock(s) excluded reason : fundamentals not available", resume.fundamentalsUnavailable ));
+		    }		    
+		    if( resume.tooSmallVE > 0 ) {
+		    	System.out.println( String.format( "%d stock(s) excluded reason : too small VE", resume.tooSmallVE ));
+		    }
+		    if( resume.nonProfitable > 0 ) {
+		    	System.out.println( String.format( "%d stock(s) excluded reason : non profitable", resume.nonProfitable ));
+		    }		    
+		    if( resume.operationalLoss > 0 ) {
+		    	System.out.println( String.format( "%d stock(s) excluded reason : operational loss detected", resume.operationalLoss ));
+		    }
+		    if( resume.insufficientRating > 0 ) {
+		    	System.out.println( String.format( "%d stock(s) excluded reason : insufficient rating", resume.insufficientRating ));
+		    }
+
+		    System.out.println( String.format( "output selection is about %d stock(s)", selection.size()));		    
 	        
 	        this.composeReport( wb, precisionStyle, selection );
 		    

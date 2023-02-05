@@ -2,18 +2,22 @@ package miouge;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 
 import org.apache.commons.math.stat.regression.SimpleRegression;
 //import org.apache.poi.hssf.util.HSSFColor;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.CreationHelper;
 import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.HorizontalAlignment;
 import org.apache.poi.ss.usermodel.IndexedColors;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import miouge.beans.Context;
+import miouge.beans.ExclusionResume;
 import miouge.beans.GetApi;
 import miouge.beans.Stock;
 import miouge.beans.TargetServer;
@@ -117,19 +121,17 @@ public class ReportZB extends ReportGeneric {
 		// stock.histoRN     -> avgRN
 		// stock.histoDIV	 -> avgDIV (pb des divisions)
 				
-		// System.out.println( String.format( "compute for stock <%s> ...", stock.name ));
-		
-//		if( stock.name.equals( "1000Mercis" )) {
+//		System.out.println( String.format( "compute for stock <%s> ...", stock.name ));
 //		
-//		int i=0;
-//		i++;
-//	}		
+//		if( stock.name.equals( "Akwel" )) {
+//			int i=0;
+//			i++;
+//		}
 		
 		if( stock.histoEBITDA != null && stock.histoEBITDA.size() > 0 ) {
 			stock.avgEBITDA = stock.histoEBITDA.stream().mapToDouble( i -> i ).average().getAsDouble();
 			stock.sizeEBITDA = stock.histoEBITDA.size();
-			//stock.histoEBITDA  = new ArrayList<>(Arrays.asList(526.0, 557.0, 619.0, 582.0, 563.0, 592.0));
-			stock.growthEBITDA = computeRegression( stock.histoEBITDA );			
+			stock.growthEBITDA = computeRegression( stock.histoEBITDA );
 		}
 		if( stock.histoEBIT != null && stock.histoEBIT.size() > 0 ) {
 			stock.avgEBIT = stock.histoEBIT.stream().mapToDouble( i -> i ).average().getAsDouble();
@@ -140,43 +142,68 @@ public class ReportZB extends ReportGeneric {
 			stock.avgRN = stock.histoRN.stream().mapToDouble( i -> i ).average().getAsDouble();
 			stock.sizeRN = stock.histoRN.size();
 			stock.growthRN = computeRegression( stock.histoRN );
-			
+
 			if( stock.histoDIV != null && stock.histoDIV.size() > 0 ) {
 				stock.avgDIV = ( stock.histoDIV.stream().mapToDouble( i -> i ).sum() / stock.histoRN.size() ); // on prend le nb de RN et pas le nb de dividende
 				stock.sizeDIV = stock.histoDIV.size();
 				stock.growthDIV = computeRegression( stock.histoDIV );
-			}			
-		}		
+			}
+		}
 		
 		// ratio EBIT/VE
 		if( stock.lastVE != null && stock.avgEBIT != null && stock.avgEBIT > 0 ) {
 			
 			stock.ratioVeOverEBIT = stock.lastVE / stock.avgEBIT;
+
+			if( stock.ratioVeOverEBIT < 8.0 ) {
+				stock.reasonsPos.add( String.format("VE/EBIT=%.1f", stock.ratioVeOverEBIT ));
+			}
+			
+			// max 1.0
+			// VE/EBIT = 5  -> 1.75
+			// VE/EBIT = 8  -> 1.0
+			// VE/EBIT = 12 -> 0.0
+			stock.ratingProfitability = Math.min( 1.5 - 0.125 * stock.ratioVeOverEBIT, 1.0 );
 		}
 
-		// Rendement %
-		if( stock.lastQuote != null && stock.lastQuote > 0 && stock.avgDIV != null && stock.avgDIV > 0 ) {
-		
-			stock.rdtPerc = ( stock.avgDIV / stock.lastQuote ) * 100.0;
-		}
-		
 		// avg BNA
 		if( stock.avgRN != null && stock.avgRN > 0 && stock.sharesCount != null ) {
 			
 			stock.avgBNA = ( stock.avgRN * 1000000.0 ) / stock.sharesCount;
-		}
-		
-		// payout %
-		if( stock.avgBNA != null && stock.avgBNA > 0 && stock.avgDIV != null && stock.avgDIV > 0 ) {
-			
-			stock.payoutPerc = ( stock.avgDIV / stock.avgBNA ) * 100.0;
-		}
+		}		
 		
 		// PER
 		if( stock.lastQuote != null && stock.lastQuote > 0 && stock.avgBNA != null && stock.avgBNA > 0 ) {
 			
 			stock.avgPER = stock.lastQuote / stock.avgBNA;
+			
+			if( stock.avgPER < 10.0 ) {
+				stock.reasonsPos.add( String.format("PER=%.1f", stock.avgPER ));
+			}
+			
+			// max 1.0
+			// PER <= 5     -> 1.0 
+			// PER = 10     -> 0.5
+			// PER = 15 	->  0
+			Double ratingPER = Math.min( 1.5 - 0.10 * stock.avgPER, 1.0 );
+			stock.ratingProfitability = Math.max( stock.ratingProfitability, ratingPER );
 		}
+		
+		// Rendement %
+		if( stock.lastQuote != null && stock.lastQuote > 0 && stock.avgDIV != null && stock.avgDIV > 0 ) {
+		
+			stock.rdtPerc = ( stock.avgDIV / stock.lastQuote ) * 100.0;
+		
+			// payout %
+			if( stock.avgBNA != null && stock.avgBNA > 0 ) {
+				
+				stock.payoutPerc = ( stock.avgDIV / stock.avgBNA ) * 100.0;
+			
+				if( stock.rdtPerc > 4.5 && stock.payoutPerc < 95 ) {
+					stock.reasonsPos.add( String.format("RDT=%.1f%%", stock.rdtPerc ));
+				}				
+			}			
+		}		
 		
 		// DFN
 		if( stock.lastVE != null && stock.lastQuote != null && stock.sharesCount != null ) {
@@ -189,129 +216,200 @@ public class ReportZB extends ReportGeneric {
 		if( stock.avgEBITDA != null && stock.avgEBITDA > 0 && stock.dfn != null && stock.dfn > 0 ) {
 			
 			stock.ratioDfnOverEBITDA = stock.dfn / stock.avgEBITDA;
+			
+			if( stock.ratioDfnOverEBITDA > 2.5 ) {
+				stock.reasonsAgainst.add( String.format("DFN/EBIDA=%.1f", stock.ratioDfnOverEBITDA ));
+			}
+			
+			// [1.0 -> -0.5]
+			Double rating = Math.min( 1 - 0.25 * stock.ratioDfnOverEBITDA, 1.0 );			
+			stock.ratingSolidity = Math.max( -0.5, rating );			
 		}
+		
+		//leverage TODO : solidiy
 		
 		// ratio trésorerie per share
 		if( stock.sharesCount != null && stock.sharesCount > 0 && stock.dfn != null && stock.dfn < 0 ) {
 			
 			stock.netCashPS = -1.0 * (( stock.dfn * 1000000) / stock.sharesCount);
+						
+			if( stock.lastQuote != null && stock.lastQuote > 0 ) {				
+				Double cashPerc = stock.netCashPS / stock.lastQuote;				
+				if( cashPerc > 0.1 ) {				
+					stock.reasonsPos.add( String.format("CashPS=%.1f€", stock.netCashPS ));
+					stock.ratingSolidity += 0.25;
+				}
+			}						
 		}
 		
 		// ratio last Quote / Book value
 		if( stock.lastQuote != null && stock.BVPS != null && stock.BVPS > 0) {			
 			stock.ratioQuoteBV = stock.lastQuote / stock.BVPS;
+			
+			if( stock.ratioQuoteBV < 1.0 ) {
+				stock.reasonsPos.add( String.format("Quote/BV=%.1f", stock.ratioQuoteBV ));
+				
+				// [+1.0 -> 0 ]
+				// Quote/BV = 1.0 -> +0.5
+				// Quote/BV = 0.5 -> +0.75				
+				stock.ratingValue = Math.max( 0.0, (-0.5 * stock.ratioQuoteBV + 1 ));
+			}
 		}
+
+		if( stock.growthEBITDA != null && stock.growthEBITDA > 0.0 ) {
+			if( stock.growthEBIT != null && stock.growthEBIT > 0.0 ) {
+				
+				if( stock.growthEBIT > 5.0 ) {
+					
+					stock.reasonsPos.add( String.format("growth=%.0f", stock.growthEBIT ));					
+				}
+				
+				// max : ]-1.0 -> 1.0]
+				// growthEBIT = 15.0 -> + 1.0
+				// growthEBIT =  5.0 -> + 0.3				
+				stock.ratingGrowth = Math.max( -1.0, Math.min( stock.growthEBIT / 15.0, 1.0 ) );
+				
+				if( stock.ratingProfitability > 0.0 ) {
+					stock.ratingGrowth *= stock.ratingProfitability;
+				}
+				else {
+					stock.ratingGrowth = 0.0;
+				}				
+				
+			}
+		}
+		
+		stock.ratingProfitability *= 2.0;
+		stock.rating = stock.ratingProfitability + stock.ratingSolidity + stock.ratingGrowth + stock.ratingValue;
+		
+		// remove 0.0 value like
+		
+		if( stock.ratingProfitability <= 0.01 ) { stock.ratingProfitability = null; }
+		if( stock.ratingSolidity      <= 0.01 ) { stock.ratingSolidity = null;      }
+		if( stock.ratingGrowth        <= 0.01 ) { stock.ratingGrowth = null;        }
+		if( stock.ratingValue         <= 0.01 ) { stock.ratingValue = null;		    }
 	}
 	
 	@Override
-	protected boolean excludeFromReport( Stock stock, boolean verbose ) {
+	protected boolean excludeFromReport( ExclusionResume resume, Stock stock, boolean verbose ) {
 		
-//		if( stock.name.equals( "1000Mercis" )) {
-//			
-//			int i=0;
-//			i++;
-//		}
-
+		if( stock.inPortfolio ) {			
+			// never exclude
+			return false;
+		}
+		
+		boolean fondamentalAvailable = false;
+		
+		if( stock.avgPER != null ) {
+			fondamentalAvailable = true;
+		} 	
+		if( stock.ratioVeOverEBIT != null ) {
+			fondamentalAvailable = true;
+		} 	
+		if( stock.ratioQuoteBV != null ) {
+			fondamentalAvailable = true;
+		}
+		
+		if( fondamentalAvailable == false ) {		
+			
+			// données fondamentales non disponible
+			resume.fundamentalsUnavailable++;
+			// System.out.println( String.format( "EXCLUDED : fundamentals not available [%s] zbSuffix=[%s]", stock.name, stock.zbSuffix ) );
+			return true;
+		}
+	
 		if( stock.lastVE != null && stock.lastVE < 30.0 ) {
+	
 			// société trop petite			
 			// System.out.println( String.format( "EXCLUDED : too small VE [%s] zbSuffix=[%s]", stock.name, stock.zbSuffix ) );
+			resume.tooSmallVE++;
 			return true;
 		}
-		
-		if( stock.histoDIV != null && stock.histoDIV.size() < 5 ) {
-			// société trop petite			
-			System.out.println( String.format( "EXCLUDED : NO ENOUGH DIVIDENDS [%s] zbSuffix=[%s]", stock.name, stock.zbSuffix ) );
-			return true;
-		}		
-		
-		// il faut que 
-		// soit le ratio VE/EBIT < 14 
-		// soit le            PE < 13
-		
-		if( stock.avgPER == null && stock.ratioVeOverEBIT == null ) {
+	
+		if( stock.avgRN != null && ( stock.avgRN < 0 ) ) {
 			
-			System.out.println( String.format( "EXCLUDED : NO DATA {PER|EBIT} [%s] zbSuffix=[%s]", stock.name, stock.zbSuffix ) );
+			// société non rentable			
+			// System.out.println( String.format( "EXCLUDED : non profitable [%s] zbSuffix=[%s]", stock.name, stock.zbSuffix ) );
+			resume.nonProfitable++;
 			return true;
 		}
-
-		// il faut au moins 1 aspect interessant sur l'action
+	
+		if( stock.histoEBITDA != null ) {
+		
+			for( Double ebitda : stock.histoEBITDA ) {
+				if( ebitda < 0 ) {					
+					
+					// System.out.println( String.format( "EXCLUDED : negative ebit found in history [%s] zbSuffix=[%s]", stock.name, stock.zbSuffix ) );
+					resume.operationalLoss++;
+					return true;
+				}
+			}									
+		}
+		
+		if( stock.histoEBIT != null ) {
 			
-		if( stock.avgPER != null && (stock.avgPER < 10.0) ) { // PER acceptable
-			stock.rating ++;
-			stock.ratingTxt += "avgPER,";
-			
-			if( stock.growthRN != null && stock.growthRN > 5.0 ) {
-				stock.rating += 0.5;
-				stock.ratingTxt += "growthRN,";
+			int count = 0;
+			for( Double ebit : stock.histoEBIT ) {
+				if( ebit < 0 ) {
+					count++;
+				}
+			}
+			if( count >= 2 ) {
+				// at least two operational lost
+				resume.operationalLoss++;
+				return true;
 			}			
-		} 
-		if( stock.ratioVeOverEBIT != null && stock.ratioVeOverEBIT <= 10.0 ) { // VE/EBIT acceptable
-			stock.rating++;
-			stock.ratingTxt += "ratioVeOverEBIT,";
-			
-			if( stock.growthEBIT != null && stock.growthEBIT > 5.0 ) {
-				stock.rating += 0.5;
-				stock.ratingTxt += "growthEBIT,";
-			}						
-		}
-		if( stock.ratioVeOverEBIT != null && stock.ratioVeOverEBIT <= 12.0 ) { // VE/EBIT acceptable
-			
-			if( stock.growthEBITDA != null && stock.growthEBITDA > 8.0 ) {
-				stock.rating ++;
-				stock.ratingTxt += "growthEBITDA,";
-			}
 		}
 		
-		if( stock.rdtPerc != null && stock.rdtPerc >= 5.0 && stock.histoDIV.size() >= 8 ) { // versement régulier de dividende
-			stock.rating++;
-			stock.ratingTxt += "rdtPerc,";
+		if( stock.rating != null && ( stock.rating < 1.0 ) ) {
 			
-			if( stock.growthDIV != null && stock.growthDIV > 5.0 ) {
-				stock.rating += 0.5;
-				stock.ratingTxt += "growthDIV,";
-			}
-		}
-		if( stock.ratioQuoteBV != null && stock.ratioQuoteBV <= 0.5 ) { // quote/BV acceptable
-			stock.rating++;
-			stock.ratingTxt += "ratioQuoteBV,";
-		}	
-		
-		if( stock.rating < 2.0 ) {
-			
-			System.out.println( String.format( "EXCLUDED : OUT OF PREREQUISITED FONDAMENTAL [%s] zbSuffix=[%s]", stock.name, stock.zbSuffix ) );
+			// société non rentable			
+			// System.out.println( String.format( "EXCLUDED : non profitable [%s] zbSuffix=[%s]", stock.name, stock.zbSuffix ) );
+			resume.insufficientRating++;
 			return true;
 		}
-
+		
 		return false;
 	}
-
+	
 	@Override
 	void composeReport( XSSFWorkbook wb, HashMap<Integer,CellStyle> precisionStyle, ArrayList<Stock> selection ) throws Exception {
+		
+		
+	    // sort the selection by rating	    
+	    Collections.sort( selection, (o1, o2) -> {
+	    	
+	    	if( o1.rating > o2.rating ) return -1;
+	    	if( o1.rating < o2.rating ) return 1;	    	
+	    	return 0;
+	    });
+		
+		
 		
 		CreationHelper ch = wb.getCreationHelper();
 		
 	    // create an empty work sheet
-	    XSSFSheet reportSheet = wb.createSheet("report");
+	    XSSFSheet ratioSheet = wb.createSheet("report");
 	    
 	    // create an empty work sheet
-	    XSSFSheet sourcesSheet = wb.createSheet("sources");
+	    XSSFSheet reasonSheet = wb.createSheet("reasons");
 	    		    
 	    // header row
-	    reportSheet.createRow( 0 ); // [ 0 : first row
-	    sourcesSheet.createRow( 0 ); // [ 0 : first row		
+	    ratioSheet.createRow( 0 ); // [ 0 : first row
+	    reasonSheet.createRow( 0 ); // [ 0 : first row	    
 		
 	    // prepare 1 row for each selected stock		
 		for( int row = 0 ; row < selection.size() ; row++ ) {
 		
-	    	reportSheet.createRow( row + 1 );
-	    	sourcesSheet.createRow( row + 1 );
+	    	ratioSheet.createRow( row + 1 );
+	    	reasonSheet.createRow( row + 1 );
 		}
 		
-		System.out.println( String.format( "XSSFSheet row [ %d - %d ]", reportSheet.getFirstRowNum(),  reportSheet.getLastRowNum() ));
+		System.out.println( String.format( "XSSFSheet row [ %d - %d ]", ratioSheet.getFirstRowNum(),  ratioSheet.getLastRowNum() ));
 	    
 	    // ********************* Compose Report Sheet ***********************
 
-	    XSSFSheet sheet = reportSheet;
+	    XSSFSheet sheet = ratioSheet;
 
 	    int column;
 	    int iMax = selection.size();
@@ -324,10 +422,7 @@ public class ReportZB extends ReportGeneric {
 	    // Rating
 	    column++;
 	    sheet.getRow(0).createCell( column ).setCellValue( (String) "RATING" );
-	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).rating ); }	    
-	    column++;
-	    sheet.getRow(0).createCell( column ).setCellValue( (String) "RATING-TAG" );
-	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).ratingTxt ); }	    
+	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).rating ).setCellStyle( precisionStyle.get(-1)); }
 	    
 	    // NAME
 	    column++;
@@ -346,8 +441,8 @@ public class ReportZB extends ReportGeneric {
 		    		font.setItalic( true );
 		    		font.setBold( true );
 		    		style.setFont(font);
-		    	}	    		
-	    		
+		    	}
+	        	style.setAlignment(HorizontalAlignment.LEFT);	    		
 	    		// if( stock.inPortfolio ) { setBackgroundColor( style, HSSFColor.HSSFColorPredefined.PALE_BLUE );	}
 	    }));}
 	    
@@ -615,6 +710,116 @@ public class ReportZB extends ReportGeneric {
 	    column++;
 	    sheet.getRow(0).createCell( column ).setCellValue( (String) "Zone Bourse URL" );
 	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).zbUrl ); }
-				
+		
+	    // ********************* Compose Reason Sheet ***********************
+	    
+	    sheet = reasonSheet;
+	    	   
+	    // elligible PEA
+	    column = 0;
+	    sheet.getRow(0).createCell( column ).setCellValue( (String) "PEA" );
+	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).withinPEALabel ); }
+
+	    // NAME
+	    column++;
+	    sheet.getRow(0).createCell( column ).setCellValue( (String) "NAME" );
+	    for( int i = 0 ; i < iMax ; i++ ) {
+	    	final Stock stock = selection.get(i);
+	    	
+	    	//System.out.println( String.format( "stock name <%s> zbSuffix <%s> ...", stock.name,  stock.zbSuffix ));
+	    	
+	    	createCell( sheet.getRow( i + 1 ), column, stock.name ).setCellStyle( createStyle( wb, stock, style -> {
+	    		
+	        	if( stock.inPortfolio ) {
+	    		
+		    		final Font font = wb.createFont ();
+		    		//font.setFontName( "Calibri" );
+		    		font.setItalic( true );
+		    		font.setBold( true );
+		    		style.setFont(font);
+		    	}
+	        	style.setAlignment(HorizontalAlignment.LEFT);	    		
+	    		// if( stock.inPortfolio ) { setBackgroundColor( style, HSSFColor.HSSFColorPredefined.PALE_BLUE );	}
+	    }));}	    
+	    
+	    // Rating
+	    column++;
+	    sheet.getRow(0).createCell( column ).setCellValue( (String) "RATING" );
+	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).rating ).setCellStyle( precisionStyle.get(-1)); }
+
+	    // profitability Rating
+	    column++;
+	    sheet.getRow(0).createCell( column ).setCellValue( (String) "Profitability" );
+	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).ratingProfitability ).setCellStyle( precisionStyle.get(-1)); }
+
+	    // solidity Rating
+	    column++;
+	    sheet.getRow(0).createCell( column ).setCellValue( (String) "Solidity" );
+	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).ratingSolidity ).setCellStyle( precisionStyle.get(-1)); }
+
+	    // growth Rating
+	    column++;
+	    sheet.getRow(0).createCell( column ).setCellValue( (String) "Growth" );
+	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).ratingGrowth ).setCellStyle( precisionStyle.get(-1)); }
+
+	    // value Rating
+	    column++;
+	    sheet.getRow(0).createCell( column ).setCellValue( (String) "Value" );
+	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).ratingValue ).setCellStyle( precisionStyle.get(-1)); }
+	    
+	    // 5 positives reasons
+	    for( Integer r = 1 ; r < 6 ; r++ ) {
+	    	
+	    	// for each reasons
+	    	
+		    column++;
+		    sheet.getRow(0).createCell( column ).setCellValue( (String) ("Reasons#" + r.toString()) );
+		    for( int i = 0 ; i < iMax ; i++ ) {
+		    	
+		    	final Stock stock = selection.get(i);
+		    	if( stock.reasonsPos.size() < r ) {
+		    		continue;
+		    	}	    	
+		    	createCell( sheet.getRow( i + 1 ), column, stock.reasonsPos.get(r-1)).setCellStyle( createStyle( wb, stock, style -> {			
+		    		
+				    Font font = wb.createFont();
+				    //font.setBold( true );
+				    //font.setUnderline(org.apache.poi.ss.usermodel.Font.U_SINGLE);
+				    font.setColor(IndexedColors.GREEN.getIndex());
+				    style.setFont(font);
+				    style.setAlignment(HorizontalAlignment.CENTER);	
+		    	}));
+		    }
+	    }
+	    
+	    // 5 negatives reasons
+	    for( Integer r = 1 ; r < 3 ; r++ ) {
+	    	
+	    	// for each reasons
+	    	
+		    column++;
+		    sheet.getRow(0).createCell( column ).setCellValue( (String) ("Reasons#" + r.toString()) );
+		    for( int i = 0 ; i < iMax ; i++ ) {
+		    	
+		    	final Stock stock = selection.get(i);
+		    	if( stock.reasonsAgainst.size() < r ) {
+		    		continue;
+		    	}	    	
+		    	createCell( sheet.getRow( i + 1 ), column, stock.reasonsAgainst.get(r-1)).setCellStyle( createStyle( wb, stock, style -> {			
+		    		
+				    Font font = wb.createFont();
+				    //font.setBold( true );
+				    //font.setUnderline(org.apache.poi.ss.usermodel.Font.U_SINGLE);
+				    font.setColor(IndexedColors.RED.getIndex());
+				    style.setFont(font);
+				    style.setAlignment(HorizontalAlignment.CENTER);	
+		    	}));
+		    }
+	    }
+	    
+	    // Zone Bourse URL
+	    column++;
+	    sheet.getRow(0).createCell( column ).setCellValue( (String) "Zone Bourse URL" );
+	    for( int i = 0 ; i < iMax ; i++ ) { createCell( sheet.getRow( i + 1 ), column, selection.get(i).zbUrl ); }	    
 	}
 }

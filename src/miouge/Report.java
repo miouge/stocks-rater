@@ -23,6 +23,7 @@ import com.opencsv.CSVReaderBuilder;
 import com.opencsv.exceptions.CsvException;
 
 import miouge.beans.Context;
+import miouge.beans.ExclusionResume;
 import miouge.beans.GetApi;
 import miouge.beans.Stock;
 import miouge.beans.TargetServer;
@@ -782,7 +783,7 @@ let modules = [
 	}	
 
 	@Override
-	protected boolean excludeFromReport( Stock stock, boolean verbose ) {
+	protected boolean excludeFromReport( ExclusionResume resume, Stock stock, boolean verbose ) {
 		
 //		if( stock.capitalization != null && stock.capitalization < 50.0 ) {
 //			// société trop petite

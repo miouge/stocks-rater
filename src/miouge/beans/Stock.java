@@ -89,15 +89,21 @@ public class Stock {
 	public Double dfn;   	 	      // dette financiere nette en M€ (si < 0 trésorie nette))
 	public Double ratioDfnOverEBITDA; // ratio DFN / EBITDA
 	public Double netCashPS;          // ratio net cash per share
+	public Double leverage;           // dfnPS / BV
 
 	public Overrides overrides = new Overrides();
 	
 	public Double rating = 0.0;
-	public String ratingTxt = "";
+	public Double ratingProfitability = 0.0; // VE/EBIT & PER
+	public Double ratingSolidity      = 0.0; // DFN/EBITDA & Leverage
+	public Double ratingGrowth        = 0.0; // growth of ebitda/ebit
+	public Double ratingValue         = 0.0; // Quote / BV
+	
+	public ArrayList<String> reasonsPos     = new ArrayList<String>();
+	public ArrayList<String> reasonsAgainst = new ArrayList<String>();
 	
 //  public Double capitalization;     // en M€ (Nb de titres * last quotation)	
 //  public Double debtRatio; // ratio d'endettement en %		
 //	public Double previousQuote1; 	  // previous quotation point	
-//	public Double progressionVsQuote1;
-	
+//	public Double progressionVsQuote1;	
 }

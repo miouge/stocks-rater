@@ -92,7 +92,7 @@ public class PatternFinder {
 					
 					// too far away from the last context pattern
 					// out of context
-					System.out.println( "found a match but too far away from the last context pattern : distance = " + distance );					
+					// System.out.println( "found a match but too far away from the last context pattern : distance = " + distance );					
 					return result;					
 				}
 			}
