@@ -4,7 +4,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 
 import org.apache.commons.math.stat.regression.SimpleRegression;
 //import org.apache.poi.hssf.util.HSSFColor;
@@ -290,8 +289,7 @@ public class ReportZB extends ReportGeneric {
 		if( stock.ratingValue         <= 0.01 ) { stock.ratingValue = null;		    }
 	}
 	
-	@Override
-	protected boolean excludeFromReport( ExclusionResume resume, Stock stock, boolean verbose ) {
+	private boolean removeUnadequate( ExclusionResume resume, Stock stock, boolean verbose ) {
 		
 		if( stock.inPortfolio ) {			
 			// never exclude
@@ -371,20 +369,44 @@ public class ReportZB extends ReportGeneric {
 		
 		return false;
 	}
+		
+	private boolean selectMinRatingRequirement( ExclusionResume resume, Stock stock, boolean verbose ) {
+		
+//		if( stock.inPortfolio ) {
+//			// never exclude
+//			return false;
+//		}
+		
+		if( stock.ratingProfitability == null ) { return true; }
+		if( stock.ratingSolidity      == null ) { return true; }
+		if( stock.ratingGrowth        == null ) { return true; }
+		if( stock.ratingValue         == null ) { return true; }			
+		if( stock.ratingProfitability <= 1.1 ) { return true; }
+		//if( stock.ratingSolidity      <= 0.3 ) { return true; }
+		//if( stock.ratingGrowth        <= 0.3 ) { return true; }
+		if( stock.ratingValue         <= 0.3 ) { return true; }
+		return false;
+	}
+
+	@Override
+	protected boolean excludeFromReport( ExclusionResume resume, Stock stock, boolean verbose ) {
+		
+		//return removeUnadequate( resume, stock, verbose );
+		return selectMinRatingRequirement( resume, stock, verbose );
+	}
 	
 	@Override
 	void composeReport( XSSFWorkbook wb, HashMap<Integer,CellStyle> precisionStyle, ArrayList<Stock> selection ) throws Exception {
-		
-		
-	    // sort the selection by rating	    
+				
+	    // sort the selection by rating (best rating first)	    
 	    Collections.sort( selection, (o1, o2) -> {
 	    	
-	    	if( o1.rating > o2.rating ) return -1;
-	    	if( o1.rating < o2.rating ) return 1;	    	
+	    	Double crit1 = o1.rating;
+	    	Double crit2 = o2.rating;
+	    	if( crit1 > crit2 ) { return -1; }
+	    	if( crit1 < crit2 ) { return  1; }
 	    	return 0;
 	    });
-		
-		
 		
 		CreationHelper ch = wb.getCreationHelper();
 		
