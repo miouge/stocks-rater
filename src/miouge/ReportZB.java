@@ -111,14 +111,14 @@ public class ReportZB extends ReportGeneric {
 	@Override
 	public void compute( Stock stock ) {
 		
-		// données disponibles
+		// available data :
 		// stock.lastVE
 		// stock.lastQuote
 		// stock.shareCount
 		// stock.histoEBITDA -> avgEBITDA
 		// stock.histoEBIT   -> avgEBIT
 		// stock.histoRN     -> avgRN
-		// stock.histoDIV	 -> avgDIV (pb des divisions)
+		// stock.histoDIV	 -> avgDIV (il y a pb des divisions)
 				
 //		System.out.println( String.format( "compute for stock <%s> ...", stock.name ));
 //		
@@ -127,6 +127,7 @@ public class ReportZB extends ReportGeneric {
 //			i++;
 //		}
 		
+		// compute average, and growth
 		if( stock.histoEBITDA != null && stock.histoEBITDA.size() > 0 ) {
 			stock.avgEBITDA = stock.histoEBITDA.stream().mapToDouble( i -> i ).average().getAsDouble();
 			stock.sizeEBITDA = stock.histoEBITDA.size();
@@ -143,7 +144,7 @@ public class ReportZB extends ReportGeneric {
 			stock.growthRN = computeRegression( stock.histoRN );
 
 			if( stock.histoDIV != null && stock.histoDIV.size() > 0 ) {
-				stock.avgDIV = ( stock.histoDIV.stream().mapToDouble( i -> i ).sum() / stock.histoRN.size() ); // on prend le nb de RN et pas le nb de dividende
+				stock.avgDIV = ( stock.histoDIV.stream().mapToDouble( i -> i ).sum() / stock.histoRN.size() ); // on prend le nb de RN et pas le nb de dividende pour tenir compte des dividendes non versés
 				stock.sizeDIV = stock.histoDIV.size();
 				stock.growthDIV = computeRegression( stock.histoDIV );
 			}
@@ -158,10 +159,11 @@ public class ReportZB extends ReportGeneric {
 				stock.reasonsPos.add( String.format("VE/EBIT=%.1f", stock.ratioVeOverEBIT ));
 			}
 			
+			// rating
 			// max 1.0
-			// VE/EBIT = 5  -> 1.75
-			// VE/EBIT = 8  -> 1.0
-			// VE/EBIT = 12 -> 0.0
+			// VE/EBIT <=4 -> 1
+			// VE/EBIT   8 -> 1.0
+			// VE/EBIT  12 -> 0.0
 			stock.ratingProfitability = Math.min( 1.5 - 0.125 * stock.ratioVeOverEBIT, 1.0 );
 		}
 
