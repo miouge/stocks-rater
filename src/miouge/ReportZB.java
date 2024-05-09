@@ -132,6 +132,11 @@ public class ReportZB extends ReportGeneric {
 			stock.avgEBITDA = stock.histoEBITDA.stream().mapToDouble( i -> i ).average().getAsDouble();
 			stock.sizeEBITDA = stock.histoEBITDA.size();
 			stock.growthEBITDA = computeRegression( stock.histoEBITDA );
+			
+			double average = stock.histoEBITDA.stream().mapToDouble(a -> a).average().getAsDouble();
+			double variance = stock.histoEBITDA.stream().mapToDouble(a -> a).map(a -> Math.pow(a - average, 2)).average().getAsDouble();
+			double standardDeviation = Math.sqrt(variance);
+			System.out.println("Standard deviation : " + standardDeviation);
 		}
 		if( stock.histoEBIT != null && stock.histoEBIT.size() > 0 ) {
 			stock.avgEBIT = stock.histoEBIT.stream().mapToDouble( i -> i ).average().getAsDouble();
@@ -361,11 +366,46 @@ public class ReportZB extends ReportGeneric {
 			}			
 		}
 		
-		if( stock.rating != null && ( stock.rating < 1.0 ) ) {
+//		if( stock.rating != null && ( stock.rating < 1.0 ) ) {
+//			
+//			// société non rentable			
+//			// System.out.println( String.format( "EXCLUDED : non profitable [%s] zbSuffix=[%s]", stock.name, stock.zbSuffix ) );
+//			resume.insufficientRating++;
+//			return true;
+//		}
+		
+		boolean fondamentalOK = false;
+		
+		if( stock.avgPER != null ) {
+			if( stock.avgPER <= 10.0 ) {
+				fondamentalOK = true;
+			}
+			else if( stock.avgPER <= 12.0 ) {
+				if( stock.ratioQuoteBV != null ) {					
+					if( stock.ratioQuoteBV <= 0.8 ) {
+						fondamentalAvailable = true;
+					}
+				}				
+			}
+		}
+		if( stock.ratioVeOverEBIT != null ) {
+			if( stock.ratioVeOverEBIT <= 10.0 ) {
+				fondamentalOK = true;
+			}
+			else if( stock.ratioVeOverEBIT <= 12.0 ) {
+				if( stock.ratioQuoteBV != null ) {					
+					if( stock.ratioQuoteBV <= 0.8 ) {
+						fondamentalAvailable = true;
+					}
+				}				
+			}
+		}
+		
+		if( fondamentalOK == false ) {		
 			
-			// société non rentable			
-			// System.out.println( String.format( "EXCLUDED : non profitable [%s] zbSuffix=[%s]", stock.name, stock.zbSuffix ) );
-			resume.insufficientRating++;
+			// données fondamentales non disponible
+			resume.fondamentalNotOK++;
+			// System.out.println( String.format( "EXCLUDED : fundamentals not available [%s] zbSuffix=[%s]", stock.name, stock.zbSuffix ) );
 			return true;
 		}
 		
@@ -393,8 +433,8 @@ public class ReportZB extends ReportGeneric {
 	@Override
 	protected boolean excludeFromReport( ExclusionResume resume, Stock stock, boolean verbose ) {
 		
-		//return removeUnadequate( resume, stock, verbose );
-		return selectMinRatingRequirement( resume, stock, verbose );
+		return removeUnadequate( resume, stock, verbose );
+		//return selectMinRatingRequirement( resume, stock, verbose );
 	}
 	
 	@Override

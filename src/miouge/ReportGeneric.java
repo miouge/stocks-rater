@@ -426,6 +426,9 @@ public abstract class ReportGeneric {
 		    if( resume.insufficientRating > 0 ) {
 		    	System.out.println( String.format( "%d stock(s) excluded reason : insufficient rating", resume.insufficientRating ));
 		    }
+		    if( resume.fondamentalNotOK > 0 ) {
+		    	System.out.println( String.format( "%d stock(s) excluded reason : fondamental not OK", resume.fondamentalNotOK ));
+		    }
 
 		    System.out.println( String.format( "output selection is about %d stock(s)", selection.size()));		    
 	        

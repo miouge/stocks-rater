@@ -7,4 +7,5 @@ public class ExclusionResume {
 	public int nonProfitable = 0;
 	public int operationalLoss = 0;
 	public int insufficientRating = 0;
+	public int fondamentalNotOK = 0;
 }

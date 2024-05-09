@@ -71,13 +71,20 @@ public class Stock {
 
 	public Double avgEBITDA;
 	public Double growthEBITDA; // en %
+	public Double deviationEBITDA;
+	
 	public Double avgEBIT;
 	public Double growthEBIT; // en %
+	public Double deviationEBIT;
+	
 	public Double avgRN;
 	public Double growthRN; // en %
+	public Double deviationRN;
+	
 	public Double avgBNA;
 	public Double avgDIV;
 	public Double growthDIV; // en %
+	public Double deviationDIV;
 	
 	public Double rdtPerc; 		// rendement en %
 	public Double payoutPerc;   // payout %
